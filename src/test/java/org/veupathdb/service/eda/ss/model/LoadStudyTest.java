@@ -92,7 +92,7 @@ public class LoadStudyTest {
     assertEquals("_networth", var.getProviderLabel());
     assertEquals(VariableType.NUMBER, var.getType());
     assertEquals(Variable.VariableDisplayType.DEFAULT, var.getDisplayType());
-    assertEquals("dollars", var.getUnits());
+    assertEquals("dollars", var.getUnitsId());
     assertTrue(var.getHasValues());
 
   }

@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +33,10 @@ public class TallRowsConversionPerformanceTest {
   @Test
   public void doTallRowsPerfTest() throws Exception {
     Entity entity = TEST_ENTITY.apply(new TestModel());
-    List<String> outputColumns = StudySubsettingUtils.getTabularOutputColumns(entity, entity.getVariables());
+    List<VariableSpecification> varSpecs = new ArrayList<>();
+    for (Variable var : entity.getVariables())
+      varSpecs.add(new VariableSpecification(var, var.getUnitsId(), var.getScaleId()));
+    List<String> outputColumns = StudySubsettingUtils.getTabularOutputColumns(entity, varSpecs);
     TallRowsGeneratedResultIterator iterator = new TallRowsGeneratedResultIterator(entity, NUM_RECORDS_TO_PROCESS, CACHE_SAMPLE_RECORD);
     try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(OUTPUT_STREAM_PROVIDER.get()))) {
       Timer t = new Timer();

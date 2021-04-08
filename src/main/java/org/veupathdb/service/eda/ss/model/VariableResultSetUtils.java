@@ -29,7 +29,7 @@ class VariableResultSetUtils {
 
   static String generateStudyVariablesListSql(String variablesTableName) {
     String[] selectCols = {VARIABLE_ID_COL_NAME, VARIABLE_TYPE_COL_NAME,
-            DATA_SHAPE_COL_NAME, DISPLAY_TYPE_COL_NAME, HAS_VALUES_COL_NAME, UNITS_COL_NAME, MULTIVALUED_COL_NAME, PRECISION_COL_NAME, PROVIDER_LABEL_COL_NAME, DISPLAY_NAME_COL_NAME, VARIABLE_PARENT_ID_COL_NAME};
+            DATA_SHAPE_COL_NAME, DISPLAY_TYPE_COL_NAME, HAS_VALUES_COL_NAME, UNITS_DISPLAY_NAME_COL_NAME, MULTIVALUED_COL_NAME, PRECISION_COL_NAME, PROVIDER_LABEL_COL_NAME, DISPLAY_NAME_COL_NAME, VARIABLE_PARENT_ID_COL_NAME};
 
 //    return "SELECT " + String.join(", ", selectCols) + NL
     return "SELECT distinct " + String.join(", ", selectCols) + NL  // TODO: remove hack distinct
@@ -64,10 +64,15 @@ class VariableResultSetUtils {
               Variable.VariableType.fromString(getRsStringNotNull(rs, VARIABLE_TYPE_COL_NAME)),
               Variable.VariableDataShape.fromString(getRsStringNotNull(rs, DATA_SHAPE_COL_NAME)),
               Variable.VariableDisplayType.fromString(getRsStringWithDefault(rs, DISPLAY_TYPE_COL_NAME, "default")),
-              getRsStringWithDefault(rs, UNITS_COL_NAME, "No Units Available"), // TODO remove hack default
+              getRsStringWithDefault(rs, UNITS_ID_COL_NAME, "NoUnitsIdAvailable"), // TODO remove hack default
+              getRsStringWithDefault(rs, UNITS_DISPLAY_NAME_COL_NAME, "No Units Available"), // TODO remove hack default
+              getRsStringWithDefault(rs, SCALE_ID_COL_NAME, "NoScaleIdAvailable"), // TODO remove hack default
+              getRsStringWithDefault(rs, SCALE_DISPLAY_NAME_COL_NAME, "No Units Available"), // TODO remove hack default
               getRsIntegerWithDefault(rs, PRECISION_COL_NAME, 1), // TODO remove hack default
               displayName,
-              parentId
+              parentId,
+              false,  // TODO read isFeatured from the database
+             false  // TODO read isTemporal from the database
       );
     }
     catch (SQLException e) {

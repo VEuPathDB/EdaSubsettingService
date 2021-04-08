@@ -259,7 +259,9 @@ public class StudySubsettingUtilsTest {
   @DisplayName("Test creating a where clause for tabular report")
   void testGenerateTabularWhereClause() {
     
-    List<Variable> vars = Arrays.asList(_model.birthDate, _model.favNumber);
+    List<VariableSpecification> vars = Arrays.asList(
+            new VariableSpecification(_model.birthDate, null, null),
+            new VariableSpecification( _model.favNumber, null, null));
     String where = StudySubsettingUtils.generateTabularWhereClause(vars, _model.observation.getPKColName(), "t", "a");
     String expected = "WHERE t." + _model.observation.getPKColName() + " = a." + _model.observation.getPKColName() + NL +
         "AND (" + NL +
@@ -297,8 +299,10 @@ public class StudySubsettingUtilsTest {
   void testGetTabularSql() {
     
     List<Filter> filters = getSomeFilters();
-    
-    List<Variable> outputVariables = Arrays.asList(_model.networth, _model.shoesize);
+
+    List<VariableSpecification> outputVariables = Arrays.asList(
+            new VariableSpecification(_model.networth, null, null),
+            new VariableSpecification( _model.shoesize, null, null));
 
     TreeNode<Entity> prunedTree = StudySubsettingUtils.pruneTree(_model.study.getEntityTree(), filters, _model.participant);
 
@@ -391,9 +395,9 @@ public class StudySubsettingUtilsTest {
     String entityId = "GEMS_Part";
     Entity entity = study.getEntity(entityId).orElseThrow();
 
-    List<Variable> variables = new ArrayList<>();
-    variables.add(entity.getVariable("var_17").orElseThrow()); // hair color
-    variables.add(entity.getVariable("var_20").orElseThrow()); // name
+    List<VariableSpecification> variables = new ArrayList<>();
+    variables.add(new VariableSpecification(entity.getVariable("var_17").orElseThrow(), null, null)); // hair color
+    variables.add(new VariableSpecification(entity.getVariable("var_20").orElseThrow(), null, null)); // name
 
     List<Filter> filters = Collections.emptyList();
     
@@ -420,9 +424,9 @@ public class StudySubsettingUtilsTest {
     String entityId = "GEMS_Part";
     Entity entity = study.getEntity(entityId).orElseThrow();
 
-    List<Variable> variables = new ArrayList<>();
-    variables.add(entity.getVariable("var_17").orElseThrow()); // hair color
-    variables.add(entity.getVariable("var_20").orElseThrow()); // name
+    List<VariableSpecification> variables = new ArrayList<>();
+    variables.add(new VariableSpecification(entity.getVariable("var_17").orElseThrow(), null, null)); // hair color
+    variables.add(new VariableSpecification(entity.getVariable("var_20").orElseThrow(), null, null)); // name
 
     List<Filter> filters = new ArrayList<>();
     filters.add(_filtersForTesting.partHairFilter);

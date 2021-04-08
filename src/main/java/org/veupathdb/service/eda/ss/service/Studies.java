@@ -17,56 +17,16 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import org.gusdb.fgputil.Tuples.TwoTuple;
 import org.gusdb.fgputil.functional.TreeNode;
-import org.veupathdb.service.eda.generated.model.APIDateRangeFilter;
-import org.veupathdb.service.eda.generated.model.APIDateSetFilter;
-import org.veupathdb.service.eda.generated.model.APIDateVariable;
-import org.veupathdb.service.eda.generated.model.APIDateVariableImpl;
-import org.veupathdb.service.eda.generated.model.APIEntity;
-import org.veupathdb.service.eda.generated.model.APIEntityImpl;
-import org.veupathdb.service.eda.generated.model.APIFilter;
-import org.veupathdb.service.eda.generated.model.APILongitudeRangeFilter;
-import org.veupathdb.service.eda.generated.model.APILongitudeVariable;
-import org.veupathdb.service.eda.generated.model.APILongitudeVariableImpl;
-import org.veupathdb.service.eda.generated.model.APINumberRangeFilter;
-import org.veupathdb.service.eda.generated.model.APINumberSetFilter;
-import org.veupathdb.service.eda.generated.model.APINumberVariable;
-import org.veupathdb.service.eda.generated.model.APINumberVariableImpl;
-import org.veupathdb.service.eda.generated.model.APIStringSetFilter;
-import org.veupathdb.service.eda.generated.model.APIStringVariable;
-import org.veupathdb.service.eda.generated.model.APIStringVariableImpl;
-import org.veupathdb.service.eda.generated.model.APIStudyDetail;
-import org.veupathdb.service.eda.generated.model.APIStudyDetailImpl;
-import org.veupathdb.service.eda.generated.model.APIStudyOverview;
-import org.veupathdb.service.eda.generated.model.APIStudyOverviewImpl;
-import org.veupathdb.service.eda.generated.model.APIVariable;
-import org.veupathdb.service.eda.generated.model.APIVariableDataShape;
-import org.veupathdb.service.eda.generated.model.APIVariableDisplayType;
-import org.veupathdb.service.eda.generated.model.APIVariablesCategory;
-import org.veupathdb.service.eda.generated.model.APIVariablesCategoryImpl;
-import org.veupathdb.service.eda.generated.model.EntityCountPostRequest;
-import org.veupathdb.service.eda.generated.model.EntityCountPostResponse;
-import org.veupathdb.service.eda.generated.model.EntityCountPostResponseImpl;
-import org.veupathdb.service.eda.generated.model.EntityIdGetResponse;
-import org.veupathdb.service.eda.generated.model.EntityIdGetResponseImpl;
-import org.veupathdb.service.eda.generated.model.EntityTabularPostRequest;
-import org.veupathdb.service.eda.generated.model.EntityTabularPostResponseStream;
-import org.veupathdb.service.eda.generated.model.StudiesGetResponseImpl;
-import org.veupathdb.service.eda.generated.model.StudyIdGetResponse;
-import org.veupathdb.service.eda.generated.model.StudyIdGetResponseImpl;
-import org.veupathdb.service.eda.generated.model.VariableDistributionPostRequest;
-import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponseStream;
+import org.veupathdb.service.eda.generated.model.*;
 import org.veupathdb.service.eda.ss.Resources;
+import org.veupathdb.service.eda.ss.model.*;
 import org.veupathdb.service.eda.ss.model.filter.DateRangeFilter;
 import org.veupathdb.service.eda.ss.model.filter.DateSetFilter;
-import org.veupathdb.service.eda.ss.model.Entity;
 import org.veupathdb.service.eda.ss.model.filter.Filter;
 import org.veupathdb.service.eda.ss.model.filter.LongitudeRangeFilter;
 import org.veupathdb.service.eda.ss.model.filter.NumberRangeFilter;
 import org.veupathdb.service.eda.ss.model.filter.NumberSetFilter;
 import org.veupathdb.service.eda.ss.model.filter.StringSetFilter;
-import org.veupathdb.service.eda.ss.model.Study;
-import org.veupathdb.service.eda.ss.model.StudySubsettingUtils;
-import org.veupathdb.service.eda.ss.model.Variable;
 import org.veupathdb.service.eda.ss.model.Variable.VariableType;
 
 import static org.gusdb.fgputil.functional.Functions.cSwallow;
@@ -180,30 +140,25 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     }
     if (var.getType() == VariableType.DATE) {
       APIDateVariable apiVar = new APIDateVariableImpl();
-      setApiVarProps(apiVar, var);
-      apiVar.setDataShape(APIVariableDataShape.valueOf(var.getDataShape().toString()));
-      apiVar.setDisplayType(APIVariableDisplayType.valueOf(var.getDisplayType().toString()));
+      setApiValueVarProps(apiVar, var);
       return apiVar;
     }
     else if (var.getType() == VariableType.NUMBER) {
       APINumberVariable apiVar = new APINumberVariableImpl();
-      setApiVarProps(apiVar, var);
-      apiVar.setUnits(var.getUnits());
-      apiVar.setDataShape(APIVariableDataShape.valueOf(var.getDataShape().toString()));
-      apiVar.setDisplayType(APIVariableDisplayType.valueOf(var.getDisplayType().toString()));
+      apiVar.setUnitsId(var.getUnitsId());
+      apiVar.setUnitsDisplayName(var.getUnitsDisplayName());
+      apiVar.setScaleId(var.getScaleId());
+      apiVar.setScaleDisplayName(var.getScaleDisplayName());
+      setApiValueVarProps(apiVar, var);
       return apiVar;
     }
     else if (var.getType() == VariableType.STRING) {
       APIStringVariable apiVar = new APIStringVariableImpl();
-      apiVar.setDataShape(APIVariableDataShape.valueOf(var.getDataShape().toString()));
-      apiVar.setDisplayType(APIVariableDisplayType.valueOf(var.getDisplayType().toString()));
-      setApiVarProps(apiVar, var);
+      setApiValueVarProps(apiVar, var);
       return apiVar;
     }
     else if (var.getType() == VariableType.LONGITUDE) {
       APILongitudeVariable apiVar = new APILongitudeVariableImpl();
-      apiVar.setDataShape(APIVariableDataShape.valueOf(var.getDataShape().toString()));
-      apiVar.setDisplayType(APIVariableDisplayType.valueOf(var.getDisplayType().toString()));
       setApiVarProps(apiVar, var);
       return apiVar;
     }
@@ -211,12 +166,24 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
       throw new RuntimeException("Invalid variable type " + var.getType());
     }
   }
-  
+
+  // set props that all variables have
   private static void setApiVarProps(APIVariable apiVar, Variable var) {
     apiVar.setId(var.getId());
     apiVar.setDisplayName(var.getDisplayName());
     apiVar.setProviderLabel(var.getProviderLabel());
     apiVar.setParentId(var.getParentId());
+    apiVar.setDataShape(APIVariableDataShape.valueOf(var.getDataShape().toString()));
+    apiVar.setDisplayType(APIVariableDisplayType.valueOf(var.getDisplayType().toString()));
+  }
+
+  // set the props that all value-having vars have
+  private static void setApiValueVarProps(APIVariable apiVar, Variable var) {
+    setApiVarProps(apiVar, var);
+    apiVar.setDataShape(APIVariableDataShape.valueOf(var.getDataShape().toString()));
+    apiVar.setDisplayType(APIVariableDisplayType.valueOf(var.getDisplayType().toString()));
+    apiVar.setIsFeatured(var.getIsFeatured());
+    apiVar.setIsTemporal(var.getIsTemporal());
   }
 
   @Override
@@ -229,8 +196,10 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
    // System.out.println("---------------- 1: " + String.valueOf(System.currentTimeMillis() - start));
     
     // unpack data from API input to model objects
-    List<String> vars = new ArrayList<>();
-    vars.add(variableId);  // force into a list for the unpacker
+    List<VariableSpec> vars = new ArrayList<>();
+    VariableSpec varSpec = new VariableSpecImpl();
+    varSpec.setVariableId(variableId);
+    vars.add(varSpec);  // force into a list of varspec for the unpacker
     UnpackedRequest unpacked = unpack(datasource, studyId, entityId, request.getFilters(), vars);
    // System.out.println("---------------- 2: " + String.valueOf(System.currentTimeMillis() - start));
 
@@ -293,7 +262,7 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     
     DataSource datasource = Resources.getApplicationDataSource();
     
-    UnpackedRequest request = unpack(datasource, studyId, entityId, requestBody.getFilters(), requestBody.getOutputVariableIds());
+    UnpackedRequest request = unpack(datasource, studyId, entityId, requestBody.getFilters(), requestBody.getOutputVariableSpecs());
     
     EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream
         (outStream -> StudySubsettingUtils.produceTabularSubset(datasource, request.getStudy(),
@@ -310,7 +279,7 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     DataSource datasource = Resources.getApplicationDataSource();
 
     // unpack data from API input to model objects
-    List<String> vars = new ArrayList<>();
+    List<VariableSpec> vars = new ArrayList<>();
     UnpackedRequest request = unpack(datasource, studyId, entityId, rawRequest.getFilters(), vars);
 
     TreeNode<Entity> prunedEntityTree = StudySubsettingUtils.pruneTree(
@@ -325,7 +294,8 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     return  PostStudiesEntitiesCountByStudyIdAndEntityIdResponse.respond200WithApplicationJson(response);
   }
   
-  private UnpackedRequest unpack(DataSource datasource, String studyId, String entityId, List<APIFilter> apiFilters, List<String> variableIds) {
+  private UnpackedRequest unpack(DataSource datasource, String studyId, String entityId,
+                                 List<APIFilter> apiFilters, List<VariableSpec> variableSpecs) {
     String studIdStr = "Study ID " + studyId;
     if (!validateStudyId(datasource, studyId))
       throw new NotFoundException(studIdStr + " is not found.");
@@ -333,7 +303,7 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     Study study = getStudy(studyId);
     Entity entity = study.getEntity(entityId).orElseThrow(() -> new NotFoundException("In " + studIdStr + " Entity ID not found: " + entityId));
     
-    List<Variable> variables = getEntityVariables(entity, variableIds);
+    List<VariableSpecification> variables = getEntityVariables(entity, variableSpecs);
 
     List<Filter> filters = constructFiltersFromAPIFilters(study, apiFilters);
   
@@ -397,15 +367,16 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     return subsetFilters;
   }
 
-  static List<Variable> getEntityVariables(Entity entity, List<String> variableIds) {
+  static List<VariableSpecification> getEntityVariables(Entity entity, List<VariableSpec> variableSpecs) {
 
-    List<Variable> variables = new ArrayList<>();
+    List<VariableSpecification> variableSpecifications = new ArrayList<>();
     
-    for (String varId : variableIds) {
-      String errMsg = "Variable '" + varId + "' is not found for entity with ID: '" + entity.getId() + "'";
-      variables.add(entity.getVariable(varId).orElseThrow(() -> new BadRequestException(errMsg)));
+    for (VariableSpec varSpec : variableSpecs) {
+      String errMsg = "Variable '" + varSpec.getVariableId() + "' is not found for entity with ID: '" + entity.getId() + "'";
+      Variable variable = entity.getVariable(varSpec.getVariableId()).orElseThrow(() -> new BadRequestException(errMsg));
+      variableSpecifications.add(new VariableSpecification(variable, varSpec.getUnitsId(), varSpec.getScaleId()));
     }
-    return variables;
+    return variableSpecifications;
   }
   
   static LocalDateTime convertDate(String dateStr) {
@@ -423,9 +394,9 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     private final Study _study;
     private final List<Filter> _filters;
     private final Entity _targetEntity;
-    private final List<Variable> _requestedVariables;
+    private final List<VariableSpecification> _requestedVariables;
 
-    UnpackedRequest(Study study, Entity targetEntity, List<Variable> requestedVariables, List<Filter> filters) {
+    UnpackedRequest(Study study, Entity targetEntity, List<VariableSpecification> requestedVariables, List<Filter> filters) {
       _study = study;
       _targetEntity = targetEntity;
       _filters = filters;
@@ -444,7 +415,7 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
       return _targetEntity;
     }
 
-    public List<Variable> getRequestedVariables() {
+    public List<VariableSpecification> getRequestedVariables() {
       return _requestedVariables;
     }
   }

@@ -37,8 +37,13 @@ public class RdbmsColumnNames {
   static final String DISPLAY_TYPE_COL_NAME = "term_type";
   static final String HAS_VALUES_COL_NAME = "has_values";
   static final String MULTIVALUED_COL_NAME = "is_multi_valued";
-  static final String UNITS_COL_NAME = "unit";
-  static final String PRECISION_COL_NAME = "precision";
+  static final String UNITS_DISPLAY_NAME_COL_NAME = "unit";  // TODO fix this column name
+  static final String UNITS_ID_COL_NAME = "unit"; // TODO fix this column name
+  static final String SCALE_DISPLAY_NAME_COL_NAME = "unit";  // TODO fix this column name
+  static final String SCALE_ID_COL_NAME = "unit"; // TODO fix this column name
+  static final String PRECISION_COL_NAME = "precision"; // TODO fix this column name
+  static final String IS_FEATURED_COL_NAME = "precision"; // TODO fix this column name
+  static final String ID_TEMPORAL_COL_NAME = "precision";
   static final String VARIABLE_PARENT_ID_COL_NAME = "parent_stable_id";
   
   // Tall table

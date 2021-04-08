@@ -56,7 +56,7 @@ types:
     properties:
       left: number
       right: number
-  VariableSpec:
+  VariableSpec2:
     type: object
     additionalProperties: false
     properties:
@@ -83,6 +83,14 @@ types:
       entityId: string
       outputVariables: VariableSpec[]
       derivedVariables: DerivedVariable[]
+  VariableSpec:
+    type: object
+    additionalProperties: false
+    properties:
+      entityId: string
+      variableId: string
+      unitsId?: string
+      scaleId?: string
   EntityCountPostRequest:
     type: object
     additionalProperties: false
@@ -114,7 +122,7 @@ types:
     additionalProperties: false
     properties:
       filters: API_Filter[]
-      outputVariableIds: string[]
+      outputVariableSpecs: VariableSpec[]
   EntityTabularPostResponse:
     type: object
     additionalProperties: false
@@ -164,6 +172,8 @@ types:
       isMultiValued: boolean
       displayType: API_VariableDisplayType
       dataShape: API_VariableDataShape
+      isFeatured: boolean
+      isTemporal: boolean
   API_VariableType:
     type: string
     enum:
@@ -195,7 +205,11 @@ types:
     type: API_Variable
     discriminatorValue: number
     properties:
-      units: string
+      unitsId: string
+      unitsDisplayName: string
+      precision: integer
+      scaleId: string
+      scaleDisplayName: string
   API_DateVariable:
     type: API_Variable
     discriminatorValue: date

@@ -1,23 +1,5 @@
 package org.veupathdb.service.eda.ss.model;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import javax.sql.DataSource;
-import static org.gusdb.fgputil.FormatUtil.NL;
-import static org.gusdb.fgputil.FormatUtil.TAB;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.gusdb.fgputil.Tuples.TwoTuple;
 import org.gusdb.fgputil.db.runner.SQLRunner;
 import org.gusdb.fgputil.db.runner.SingleIntResultSetHandler;
@@ -25,11 +7,20 @@ import org.gusdb.fgputil.db.stream.ResultSetIterator;
 import org.gusdb.fgputil.db.stream.ResultSets;
 import org.gusdb.fgputil.functional.TreeNode;
 import org.gusdb.fgputil.iterator.GroupingIterator;
-import org.gusdb.fgputil.iterator.IteratorUtil;
 import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Variable.VariableType;
 import org.veupathdb.service.eda.ss.model.filter.Filter;
 
+import javax.sql.DataSource;
+import java.io.*;
+import java.sql.ResultSet;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.gusdb.fgputil.FormatUtil.NL;
+import static org.gusdb.fgputil.FormatUtil.TAB;
 import static org.gusdb.fgputil.iterator.IteratorUtil.toIterable;
 import static org.veupathdb.service.eda.ss.model.RdbmsColumnNames.TT_VARIABLE_ID_COL_NAME;
 
@@ -58,7 +49,7 @@ public class StudySubsettingUtils {
    * @param filters filters to apply to create a subset of records
    */
   public static void produceTabularSubset(DataSource datasource, Study study, Entity outputEntity,
-                                          List<Variable> outputVariables, List<Filter> filters, OutputStream outputStream) {
+                                          List<VariableSpecification> outputVariables, List<Filter> filters, OutputStream outputStream) {
 
     TreeNode<Entity> prunedEntityTree = pruneTree(study.getEntityTree(), filters, outputEntity);
 
@@ -80,8 +71,8 @@ public class StudySubsettingUtils {
     }, FETCH_SIZE_FOR_TABULAR_QUERIES);
   }
 
-  static List<String> getTabularOutputColumns(Entity outputEntity, List<Variable> outputVariables) {
-    List<String> outputVariableIds = outputVariables.stream().map(Variable::getId).collect(Collectors.toList());
+  static List<String> getTabularOutputColumns(Entity outputEntity, List<VariableSpecification> outputVariables) {
+    List<String> outputVariableIds = outputVariables.stream().map(varSpec -> varSpec.getVariable().getId()).collect(Collectors.toList());
     List<String> outputColumns = new ArrayList<>();
     outputColumns.add(outputEntity.getPKColName());
     outputColumns.addAll(outputEntity.getAncestorPkColNames());
@@ -167,7 +158,7 @@ public class StudySubsettingUtils {
   /**
    * Generate SQL to produce a multi-column tabular output (the requested variables), for the specified subset.
    */
-  static String generateTabularSql(List<Variable> outputVariables, Entity outputEntity, List<Filter> filters, TreeNode<Entity> prunedEntityTree) {
+  static String generateTabularSql(List<VariableSpecification> outputVariables, Entity outputEntity, List<Filter> filters, TreeNode<Entity> prunedEntityTree) {
 
     String tallTblAbbrev = "t"; 
     String ancestorTblAbbrev = "a";
@@ -275,9 +266,9 @@ public class StudySubsettingUtils {
         Resources.getAppDbSchema() + outputEntity.getAncestorsTableName() + " " + ancestorTblNm;
   }
   
-  static String generateTabularWhereClause(List<Variable> outputVariables, String entityPkCol, String entityTblNm, String ancestorTblNm) {
+  static String generateTabularWhereClause(List<VariableSpecification> outputVariables, String entityPkCol, String entityTblNm, String ancestorTblNm) {
     
-    List<String> outputVariableIds = outputVariables.stream().map(Variable::getId).collect(Collectors.toList());
+    List<String> outputVariableIds = outputVariables.stream().map(varSpec -> varSpec.getVariable().getId()).collect(Collectors.toList());
 
     List<String> varExprs = new ArrayList<>();
     for (String varId : outputVariableIds) varExprs.add(" " + TT_VARIABLE_ID_COL_NAME + " = '" + varId + "'");
