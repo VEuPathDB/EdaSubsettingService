@@ -11,14 +11,18 @@ import javax.sql.DataSource;
 import org.gusdb.fgputil.db.runner.SQLRunner;
 import org.gusdb.fgputil.functional.TreeNode;
 import org.veupathdb.service.eda.generated.model.APIFilter;
+import org.veupathdb.service.eda.generated.model.APIStudyOverviewImpl;
 import org.veupathdb.service.eda.ss.Resources;
 
-public class Study {
+public class Study extends APIStudyOverviewImpl {
+
   private TreeNode<Entity> entityTree;
   private final Map<String, Entity> entityIdMap;
   private final StudyOverview overview;
   
   public Study(StudyOverview overview, TreeNode<Entity> entityTree, Map<String, Entity> entityIdMap) {
+    setId(overview.getId());
+    setDatasetId(overview.getDatasetId());
     this.entityTree = entityTree;
     this.entityIdMap = entityIdMap;
     this.overview = overview;

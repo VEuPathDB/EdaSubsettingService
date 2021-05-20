@@ -14,9 +14,7 @@ public class Variable {
   private final VariableDisplayType displayType;
   private final boolean hasValues;
   private final String unitsId;
-  private final String unitsDisplayName;
   private final String scaleId;
-  private final String scaleDisplayName;
   private final Integer precision;
   private final String displayName;
   private final String parentId;
@@ -134,7 +132,7 @@ public class Variable {
   Construct a variable that does have values
    */
   public Variable(String providerLabel, String id, Entity entity, VariableType type, VariableDataShape dataShape,
-                  VariableDisplayType displayType, String unitsId, String unitsDisplayName, String scaleId, String scaleDisplayName,
+                  VariableDisplayType displayType, String unitsId, String scaleId,
                   Integer precision, String displayName, String parentId, Boolean isFeatured, Boolean isTemporal) {
 
     String errPrefix = "In entity " + entity.getId() + " variable " + id + " has a null ";
@@ -144,10 +142,6 @@ public class Variable {
     if (isFeatured == null) throw new RuntimeException(errPrefix + "is featured");
     if (isTemporal == null) throw new RuntimeException(errPrefix + "is temporal");
     if (type.equals(VariableType.NUMBER)) {
-      if (unitsId == null) throw new RuntimeException(errPrefix + "unitsId");
-      if (unitsDisplayName == null) throw new RuntimeException(errPrefix + "unitsDisplayName");
-      if (scaleId == null) throw new RuntimeException(errPrefix + "scaleId");
-      if (scaleDisplayName == null) throw new RuntimeException(errPrefix + "scaleDisplayName");
       if (precision == null) throw new RuntimeException(errPrefix + "precision");
     }
 
@@ -159,9 +153,7 @@ public class Variable {
     this.displayType = displayType;
     this.hasValues = true;
     this.unitsId = unitsId;
-    this.unitsDisplayName = unitsDisplayName;
     this.scaleId = scaleId;
-    this.scaleDisplayName = scaleDisplayName;
     this.isFeatured = isFeatured;
     this.isTemporal = isTemporal;
     this.precision = precision;
@@ -181,9 +173,7 @@ public class Variable {
     this.displayType = null;
     this.hasValues = false;
     this.unitsId = null;
-    this.unitsDisplayName = null;
     this.scaleId = null;
-    this.scaleDisplayName = null;
     this.precision = null;
     this.displayName = displayName;
     this.parentId = parentId;
@@ -215,16 +205,8 @@ public class Variable {
     return unitsId;
   }
 
-  public String getUnitsDisplayName() {
-    return unitsDisplayName;
-  }
-
   public String getScaleId() {
     return scaleId;
-  }
-
-  public String getScaleDisplayName() {
-    return scaleDisplayName;
   }
 
   public Integer getPrecision() {

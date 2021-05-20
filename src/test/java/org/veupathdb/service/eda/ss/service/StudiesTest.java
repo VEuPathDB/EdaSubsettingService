@@ -1,17 +1,32 @@
 package org.veupathdb.service.eda.ss.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.gusdb.fgputil.ListBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.veupathdb.service.eda.generated.model.APIEntity;
+import org.veupathdb.service.eda.generated.model.APIFilter;
+import org.veupathdb.service.eda.generated.model.APIFilterImpl;
+import org.veupathdb.service.eda.generated.model.APINumberRangeFilter;
+import org.veupathdb.service.eda.generated.model.APINumberRangeFilterImpl;
+import org.veupathdb.service.eda.generated.model.APIStringSetFilter;
+import org.veupathdb.service.eda.generated.model.APIStringSetFilterImpl;
+import org.veupathdb.service.eda.generated.model.APIStudyDetail;
+import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponse;
 import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Entity;
+import org.veupathdb.service.eda.ss.model.UnitsAndScale;
 import org.veupathdb.service.eda.ss.model.filter.Filter;
 import org.veupathdb.service.eda.ss.model.FiltersForTesting;
 import org.veupathdb.service.eda.ss.model.Study;
 import org.veupathdb.service.eda.ss.model.TestModel;
 import org.veupathdb.service.eda.ss.model.Variable;
-import org.veupathdb.service.eda.generated.model.*;
 import org.veupathdb.service.eda.ss.stubdb.StubDb;
 
 import javax.sql.DataSource;
@@ -19,15 +34,17 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class StudiesTest {
 
   private static TestModel _model;
   private static DataSource _dataSource;
   private static FiltersForTesting _filtersForTesting;
+  private static UnitsAndScale _unitsAndScale;
   private static Study _study;
 
   @BeforeAll
@@ -35,6 +52,7 @@ public class StudiesTest {
     _model = new TestModel();
     _dataSource = StubDb.getDataSource();
     _study = Study.loadStudy(_dataSource, "DS-2324");
+    _unitsAndScale = UnitsAndScale.fromApplicationMetadata(ListBuilder.asList(_study), s -> _study);
     _filtersForTesting = new FiltersForTesting(_study);
   }
 
@@ -42,7 +60,7 @@ public class StudiesTest {
   @DisplayName("Test entity tree to api tree")
   void testEntityTreeToAPITree() {
 
-    APIEntity apiEntityTree = Studies.entityTreeToAPITree(_study.getEntityTree());
+    APIEntity apiEntityTree = Studies.entityTreeToAPITree(_study.getEntityTree(), _unitsAndScale);
     assertEquals("GEMS_House", apiEntityTree.getId());
 
     assertEquals(2, apiEntityTree.getChildren().size());
@@ -51,7 +69,7 @@ public class StudiesTest {
   @Test
   @DisplayName("Test get study details")
   void testGetStudyDetails() {
-    APIStudyDetail studyDetail = Studies.getApiStudyDetail(_study);
+    APIStudyDetail studyDetail = Studies.getApiStudyDetail(_study, _unitsAndScale);
     assertNotNull(studyDetail);
   }
 

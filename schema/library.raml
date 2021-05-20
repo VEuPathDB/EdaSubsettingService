@@ -7,61 +7,6 @@
 ################################################################################
 
 types:
-  API_Filter:
-    type: object
-    discriminator: type
-    properties:
-      entityId: string
-      variableId: string
-      type: API_FilterType
-  API_FilterType:
-    type: string
-    enum:
-      - stringSet
-      - numberSet
-      - dateSet
-      - numberRange
-      - dateRange
-      - longitudeRange
-  API_StringSetFilter:
-    type: API_Filter
-    discriminatorValue: 'stringSet'
-    properties:
-      stringSet: string[]
-  API_NumberSetFilter:
-    type: API_Filter
-    discriminatorValue: 'numberSet'
-    properties:
-      numberSet: number[]
-  API_DateSetFilter:
-    type: API_Filter
-    discriminatorValue: 'dateSet'
-    properties:
-      dateSet: string[] # how to constrain this to a date?
-  API_NumberRangeFilter:
-    type: API_Filter
-    discriminatorValue: 'numberRange'
-    properties:
-      min: number
-      max: number
-  API_DateRangeFilter:
-    type: API_Filter
-    discriminatorValue: 'dateRange'
-    properties:
-      min: string
-      max: string
-  API_LongitudeRangeFilter:
-    type: API_Filter
-    discriminatorValue: 'longitudeRange'
-    properties:
-      left: number
-      right: number
-  VariableSpec2:
-    type: object
-    additionalProperties: false
-    properties:
-      entityId: string
-      variableId: string
   DerivationType:
     type: string
     enum:
@@ -71,9 +16,11 @@ types:
     type: VariableSpec
     properties:
       variableType: API_VariableType
+      variableDataShape: API_VariableDataShape
       derivationType: DerivationType
-      dependentVariables: VariableSpec[]
-      construction: object # TBD
+      functionName: string
+      inputVars: VariableSpec[]
+      config: object # TBD
   MergedEntityTabularPostRequest:
     type: object
     additionalProperties: false
@@ -83,12 +30,16 @@ types:
       entityId: string
       outputVariables: VariableSpec[]
       derivedVariables: DerivedVariable[]
-  VariableSpec:
+  VariableSpecBaseIds:
     type: object
     additionalProperties: false
     properties:
       entityId: string
       variableId: string
+  VariableSpec:
+    type: VariableSpecBaseIds
+    additionalProperties: false
+    properties:
       unitsId?: string
       scaleId?: string
   EntityCountPostRequest:
@@ -150,6 +101,29 @@ types:
       id: string
       datasetId: string
       rootEntity: API_Entity
+      units: UnitsGroup[]
+      scale: ScaleOption[]
+  UnitsGroup:
+    type: object
+    properties:
+      unitsGroupId: string
+      displayName: string
+      members: UnitOption[]
+  UnitOption:
+    type: object
+    properties:
+      unitsId: string
+      displayName: string
+  ScaleOption:
+    type: object
+    properties:
+      scaleId: string
+      displayName: string
+  VariableAspect:
+    type: object
+    properties:
+      id: string
+      display: string
   API_Entity:
     type: object
     properties:
@@ -174,6 +148,9 @@ types:
       dataShape: API_VariableDataShape
       isFeatured: boolean
       isTemporal: boolean
+      unitsGroupId: string
+      defaultUnitsId: string
+      defaultScaleId: string
   API_VariableType:
     type: string
     enum:
@@ -205,15 +182,61 @@ types:
     type: API_Variable
     discriminatorValue: number
     properties:
-      unitsId: string
-      unitsDisplayName: string
       precision: integer
-      scaleId: string
-      scaleDisplayName: string
+      defaultScaleId: string
   API_DateVariable:
     type: API_Variable
     discriminatorValue: date
   API_LongitudeVariable:
     type: API_Variable
     discriminatorValue: longitude
+  API_Filter:
+    type: object
+    discriminator: type
+    properties:
+      entityId: string
+      variableId: string
+      type: API_FilterType
+  API_FilterType:
+    type: string
+    enum:
+      - stringSet
+      - numberSet
+      - dateSet
+      - numberRange
+      - dateRange
+      - longitudeRange
+  API_StringSetFilter:
+    type: API_Filter
+    discriminatorValue: 'stringSet'
+    properties:
+      stringSet: string[]
+  API_NumberSetFilter:
+    type: API_Filter
+    discriminatorValue: 'numberSet'
+    properties:
+      numberSet: number[]
+  API_DateSetFilter:
+    type: API_Filter
+    discriminatorValue: 'dateSet'
+    properties:
+      dateSet: string[] # how to constrain this to a date?
+  API_NumberRangeFilter:
+    type: API_Filter
+    discriminatorValue: 'numberRange'
+    properties:
+      min: number
+      max: number
+  API_DateRangeFilter:
+    type: API_Filter
+    discriminatorValue: 'dateRange'
+    properties:
+      min: string
+      max: string
+  API_LongitudeRangeFilter:
+    type: API_Filter
+    discriminatorValue: 'longitudeRange'
+    properties:
+      left: number
+      right: number
 

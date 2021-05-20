@@ -8,7 +8,10 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
@@ -17,9 +20,53 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import org.gusdb.fgputil.Tuples.TwoTuple;
 import org.gusdb.fgputil.functional.TreeNode;
-import org.veupathdb.service.eda.generated.model.*;
+import org.veupathdb.service.eda.generated.model.APIDateRangeFilter;
+import org.veupathdb.service.eda.generated.model.APIDateSetFilter;
+import org.veupathdb.service.eda.generated.model.APIDateVariable;
+import org.veupathdb.service.eda.generated.model.APIDateVariableImpl;
+import org.veupathdb.service.eda.generated.model.APIEntity;
+import org.veupathdb.service.eda.generated.model.APIEntityImpl;
+import org.veupathdb.service.eda.generated.model.APIFilter;
+import org.veupathdb.service.eda.generated.model.APILongitudeRangeFilter;
+import org.veupathdb.service.eda.generated.model.APILongitudeVariable;
+import org.veupathdb.service.eda.generated.model.APILongitudeVariableImpl;
+import org.veupathdb.service.eda.generated.model.APINumberRangeFilter;
+import org.veupathdb.service.eda.generated.model.APINumberSetFilter;
+import org.veupathdb.service.eda.generated.model.APINumberVariable;
+import org.veupathdb.service.eda.generated.model.APINumberVariableImpl;
+import org.veupathdb.service.eda.generated.model.APIStringSetFilter;
+import org.veupathdb.service.eda.generated.model.APIStringVariable;
+import org.veupathdb.service.eda.generated.model.APIStringVariableImpl;
+import org.veupathdb.service.eda.generated.model.APIStudyDetail;
+import org.veupathdb.service.eda.generated.model.APIStudyDetailImpl;
+import org.veupathdb.service.eda.generated.model.APIVariable;
+import org.veupathdb.service.eda.generated.model.APIVariableDataShape;
+import org.veupathdb.service.eda.generated.model.APIVariableDisplayType;
+import org.veupathdb.service.eda.generated.model.APIVariablesCategory;
+import org.veupathdb.service.eda.generated.model.APIVariablesCategoryImpl;
+import org.veupathdb.service.eda.generated.model.EntityCountPostRequest;
+import org.veupathdb.service.eda.generated.model.EntityCountPostResponse;
+import org.veupathdb.service.eda.generated.model.EntityCountPostResponseImpl;
+import org.veupathdb.service.eda.generated.model.EntityIdGetResponse;
+import org.veupathdb.service.eda.generated.model.EntityIdGetResponseImpl;
+import org.veupathdb.service.eda.generated.model.EntityTabularPostRequest;
+import org.veupathdb.service.eda.generated.model.EntityTabularPostResponseStream;
+import org.veupathdb.service.eda.generated.model.StudiesGetResponseImpl;
+import org.veupathdb.service.eda.generated.model.StudyIdGetResponse;
+import org.veupathdb.service.eda.generated.model.StudyIdGetResponseImpl;
+import org.veupathdb.service.eda.generated.model.VariableDistributionPostRequest;
+import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponseStream;
+import org.veupathdb.service.eda.generated.model.VariableSpec;
+import org.veupathdb.service.eda.generated.model.VariableSpecImpl;
 import org.veupathdb.service.eda.ss.Resources;
-import org.veupathdb.service.eda.ss.model.*;
+import org.veupathdb.service.eda.ss.model.Entity;
+import org.veupathdb.service.eda.ss.model.MetadataCache;
+import org.veupathdb.service.eda.ss.model.Study;
+import org.veupathdb.service.eda.ss.model.StudySubsettingUtils;
+import org.veupathdb.service.eda.ss.model.UnitsAndScale;
+import org.veupathdb.service.eda.ss.model.Variable;
+import org.veupathdb.service.eda.ss.model.Variable.VariableType;
+import org.veupathdb.service.eda.ss.model.VariableSpecification;
 import org.veupathdb.service.eda.ss.model.filter.DateRangeFilter;
 import org.veupathdb.service.eda.ss.model.filter.DateSetFilter;
 import org.veupathdb.service.eda.ss.model.filter.Filter;
@@ -27,47 +74,29 @@ import org.veupathdb.service.eda.ss.model.filter.LongitudeRangeFilter;
 import org.veupathdb.service.eda.ss.model.filter.NumberRangeFilter;
 import org.veupathdb.service.eda.ss.model.filter.NumberSetFilter;
 import org.veupathdb.service.eda.ss.model.filter.StringSetFilter;
-import org.veupathdb.service.eda.ss.model.Variable.VariableType;
 
 import static org.gusdb.fgputil.functional.Functions.cSwallow;
 
 public class Studies implements org.veupathdb.service.eda.generated.resources.Studies {
-  static Map<String, APIStudyOverview> apiStudyOverviews;  // cache the overviews
-  static Map<String, Study> studies = new HashMap<>(); // cache the studies
 
-  // TODO: use proper cache
-  private Study getStudy(String studyId){
-    if (!studies.containsKey(studyId)) {
-      studies.put(studyId, Study.loadStudy(Resources.getApplicationDataSource(), studyId));
-    }
-    return studies.get(studyId);
+  @Override
+  public GetStudiesClearMetadataCacheResponse getStudiesClearMetadataCache() {
+    MetadataCache.clear();
+    return GetStudiesClearMetadataCacheResponse.respond202();
   }
 
   @Override
   public GetStudiesResponse getStudies() {
     var out = new StudiesGetResponseImpl();
-    out.setStudies(getStudyOverviews(Resources.getApplicationDataSource()));
+    out.setStudies(MetadataCache.getStudyOverviews());
     return GetStudiesResponse.respond200WithApplicationJson(out);
-  }
-
-  private List<APIStudyOverview> getStudyOverviews(DataSource datasource) {
-    if (apiStudyOverviews == null) {
-      List<Study.StudyOverview> overviews = Study.getStudyOverviews(datasource);
-      apiStudyOverviews = new LinkedHashMap<>();
-      for (Study.StudyOverview overview : overviews) {
-        APIStudyOverview study = new APIStudyOverviewImpl();
-        study.setId(overview.getId());
-        study.setDatasetId(overview.getDatasetId());
-        apiStudyOverviews.put(study.getId(), study);
-      }
-    }
-    return new ArrayList<>( apiStudyOverviews.values() );
   }
 
   @Override
   public GetStudiesByStudyIdResponse getStudiesByStudyId(String studyId) {
-    Study study = getStudy(studyId);
-    APIStudyDetail apiStudyDetail = getApiStudyDetail(study);
+    APIStudyDetail apiStudyDetail = getApiStudyDetail(
+        MetadataCache.getStudy(studyId),
+        MetadataCache.getUnitsAndScale());
     StudyIdGetResponse response = new StudyIdGetResponseImpl();
     response.setStudy(apiStudyDetail);
     
@@ -76,7 +105,9 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
 
   @Override
   public GetStudiesEntitiesByStudyIdAndEntityIdResponse getStudiesEntitiesByStudyIdAndEntityId(String studyId, String entityId) {
-    APIStudyDetail apiStudyDetail = getApiStudyDetail(getStudy(studyId));
+    APIStudyDetail apiStudyDetail = getApiStudyDetail(
+        MetadataCache.getStudy(studyId),
+        MetadataCache.getUnitsAndScale());
     APIEntity entity = findEntityById(apiStudyDetail.getRootEntity(), entityId).orElseThrow(NotFoundException::new);
     EntityIdGetResponse response = new EntityIdGetResponseImpl();
     // copy properties of found entity, skipping children
@@ -102,9 +133,9 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     return Optional.empty();
   }
 
-  public static APIStudyDetail getApiStudyDetail(Study study) {
+  public static APIStudyDetail getApiStudyDetail(Study study, UnitsAndScale unitsAndScale) {
 
-    APIEntity apiEntityTree = entityTreeToAPITree(study.getEntityTree());
+    APIEntity apiEntityTree = entityTreeToAPITree(study.getEntityTree(), unitsAndScale);
 
     APIStudyDetail apiStudyDetail = new APIStudyDetailImpl();
     apiStudyDetail.setId(study.getStudyId());
@@ -114,7 +145,7 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     return apiStudyDetail;
   }
   
-  public static APIEntity entityTreeToAPITree(TreeNode<Entity> root) {
+  public static APIEntity entityTreeToAPITree(TreeNode<Entity> root, UnitsAndScale unitsAndScale) {
     return root.mapStructure((entity, mappedChildren) -> {
       APIEntity apiEntity = new APIEntityImpl();
       apiEntity.setDescription(entity.getDescription());
@@ -125,14 +156,14 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
       
       List<APIVariable> apiVariables = new ArrayList<>();
       for (Variable var : entity.getVariables())
-        apiVariables.add(variableToAPIVariable(var));
+        apiVariables.add(variableToAPIVariable(var, unitsAndScale));
       apiEntity.setVariables(apiVariables);
 
       return apiEntity;
     });
   }
   
-  private static APIVariable variableToAPIVariable(Variable var) {
+  private static APIVariable variableToAPIVariable(Variable var, UnitsAndScale unitsAndScale) {
     if (!var.getHasValues()) {
       APIVariablesCategory apiVar = new APIVariablesCategoryImpl();
       setApiVarProps(apiVar, var);
@@ -145,10 +176,15 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     }
     else if (var.getType() == VariableType.NUMBER) {
       APINumberVariable apiVar = new APINumberVariableImpl();
-      apiVar.setUnitsId(var.getUnitsId());
-      apiVar.setUnitsDisplayName(var.getUnitsDisplayName());
-      apiVar.setScaleId(var.getScaleId());
-      apiVar.setScaleDisplayName(var.getScaleDisplayName());
+      String unitsId = var.getUnitsId();
+      apiVar.setUnitsGroupId(unitsId == null ? null :
+          unitsAndScale.getUnitsGroup(unitsId)
+              .map(group -> group.getUnitsGroupId())
+              .orElseThrow(() -> new RuntimeException(
+                  "No units group associated with unitsId '" + unitsId +
+                      "', set on variable '" + var.getId() + "'.")));
+      apiVar.setDefaultUnitsId(unitsId);
+      apiVar.setDefaultScaleId(var.getScaleId());
       setApiValueVarProps(apiVar, var);
       return apiVar;
     }
@@ -300,7 +336,7 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     if (!validateStudyId(datasource, studyId))
       throw new NotFoundException(studIdStr + " is not found.");
    
-    Study study = getStudy(studyId);
+    Study study = MetadataCache.getStudy(studyId);
     Entity entity = study.getEntity(entityId).orElseThrow(() -> new NotFoundException("In " + studIdStr + " Entity ID not found: " + entityId));
     
     List<VariableSpecification> variables = getEntityVariables(entity, variableSpecs);
@@ -313,8 +349,8 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
    * return true if valid study id
    */
   public boolean validateStudyId(DataSource datasource, String studyId) {
-    return getStudyOverviews(datasource).stream()
-            .anyMatch(study -> study.getId().equals(studyId));
+    return MetadataCache.getStudyOverviews().stream()
+        .anyMatch(study -> study.getId().equals(studyId));
   }
 
   /*
