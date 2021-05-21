@@ -146,7 +146,7 @@ public class StudySubsettingUtilsTest {
     filters.add(_model.obsFavNewYearsFilter);
     String withClause = StudySubsettingUtils.generateWithClause(_model.householdObs, filters);
     String expectedWithClause = _model.householdObs.getWithClauseName() + " as (" + NL +
-        "  SELECT " + _model.household.getPKColName() + ", " +  _model.householdObs.getPKColName() + " FROM " + _model.householdObs.getAncestorsTableName() + NL +
+        "  SELECT " + _model.household.getPKColName() + ", " + _model.householdObs.getPKColName() + " FROM " + _model.householdObs.getAncestorsTableName() + NL +
         ")";
     assertEquals(expectedWithClause, withClause);
   }
@@ -165,14 +165,14 @@ public class StudySubsettingUtilsTest {
     String withClause = StudySubsettingUtils.generateWithClause(_model.observation, filters);
  
     List<String> selectColsList = new ArrayList<>();
-    for (String name : _model.observation.getAncestorPkColNames()) selectColsList.add("a." + name);
     selectColsList.add("t." + _model.observation.getPKColName());
+    for (String name : _model.observation.getAncestorPkColNames()) selectColsList.add("a." + name);
     String selectCols = String.join(", ", selectColsList);
 
-    //      SELECT a.household_id, a.participant_id, t.observation_id
-  //  FROM Obs_tall t, Obs_ancestors a
+    //  SELECT a.household_id, a.participant_id, t.observation_id
+    //  FROM Obs_tall t, Obs_ancestors a
 
-    String obsBase = "  SELECT " + String.join(", ", selectCols) + NL +
+    String obsBase = "  SELECT " + selectCols + NL +
         "  FROM " + _model.observation.getTallTableName() + " t, " +
         _model.observation.getAncestorsTableName() + " a" + NL +
         "  WHERE t." + _model.observation.getPKColName() + " = a." + _model.observation.getPKColName() + NL;
@@ -206,9 +206,9 @@ public class StudySubsettingUtilsTest {
   void testGenerateTabularSelectClause() {
     
     String selectClause = StudySubsettingUtils.generateTabularSelectClause(_model.observation, "t", "a");
-    String expectedSelectClause = "SELECT a." + _model.household.getPKColName() +
+    String expectedSelectClause = "SELECT t." + _model.observation.getPKColName() +
         ", a." + _model.participant.getPKColName() +
-        ", t." + _model.observation.getPKColName() +
+        ", a." + _model.household.getPKColName() +
         ", " + TT_VARIABLE_ID_COL_NAME + ", " + STRING_VALUE_COL_NAME + ", " + NUMBER_VALUE_COL_NAME + ", " + DATE_VALUE_COL_NAME;
     assertEquals(expectedSelectClause, selectClause);
   }
@@ -239,17 +239,17 @@ public class StudySubsettingUtilsTest {
     assertEquals(l, e.getAncestorEntities());
 
     e = _model.study.getEntity(_model.observation.getId()).orElse(null);
-    l = Arrays.asList(_model.household, _model.participant);
+    l = Arrays.asList(_model.participant, _model.household);
     assert e != null;
     assertEquals(l, e.getAncestorEntities());
   
     e = _model.study.getEntity(_model.sample.getId()).orElse(null);
-    l = Arrays.asList(_model.household, _model.participant, _model.observation);
+    l = Arrays.asList(_model.observation, _model.participant, _model.household );
     assert e != null;
     assertEquals(l, e.getAncestorEntities());
   
     e = _model.study.getEntity(_model.treatment.getId()).orElse(null);
-    l = Arrays.asList(_model.household, _model.participant, _model.observation);
+    l = Arrays.asList(_model.observation, _model.participant, _model.household);
     assert e != null;
     assertEquals(l, e.getAncestorEntities());
   

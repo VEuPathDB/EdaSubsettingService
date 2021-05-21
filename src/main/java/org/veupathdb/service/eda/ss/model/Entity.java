@@ -114,9 +114,9 @@ public class Entity {
   
   public String getAllPksSelectList(String entityTableName, String ancestorTableName) {
     List<String> selectColsList = new ArrayList<>();
-    for (String name : getAncestorPkColNames()) selectColsList.add(ancestorTableName + "." + name);
-  
     selectColsList.add(entityTableName + "." + getPKColName());
+    for (String name : getAncestorPkColNames())
+      selectColsList.add(ancestorTableName + "." + name);
     return String.join(", ", selectColsList);
   }
   

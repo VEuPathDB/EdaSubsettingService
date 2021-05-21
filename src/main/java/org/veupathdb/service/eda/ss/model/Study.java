@@ -136,7 +136,7 @@ public class Study extends APIStudyOverviewImpl {
   private static void populateEntityAncestors(TreeNode<Entity> entityNode, List<Entity> ancestorEntities) {
     Entity entity = entityNode.getContents();
     entity.setAncestorEntities(ancestorEntities);
-    ancestorEntities.add(entity);
+    ancestorEntities.add(0, entity);
     for (TreeNode<Entity> childNode : entityNode.getChildNodes()) {
       populateEntityAncestors(childNode, new ArrayList<>(ancestorEntities));
     }
