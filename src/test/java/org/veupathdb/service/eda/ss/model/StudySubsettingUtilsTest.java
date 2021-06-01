@@ -388,7 +388,7 @@ public class StudySubsettingUtilsTest {
 
   @Test
   @DisplayName("Test get tabular report - no filters") 
-  void testTabularReporttNoFiltersFromDb() {
+  void testTabularReportNoFiltersFromDb() {
     
     Study study = Study.loadStudy(_dataSource, LoadStudyTest.STUDY_ID);
 
@@ -406,7 +406,7 @@ public class StudySubsettingUtilsTest {
     StudySubsettingUtils.produceTabularSubset(_dataSource, study, entity,
         variables, filters, outStream);
     String[] expected = {
-    "Prtcpnt_stable_id", "Hshld_stable_id", "var_17",  "var_20",
+    "GEMS_Part.Prtcpnt_stable_id.null.null", "GEMS_House.Hshld_stable_id.null.null", "GEMS_Part.var_17.null.null",  "GEMS_Part.var_20.null.null",
     "201", "101",     "blond",   "Martin",
     "202", "101",     "blond",   "Abe",
     "203", "102",     "brown",   "Gladys",
@@ -437,7 +437,7 @@ public class StudySubsettingUtilsTest {
     StudySubsettingUtils.produceTabularSubset(_dataSource, study, entity,
         variables, filters, outStream);
     String[] expected = {
-    "Prtcpnt_stable_id", "Hshld_stable_id", "var_17",  "var_20",
+    "GEMS_Part.Prtcpnt_stable_id.null.null", "GEMS_House.Hshld_stable_id.null.null", "GEMS_Part.var_17.null.null",  "GEMS_Part.var_20.null.null",
     "201", "101",     "blond",   "Martin",
     "202", "101",     "blond",   "Abe",
 //    "203", "102",     "brown",   "Gladys",

@@ -8,11 +8,13 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.gusdb.fgputil.Timer;
 import org.gusdb.fgputil.functional.FunctionalInterfaces.SupplierWithException;
 import org.junit.jupiter.api.Test;
+import org.veupathdb.service.eda.common.model.VariableDef;
 
 public class TallRowsConversionPerformanceTest {
 
@@ -36,7 +38,8 @@ public class TallRowsConversionPerformanceTest {
     List<VariableSpecification> varSpecs = new ArrayList<>();
     for (Variable var : entity.getVariables())
       varSpecs.add(new VariableSpecification(var, var.getUnitsId(), var.getScaleId()));
-    List<String> outputColumns = StudySubsettingUtils.getTabularOutputColumns(entity, varSpecs);
+    List<VariableDef> outputColumnVars = StudySubsettingUtils.getTabularOutputColumns(entity, varSpecs);
+    List<String> outputColumns = outputColumnVars.stream().map(var -> var.getVariableId()).collect(Collectors.toList());
     TallRowsGeneratedResultIterator iterator = new TallRowsGeneratedResultIterator(entity, NUM_RECORDS_TO_PROCESS, CACHE_SAMPLE_RECORD);
     try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(OUTPUT_STREAM_PROVIDER.get()))) {
       Timer t = new Timer();

@@ -1,6 +1,7 @@
 
 package org.veupathdb.service.eda.ss.model;
 
+import java.util.Collection;
 import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.gusdb.fgputil.Tuples;
+import org.gusdb.fgputil.Tuples.TwoTuple;
+import org.veupathdb.service.eda.common.model.VariableDef;
 
 /**
  * @author Steve
@@ -27,6 +31,7 @@ public class Entity {
   private List<Entity> ancestorEntities;
   private List<String> ancestorPkColNames;
   private List<String> ancestorFullPkColNames; // entityName.pkColName
+  private List<TwoTuple<String,String>> ancestorPkColVariables;
   private Integer tallRowSize; // number of columns in a tall table row
   
   public Entity(String entityId, String studyAbbrev, String displayName, String displayNamePlural, String description, String abbreviation) {
@@ -102,6 +107,8 @@ public class Entity {
         ancestorEntities.stream().map(Entity::getPKColName).collect(Collectors.toList());
     this.ancestorFullPkColNames = 
         ancestorEntities.stream().map(Entity::getFullPKColName).collect(Collectors.toList());
+    this.ancestorPkColVariables =
+        ancestorEntities.stream().map(e -> new TwoTuple<>(e.getId(), e.getPKColName())).collect(Collectors.toList());
   }
 
   public List<Entity> getAncestorEntities() {
@@ -140,5 +147,9 @@ public class Entity {
   void loadVariables(DataSource datasource) {
     List<Variable> variables = VariableResultSetUtils.getEntityVariables(datasource, this);
     for (Variable var : variables) addVariable(var);
+  }
+
+  public List<TwoTuple<String, String>> getAncestorPkVariables() {
+    return ancestorPkColVariables;
   }
 }

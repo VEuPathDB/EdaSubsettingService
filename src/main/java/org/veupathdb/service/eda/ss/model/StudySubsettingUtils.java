@@ -7,6 +7,11 @@ import org.gusdb.fgputil.db.stream.ResultSetIterator;
 import org.gusdb.fgputil.db.stream.ResultSets;
 import org.gusdb.fgputil.functional.TreeNode;
 import org.gusdb.fgputil.iterator.GroupingIterator;
+import org.veupathdb.service.eda.common.model.VariableDef;
+import org.veupathdb.service.eda.common.model.VariableDef.PkVariableDef;
+import org.veupathdb.service.eda.common.model.VariableSource;
+import org.veupathdb.service.eda.generated.model.APIVariableDataShape;
+import org.veupathdb.service.eda.generated.model.APIVariableType;
 import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Variable.VariableType;
 import org.veupathdb.service.eda.ss.model.filter.Filter;
@@ -55,13 +60,16 @@ public class StudySubsettingUtils {
 
     String sql = generateTabularSql(outputVariables, outputEntity, filters, prunedEntityTree);
 
-    List<String> outputColumns = getTabularOutputColumns(outputEntity, outputVariables);
+    List<VariableDef> outputColumns = getTabularOutputColumns(outputEntity, outputVariables);
+    List<String> outputVarNames = outputColumns.stream().map(var -> var.getVariableId()).collect(Collectors.toList());
 
     new SQLRunner(datasource, sql, "Produce tabular subset").executeQuery(rs -> {
       try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
 
-        writer.write(String.join(TAB, outputColumns) + NL);
-        writeWideRows(convertTallRowsResultSet(rs, outputEntity), writer, outputColumns, outputEntity);
+        // write header row
+        writer.write(String.join(TAB, VariableDef.toDotNotation(outputColumns)) + NL);
+
+        writeWideRows(convertTallRowsResultSet(rs, outputEntity), writer, outputVarNames, outputEntity);
         writer.flush();
         return null;
       }
@@ -71,12 +79,34 @@ public class StudySubsettingUtils {
     }, FETCH_SIZE_FOR_TABULAR_QUERIES);
   }
 
-  static List<String> getTabularOutputColumns(Entity outputEntity, List<VariableSpecification> outputVariables) {
-    List<String> outputVariableIds = outputVariables.stream().map(varSpec -> varSpec.getVariable().getId()).collect(Collectors.toList());
-    List<String> outputColumns = new ArrayList<>();
-    outputColumns.add(outputEntity.getPKColName());
-    outputColumns.addAll(outputEntity.getAncestorPkColNames());
-    outputColumns.addAll(outputVariableIds);
+  static List<VariableDef> getTabularOutputColumns(Entity outputEntity, List<VariableSpecification> outputVariables) {
+    List<VariableDef> outputColumns = new ArrayList<>();
+
+    // add ID for this entity
+    outputColumns.add(
+        new PkVariableDef(
+            outputEntity.getId(),
+            outputEntity.getPKColName()));
+
+    // add IDs for ancestor entities (up the tree)
+    outputColumns.addAll(outputEntity.getAncestorPkVariables().stream()
+        .map(ancestorPk -> new PkVariableDef(
+            ancestorPk.getFirst(),
+            ancestorPk.getSecond()))
+        .collect(Collectors.toList()));
+
+    // add columns for requested vars in order requested
+    outputColumns.addAll(outputVariables.stream()
+        // FIXME: need to validate scale and units IDs at some point; for now, simply pass on
+        .map(varSpec -> new VariableDef(
+            varSpec.getVariable().getEntityId(),
+            varSpec.getVariable().getId(),
+            varSpec.getUnitsId(),
+            varSpec.getScaleId(),
+            varSpec.getVariable().getType().toApiVariableType(),
+            APIVariableDataShape.valueOf(varSpec.getVariable().getDataShape().toString()),
+            VariableSource.ID))
+        .collect(Collectors.toList()));
     return outputColumns;
   }
 

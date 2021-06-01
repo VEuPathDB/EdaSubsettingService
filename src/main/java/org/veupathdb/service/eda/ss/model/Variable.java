@@ -4,6 +4,7 @@ import org.gusdb.fgputil.FormatUtil;
 import org.gusdb.fgputil.functional.FunctionalInterfaces.FunctionWithException;
 
 import java.sql.ResultSet;
+import org.veupathdb.service.eda.generated.model.APIVariableType;
 
 public class Variable {
   private final String providerLabel;
@@ -63,6 +64,17 @@ public class Variable {
       }
       catch (Exception e) {
         throw new RuntimeException(e);
+      }
+    }
+
+    public APIVariableType toApiVariableType() {
+      switch(this) {
+        case STRING: return APIVariableType.STRING;
+        case DATE: return APIVariableType.DATE;
+        case NUMBER: return APIVariableType.NUMBER;
+        case LONGITUDE: return APIVariableType.LONGITUDE;
+        default:
+          throw new IllegalArgumentException("Variable type " + name() + " not mapped to APIVariableType");
       }
     }
   }
