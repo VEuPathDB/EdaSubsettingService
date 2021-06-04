@@ -64,7 +64,9 @@ public class Study extends APIStudyOverviewImpl {
     String sql = getStudyOverviewSql(studyId);
 
     return new SQLRunner(datasource, sql, "Get study overview").executeQuery(rs -> {
-      rs.next();
+      if (!rs.next()) {
+        throw new RuntimeException("No rows returned for SQL: " + sql);
+      }
       String id = rs.getString(1);
       String datasetId = rs.getString(2);
       String abbrev = rs.getString(3);

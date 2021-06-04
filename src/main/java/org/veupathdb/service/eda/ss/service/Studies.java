@@ -99,7 +99,6 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
         MetadataCache.getUnitsAndScale());
     StudyIdGetResponse response = new StudyIdGetResponseImpl();
     response.setStudy(apiStudyDetail);
-    
     return GetStudiesByStudyIdResponse.respond200WithApplicationJson(response);
   }
 
@@ -141,7 +140,8 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     apiStudyDetail.setId(study.getStudyId());
     apiStudyDetail.setDatasetId(study.getDatasetId());
     apiStudyDetail.setRootEntity(apiEntityTree);
-    // TODO: lose or fill in study.setName() prop
+    apiStudyDetail.setUnits(unitsAndScale.getUnitsGroups());
+    apiStudyDetail.setScale(unitsAndScale.getScaleOptions());
     return apiStudyDetail;
   }
   
@@ -209,8 +209,9 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     apiVar.setDisplayName(var.getDisplayName());
     apiVar.setProviderLabel(var.getProviderLabel());
     apiVar.setParentId(var.getParentId());
-    apiVar.setDataShape(APIVariableDataShape.valueOf(var.getDataShape().toString()));
-    apiVar.setDisplayType(APIVariableDisplayType.valueOf(var.getDisplayType().toString()));
+    // these can be null, specifically for category vars
+    apiVar.setDataShape(var.getDataShape() == null ? null : APIVariableDataShape.valueOf(var.getDataShape().toString()));
+    apiVar.setDisplayType(var.getDisplayType() == null ? null : APIVariableDisplayType.valueOf(var.getDisplayType().toString()));
   }
 
   // set the props that all value-having vars have

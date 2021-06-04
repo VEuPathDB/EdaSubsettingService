@@ -69,14 +69,23 @@ public class UnitsAndScale {
   private static List<UnitOption> getAllUnits(List<APIStudyOverview> overviews, Function<String,Study> studyGetter) {
     Set<String> uniqueUnitIds = new HashSet<>();
     overviews.stream()
-        .forEach(overview -> studyGetter.apply(overview.getId())
-            .getEntityTree()
-            .findAll(e -> true).stream()
-            .map(node -> node.getContents().getVariables())
-            .forEach(varList -> varList.stream()
-                .map(var -> var.getUnitsId())
-                .filter(Objects::nonNull)
-                .forEach(id -> uniqueUnitIds.add(id))));
+        // filter this study which has 117k vars :(
+        .filter(study -> !study.getId().equals("MBSTDY0001-1"))
+        .forEach(overview -> {
+          try {
+            studyGetter.apply(overview.getId())
+                .getEntityTree()
+                .findAll(e -> true).stream()
+                .map(node -> node.getContents().getVariables())
+                .forEach(varList -> varList.stream()
+                    .map(var -> var.getUnitsId())
+                    .filter(Objects::nonNull)
+                    .forEach(id -> uniqueUnitIds.add(id)));
+          }
+          catch (Exception e) {
+            // if unable to read a study's metadata, ignore its units
+          }
+        });
     return uniqueUnitIds.stream().map(id -> {
       UnitOption opt = new UnitOptionImpl();
       opt.setUnitsId(id);
