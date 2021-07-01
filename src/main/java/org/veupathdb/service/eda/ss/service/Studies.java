@@ -422,7 +422,7 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
       return LocalDateTime.parse(dateStr, formatter);
     }
     catch (DateTimeParseException e) {
-      throw new BadRequestException("Can't parse date string" + dateStr);
+      throw new BadRequestException("Can't parse date string: " + dateStr);
     }
   }
 

@@ -105,19 +105,24 @@ public class EntityResultSetUtils {
     Map<String, String> tallRow = new HashMap<>();
 
     try {
+      // add entity PK to map
+      tallRow.put(entity.getPKColName(), rs.getString(entity.getPKColName()));
+      // add ancestor PKs to map
       for (String colName : entity.getAncestorPkColNames()) {
         tallRow.put(colName, rs.getString(colName));
       }
-      tallRow.put(entity.getPKColName(), rs.getString(entity.getPKColName()));
-      tallRow.put(TT_VARIABLE_ID_COL_NAME, rs.getString(TT_VARIABLE_ID_COL_NAME));
-
+      // add variable ID to map (may be null!)
       String variableId = rs.getString(TT_VARIABLE_ID_COL_NAME);
-      Variable var = entity.getVariable(variableId)
+      tallRow.put(TT_VARIABLE_ID_COL_NAME, variableId);
+
+      // add variable value to map (skip if ID is null)
+      if (variableId != null) {
+        Variable var = entity.getVariable(variableId)
           .orElseThrow(() -> new RuntimeException(
               "Metadata does not have variable found in tall table result set: " + variableId));
 
-      tallRow.put(VARIABLE_VALUE_COL_NAME, var.getType().convertRowValueToStringValue(rs));
-      
+        tallRow.put(VARIABLE_VALUE_COL_NAME, var.getType().convertRowValueToStringValue(rs));
+      }
       return tallRow;
     }
     catch (SQLException e) {
@@ -142,29 +147,28 @@ public class EntityResultSetUtils {
     String errPrefix = "Tall row supplied to entity " + entity.getId();
 
     return tallRows -> {
-      
+
+      Map<String,String> firstTallRow = tallRows.get(0);
       Map<String, String> wideRow = new HashMap<>();
 
-      String tallRowEnityId = tallRows.get(0).get(entity.getPKColName());
-      wideRow.put(entity.getPKColName(), tallRowEnityId);
-      
-      boolean first = true;
+      // add entity PK to the wide row
+      String tallRowEntityId = firstTallRow.get(entity.getPKColName());
+      wideRow.put(entity.getPKColName(), tallRowEntityId);
+
+      // add ancestor PKs to wide row
+      for (String ancestorPkColName : entity.getAncestorPkColNames()) {
+        if (!firstTallRow.containsKey(ancestorPkColName))
+          throw new RuntimeException(errPrefix + " does not contain column " + ancestorPkColName);
+        wideRow.put(ancestorPkColName, firstTallRow.get(ancestorPkColName));
+      }
+
+      // loop through all tall rows and add vars to wide row, validating along the way
       for (Map<String, String> tallRow : tallRows) {
-
         String variableId = tallRow.get(TT_VARIABLE_ID_COL_NAME);
-        
-        validateTallRow(entity, tallRow, errPrefix, tallRowEnityId, variableId);
-        
-        String value = tallRow.get(VARIABLE_VALUE_COL_NAME);
-        wideRow.put(variableId, value);
-
-        // if first row, add ancestor PKs to wide table
-        for (String ancestorPkColName : entity.getAncestorPkColNames()) {
-          if (!tallRow.containsKey(ancestorPkColName))
-            throw new RuntimeException(errPrefix + " does not contain column " + ancestorPkColName);
-          if (first) wideRow.put(ancestorPkColName, tallRow.get(ancestorPkColName));
+        if (variableId != null) {
+          validateTallRow(entity, tallRow, errPrefix, tallRowEntityId, variableId);
+          wideRow.put(variableId, tallRow.get(VARIABLE_VALUE_COL_NAME));
         }
-        first = false;
       }
       return wideRow;
     };

@@ -1,7 +1,6 @@
 
 package org.veupathdb.service.eda.ss.model;
 
-import java.util.Collection;
 import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,9 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.gusdb.fgputil.Tuples;
 import org.gusdb.fgputil.Tuples.TwoTuple;
-import org.veupathdb.service.eda.common.model.VariableDef;
 
 /**
  * @author Steve
@@ -30,7 +27,7 @@ public class Entity {
   private final List<Variable> variablesList = new ArrayList<>();
   private List<Entity> ancestorEntities;
   private List<String> ancestorPkColNames;
-  private List<String> ancestorFullPkColNames; // entityName.pkColName
+  private List<String> ancestorSelectPkColNames; // entityName.pkColName
   private List<TwoTuple<String,String>> ancestorPkColVariables;
   private Integer tallRowSize; // number of columns in a tall table row
   
@@ -77,7 +74,7 @@ public class Entity {
     return getAbbreviation() + "_stable_id";
   }
   
-  public String getFullPKColName() {
+  public String getSelectPKColName() {
     return getWithClauseName() + "." + getPKColName();
   }
   
@@ -97,16 +94,16 @@ public class Entity {
     return Optional.ofNullable(variablesMap.get(variableId));
   }
   
-  public List<String> getAncestorFullPkColNames() {
-    return Collections.unmodifiableList(ancestorFullPkColNames);
+  public List<String> getAncestorSelectPkColNames() {
+    return Collections.unmodifiableList(ancestorSelectPkColNames);
   }
   
   public void setAncestorEntities(List<Entity> ancestorEntities) {
     this.ancestorEntities = new ArrayList<>(ancestorEntities);
     this.ancestorPkColNames = 
         ancestorEntities.stream().map(Entity::getPKColName).collect(Collectors.toList());
-    this.ancestorFullPkColNames = 
-        ancestorEntities.stream().map(Entity::getFullPKColName).collect(Collectors.toList());
+    this.ancestorSelectPkColNames =
+        ancestorEntities.stream().map(Entity::getSelectPKColName).collect(Collectors.toList());
     this.ancestorPkColVariables =
         ancestorEntities.stream().map(e -> new TwoTuple<>(e.getId(), e.getPKColName())).collect(Collectors.toList());
   }
@@ -119,9 +116,9 @@ public class Entity {
     return "id: " + getId() + " name: " + getDisplayName() + " (" + super.toString() + ")";
   }
   
-  public String getAllPksSelectList(String entityTableName, String ancestorTableName) {
+  public String getAllPksSelectList(String ancestorTableName) {
     List<String> selectColsList = new ArrayList<>();
-    selectColsList.add(entityTableName + "." + getPKColName());
+    selectColsList.add(ancestorTableName + "." + getPKColName());
     for (String name : getAncestorPkColNames())
       selectColsList.add(ancestorTableName + "." + name);
     return String.join(", ", selectColsList);

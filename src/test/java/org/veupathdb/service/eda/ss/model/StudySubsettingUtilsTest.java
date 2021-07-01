@@ -1,5 +1,10 @@
 package org.veupathdb.service.eda.ss.model;
 
+import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.gusdb.fgputil.DelimitedDataParser;
+import org.gusdb.fgputil.FormatUtil;
 import org.gusdb.fgputil.Tuples.TwoTuple;
 import org.gusdb.fgputil.functional.Functions;
 import org.gusdb.fgputil.functional.TreeNode;
@@ -7,6 +12,7 @@ import org.gusdb.fgputil.iterator.IteratorUtil;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.veupathdb.service.eda.common.model.VariableDef.PkVariableDef;
 import org.veupathdb.service.eda.ss.model.filter.Filter;
 import org.veupathdb.service.eda.ss.stubdb.StubDb;
 
@@ -16,10 +22,14 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static org.gusdb.fgputil.FormatUtil.NL;
+import static org.gusdb.fgputil.FormatUtil.TAB;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.veupathdb.service.eda.common.model.VariableDef.toDotNotation;
 import static org.veupathdb.service.eda.ss.model.RdbmsColumnNames.*;
 
 public class StudySubsettingUtilsTest {
+
+  private static final Logger LOG = LogManager.getLogger(StudySubsettingUtilsTest.class);
 
   private static TestModel _model;
   private static DataSource _dataSource;
@@ -165,7 +175,7 @@ public class StudySubsettingUtilsTest {
     String withClause = StudySubsettingUtils.generateWithClause(_model.observation, filters);
  
     List<String> selectColsList = new ArrayList<>();
-    selectColsList.add("t." + _model.observation.getPKColName());
+    selectColsList.add("a." + _model.observation.getPKColName());
     for (String name : _model.observation.getAncestorPkColNames()) selectColsList.add("a." + name);
     String selectCols = String.join(", ", selectColsList);
 
@@ -205,8 +215,8 @@ public class StudySubsettingUtilsTest {
   @DisplayName("Test creating a select clause for tabular report")
   void testGenerateTabularSelectClause() {
     
-    String selectClause = StudySubsettingUtils.generateTabularSelectClause(_model.observation, "t", "a");
-    String expectedSelectClause = "SELECT t." + _model.observation.getPKColName() +
+    String selectClause = StudySubsettingUtils.generateTabularSelectClause(_model.observation, "a");
+    String expectedSelectClause = "SELECT a." + _model.observation.getPKColName() +
         ", a." + _model.participant.getPKColName() +
         ", a." + _model.household.getPKColName() +
         ", " + TT_VARIABLE_ID_COL_NAME + ", " + STRING_VALUE_COL_NAME + ", " + NUMBER_VALUE_COL_NAME + ", " + DATE_VALUE_COL_NAME;
@@ -216,8 +226,8 @@ public class StudySubsettingUtilsTest {
   @Test
   @DisplayName("Test getting full ancestor PKs list")
   void testGetFullAncestorPKs() {
-    Set<String> cols = new HashSet<>(_model.observation.getAncestorFullPkColNames());
-    Set<String> expected = new HashSet<>(Arrays.asList(_model.household.getFullPKColName(), _model.participant.getFullPKColName()));
+    Set<String> cols = new HashSet<>(_model.observation.getAncestorSelectPkColNames());
+    Set<String> expected = new HashSet<>(Arrays.asList(_model.household.getSelectPKColName(), _model.participant.getSelectPKColName()));
     assertEquals(expected, cols);
   }
   
@@ -258,13 +268,13 @@ public class StudySubsettingUtilsTest {
   @Test
   @DisplayName("Test creating a where clause for tabular report")
   void testGenerateTabularWhereClause() {
-    
-    List<VariableSpecification> vars = Arrays.asList(
-            new VariableSpecification(_model.birthDate, null, null),
-            new VariableSpecification( _model.favNumber, null, null));
-    String where = StudySubsettingUtils.generateTabularWhereClause(vars, _model.observation.getPKColName(), "t", "a");
-    String expected = "WHERE t." + _model.observation.getPKColName() + " = a." + _model.observation.getPKColName() + NL +
-        "AND (" + NL +
+
+    List<Variable> vars = Arrays.asList(_model.birthDate, _model.favNumber);
+    List<VariableSpecification> varSpecs = vars.stream()
+        .map(v -> new VariableSpecification(v, null, null))
+        .collect(Collectors.toList());
+    String where = StudySubsettingUtils.generateTabularWhereClause(varSpecs, _model.observation.getPKColName());
+    String expected = " WHERE (" + NL +
         " " + TT_VARIABLE_ID_COL_NAME + " = '" + _model.birthDate.getId() + "' OR" + NL +
         " " + TT_VARIABLE_ID_COL_NAME + " = '" + _model.favNumber.getId() + "'" + NL +
         ")" + NL;
@@ -285,10 +295,10 @@ public class StudySubsettingUtilsTest {
     List<String> from = Arrays.asList(_model.household.getWithClauseName(), _model.householdObs.getWithClauseName(), _model.observation.getWithClauseName());
     String inClause = StudySubsettingUtils.generateInClause(prunedTree, outputEntity, "t");
     String expected = "AND t." + _model.householdObs.getPKColName() + " IN (" + NL +
-        "  SELECT " + _model.householdObs.getFullPKColName() + NL +
+        "  SELECT " + _model.householdObs.getSelectPKColName() + NL +
         "  FROM " + String.join(", ", from) + NL +
-        "  WHERE " + _model.household.getFullPKColName() + " = " + _model.householdObs.getWithClauseName() + "." + _model.household.getPKColName() + NL +
-        "  AND " + _model.household.getFullPKColName() + " = " + _model.observation.getWithClauseName() + "." + _model.household.getPKColName() + NL +
+        "  WHERE " + _model.household.getSelectPKColName() + " = " + _model.householdObs.getWithClauseName() + "." + _model.household.getPKColName() + NL +
+        "  AND " + _model.household.getSelectPKColName() + " = " + _model.observation.getWithClauseName() + "." + _model.household.getPKColName() + NL +
         ")";
 
     assertEquals(expected, inClause);
@@ -561,4 +571,70 @@ public class StudySubsettingUtilsTest {
     return filters;
   }
 
+  @Test
+  @DisplayName("Test tabular results without vars containing no nulls")
+  void testTabularResultsNoVars() {
+    testTabularResults(Arrays.asList());
+  }
+
+  @Test
+  @DisplayName("Test tabular results with vars containing data for all rows")
+  void testTabularResultsVarsWithData() {
+    testTabularResults(Arrays.asList(_model.haircolor, _model.shoesize));
+  }
+
+  @Test
+  @DisplayName("Test tabular results with vars containing missing data for one var")
+  void testTabularResultsVarsWithMissingData() {
+    testTabularResults(Arrays.asList(_model.networth, _model.shoesize));
+  }
+
+  @Test
+  @DisplayName("Test tabular results with vars containing missing data for some rows")
+  void testTabularResultsVarsWithPartialData() {
+    testTabularResults(Arrays.asList(_model.earsize, _model.shoesize));
+  }
+
+  private void testTabularResults(List<Variable> requestedVars) {
+
+    List<VariableSpecification> varSpecs = requestedVars.stream()
+        .map(v -> new VariableSpecification(v, null, null))
+        .collect(Collectors.toList());
+    Entity entity = _model.participant;
+    List<Map<String,String>> results = getTabularOutputRows(entity, varSpecs);
+
+    for (Map<String,String> row : results) {
+      LOG.info(FormatUtil.prettyPrint(row, FormatUtil.Style.SINGLE_LINE));
+    }
+    // test number of results; should always be the same regardless of var data (PKs always provided)
+    assertEquals(4, results.size());
+
+    Map<String,String> firstRow = results.iterator().next();
+
+    // make sure results have cols for entity PK and ancestor PKs
+    assertTrue(firstRow.containsKey(toDotNotation(new PkVariableDef(entity.getId(), entity.getPKColName()))));
+    for (Entity ancestor : entity.getAncestorEntities()) {
+      assertTrue(firstRow.containsKey(toDotNotation(new PkVariableDef(ancestor.getId(), ancestor.getPKColName()))));
+    }
+
+    // make sure results have cols for all requested rows
+    for (VariableSpecification var : varSpecs) {
+      assertTrue(firstRow.containsKey(toDotNotation(var)));
+    }
+  }
+
+  private List<Map<String,String>> getTabularOutputRows(Entity entity, List<VariableSpecification> varSpecs) {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    StudySubsettingUtils.produceTabularSubset(_dataSource, _model.study, entity, varSpecs, Collections.emptyList(), buffer);
+    Scanner scanner = new Scanner(buffer.toString());
+    if (!scanner.hasNextLine()) {
+      throw new RuntimeException("Tabular output did not contain a header row.");
+    }
+    DelimitedDataParser parser = new DelimitedDataParser(scanner.nextLine(), TAB, true);
+    List<Map<String,String>> rows = new ArrayList<>();
+    while(scanner.hasNextLine()) {
+      rows.add(parser.parseLine(scanner.nextLine()));
+    }
+    return rows;
+  }
 }

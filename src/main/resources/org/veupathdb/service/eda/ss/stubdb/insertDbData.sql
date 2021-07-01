@@ -49,26 +49,31 @@ insert into AttributeGraph_ds2324_Prtcpnt values ('var_10', 300, null, '_networt
 insert into AttributeGraph_ds2324_Prtcpnt values ('var_11', 300, null, '_shoesize', 'Shoe size', 'default', 1, 'number', 0, 'categorical', 'size', null, 1);
 insert into AttributeGraph_ds2324_Prtcpnt values ('var_20', 200, null, '_name', 'Name', 'default', 1, 'string', 0, 'categorical', null, null, null);
 insert into AttributeGraph_ds2324_Prtcpnt values ('var_17', 200, null, '_haircolor', 'Hair color', 'default', 1, 'string', 0,  'categorical', null, null, null);
+insert into AttributeGraph_ds2324_Prtcpnt values ('var_18', 200, null, '_earsize', 'Ear size', 'default', 1, 'string', 0,  'categorical', null, null, null);
 
 insert into Ancestors_ds2324_Prtcpnt values ('201', '101');
 insert into AttributeValue_ds2324_Prtcpnt values ('201', 'var_20', null, 'Martin', null);
 insert into AttributeValue_ds2324_Prtcpnt values ('201', 'var_11', 11.5, null, null);
 insert into AttributeValue_ds2324_Prtcpnt values ('201', 'var_17', null, 'blond', null);
+insert into AttributeValue_ds2324_Prtcpnt values ('201', 'var_18', null, 'small', null);
 
 insert into Ancestors_ds2324_Prtcpnt values ('202', '101');
 insert into AttributeValue_ds2324_Prtcpnt values ('202', 'var_20', null, 'Abe', null);
 insert into AttributeValue_ds2324_Prtcpnt values ('202', 'var_11', 10, null, null);
 insert into AttributeValue_ds2324_Prtcpnt values ('202', 'var_17', null, 'blond', null);
+insert into AttributeValue_ds2324_Prtcpnt values ('202', 'var_18', null, 'medium', null);
 
 insert into Ancestors_ds2324_Prtcpnt values ('203', '102');
 insert into AttributeValue_ds2324_Prtcpnt values ('203', 'var_20', null, 'Gladys', null);
 insert into AttributeValue_ds2324_Prtcpnt values ('203', 'var_11', 11.5, null, null);
 insert into AttributeValue_ds2324_Prtcpnt values ('203', 'var_17', null, 'brown', null);
+insert into AttributeValue_ds2324_Prtcpnt values ('203', 'var_18', null, 'large', null);
 
 insert into Ancestors_ds2324_Prtcpnt values ('204', '102');
 insert into AttributeValue_ds2324_Prtcpnt values ('204', 'var_20', null, 'Susan', null);
 insert into AttributeValue_ds2324_Prtcpnt values ('204', 'var_11', 10, null, null);
 insert into AttributeValue_ds2324_Prtcpnt values ('204', 'var_17', null, 'silver', null);
+-- intentionally omit var_18 to test left join logic
 
 -- participant observations
 
