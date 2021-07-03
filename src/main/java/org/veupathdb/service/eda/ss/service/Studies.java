@@ -69,6 +69,9 @@ import org.veupathdb.service.eda.ss.model.Variable.VariableType;
 import org.veupathdb.service.eda.ss.model.VariableSpecification;
 import org.veupathdb.service.eda.ss.model.filter.DateRangeFilter;
 import org.veupathdb.service.eda.ss.model.filter.DateSetFilter;
+import org.veupathdb.service.eda.ss.model.DateVariable;
+import org.veupathdb.service.eda.ss.model.NumberVariable;
+import org.veupathdb.service.eda.ss.model.StringVariable;
 import org.veupathdb.service.eda.ss.model.filter.Filter;
 import org.veupathdb.service.eda.ss.model.filter.LongitudeRangeFilter;
 import org.veupathdb.service.eda.ss.model.filter.NumberRangeFilter;
@@ -150,6 +153,7 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
       APIEntity apiEntity = new APIEntityImpl();
       apiEntity.setDescription(entity.getDescription());
       apiEntity.setDisplayName(entity.getDisplayName());
+      apiEntity.setDisplayNamePlural(entity.getDisplayNamePlural());
       apiEntity.setId(entity.getId());
       apiEntity.setIdColumnName(entity.getPKColName());
       apiEntity.setChildren(mappedChildren);
@@ -166,61 +170,95 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
   private static APIVariable variableToAPIVariable(Variable var, UnitsAndScale unitsAndScale) {
     if (!var.getHasValues()) {
       APIVariablesCategory apiVar = new APIVariablesCategoryImpl();
-      setApiVarProps(apiVar, var);
+      apiVar.setId(var.getId());
+      apiVar.setDisplayName(var.getDisplayName());
+      apiVar.setProviderLabel(var.getProviderLabel());
+      apiVar.setParentId(var.getParentId());
+      apiVar.setDefinition(var.getDefinition());
+      apiVar.setDisplayOrder(var.getDisplayOrder());
       return apiVar;
     }
-    if (var.getType() == VariableType.DATE) {
-      APIDateVariable apiVar = new APIDateVariableImpl();
-      setApiValueVarProps(apiVar, var);
-      return apiVar;
-    }
-    else if (var.getType() == VariableType.NUMBER) {
-      APINumberVariable apiVar = new APINumberVariableImpl();
-      String unitsId = var.getUnitsId();
-      apiVar.setUnitsGroupId(unitsId == null ? null :
-          unitsAndScale.getUnitsGroup(unitsId)
-              .map(group -> group.getUnitsGroupId())
-              .orElseThrow(() -> new RuntimeException(
-                  "No units group associated with unitsId '" + unitsId +
-                      "', set on variable '" + var.getId() + "'.")));
-      apiVar.setDefaultUnitsId(unitsId);
-      apiVar.setDefaultScaleId(var.getScaleId());
-      setApiValueVarProps(apiVar, var);
-      return apiVar;
-    }
-    else if (var.getType() == VariableType.STRING) {
-      APIStringVariable apiVar = new APIStringVariableImpl();
-      setApiValueVarProps(apiVar, var);
-      return apiVar;
-    }
-    else if (var.getType() == VariableType.LONGITUDE) {
-      APILongitudeVariable apiVar = new APILongitudeVariableImpl();
-      setApiVarProps(apiVar, var);
-      return apiVar;
-    }
-    else {
-      throw new RuntimeException("Invalid variable type " + var.getType());
+
+    // else delegate to var subclass to set relevant data
+    switch (var.getType()) {
+
+      case DATE:
+        DateVariable dateVar = (DateVariable)var;
+        APIDateVariable apiDateVar = new APIDateVariableImpl();
+        setApiVarProps(apiDateVar, var);
+        apiDateVar.setBinWidth(dateVar.getBinWidth());
+        apiDateVar.setBinWidthOverride(dateVar.getBinWidthOverride());
+        apiDateVar.setDisplayRangeMin(dateVar.getDisplayRangeMin());
+        apiDateVar.setDisplayRangeMax(dateVar.getDisplayRangeMax());
+        apiDateVar.setRangeMin(dateVar.getRangeMin());
+        apiDateVar.setRangeMax(dateVar.getRangeMax());
+        apiDateVar.setVocabulary(dateVar.getVocabulary());
+        apiDateVar.setDistinctValuesCount(dateVar.getDistinctValuesCount());
+        apiDateVar.setIsFeatured(dateVar.getIsFeatured());
+        apiDateVar.setIsMergeKey(dateVar.getIsMergeKey());
+        apiDateVar.setIsMultiValued(dateVar.getIsMultiValued());
+        apiDateVar.setIsTemporal(dateVar.getIsTemporal());
+        return apiDateVar;
+
+      case NUMBER:
+        NumberVariable numVar = (NumberVariable)var;
+        APINumberVariable apiNumVar = new APINumberVariableImpl();
+        setApiVarProps(apiNumVar, var);
+        String unitsId = numVar.getUnitsId();
+        apiNumVar.setUnitsGroupId(unitsId == null ? null :
+            unitsAndScale.getUnitsGroup(unitsId)
+                .map(group -> group.getUnitsGroupId())
+                .orElseThrow(() -> new RuntimeException(
+                    "No units group associated with unitsId '" + unitsId +
+                        "', set on variable '" + var.getId() + "'.")));
+        apiNumVar.setDefaultUnitsId(unitsId);
+        apiNumVar.setDefaultScaleId(numVar.getScaleId());
+        apiNumVar.setBinWidth(numVar.getBinWidth());
+        apiNumVar.setBinWidthOverride(numVar.getBinWidthOverride());
+        apiNumVar.setDisplayRangeMin(numVar.getDisplayRangeMin());
+        apiNumVar.setDisplayRangeMax(numVar.getDisplayRangeMax());
+        apiNumVar.setRangeMin(numVar.getRangeMin());
+        apiNumVar.setRangeMax(numVar.getRangeMax());
+        apiNumVar.setDistinctValuesCount(numVar.getDistinctValuesCount());
+        apiNumVar.setIsFeatured(numVar.getIsFeatured());
+        apiNumVar.setIsMergeKey(numVar.getIsMergeKey());
+        apiNumVar.setIsMultiValued(numVar.getIsMultiValued());
+        apiNumVar.setIsTemporal(numVar.getIsTemporal());
+        apiNumVar.setVocabulary(numVar.getVocabulary());
+        return apiNumVar;
+
+      case STRING:
+        StringVariable strVar = (StringVariable)var;
+        APIStringVariable apiStringVar = new APIStringVariableImpl();
+        setApiVarProps(apiStringVar, var);
+        apiStringVar.setDistinctValuesCount(strVar.getDistinctValuesCount());
+        apiStringVar.setIsFeatured(strVar.getIsFeatured());
+        apiStringVar.setIsMergeKey(strVar.getIsMergeKey());
+        apiStringVar.setIsMultiValued(strVar.getIsMultiValued());
+        apiStringVar.setIsTemporal(strVar.getIsTemporal());
+        apiStringVar.setVocabulary(strVar.getVocabulary());
+        return apiStringVar;
+
+      case LONGITUDE:
+        APILongitudeVariable apiLonVar = new APILongitudeVariableImpl();
+        setApiVarProps(apiLonVar, var);
+        return apiLonVar;
+
+      default:
+        throw new RuntimeException("Invalid variable type " + var.getType());
     }
   }
 
   // set props that all variables have
   private static void setApiVarProps(APIVariable apiVar, Variable var) {
     apiVar.setId(var.getId());
+    apiVar.setDataShape(APIVariableDataShape.valueOf(var.getDataShape().toString()));
+    apiVar.setDisplayType(APIVariableDisplayType.valueOf(var.getDisplayType().toString()));
     apiVar.setDisplayName(var.getDisplayName());
     apiVar.setProviderLabel(var.getProviderLabel());
     apiVar.setParentId(var.getParentId());
-    // these can be null, specifically for category vars
-    apiVar.setDataShape(var.getDataShape() == null ? null : APIVariableDataShape.valueOf(var.getDataShape().toString()));
-    apiVar.setDisplayType(var.getDisplayType() == null ? null : APIVariableDisplayType.valueOf(var.getDisplayType().toString()));
-  }
-
-  // set the props that all value-having vars have
-  private static void setApiValueVarProps(APIVariable apiVar, Variable var) {
-    setApiVarProps(apiVar, var);
-    apiVar.setDataShape(APIVariableDataShape.valueOf(var.getDataShape().toString()));
-    apiVar.setDisplayType(APIVariableDisplayType.valueOf(var.getDisplayType().toString()));
-    apiVar.setIsFeatured(var.getIsFeatured());
-    apiVar.setIsTemporal(var.getIsTemporal());
+    apiVar.setDefinition(var.getDefinition());
+    apiVar.setDisplayOrder(var.getDisplayOrder());
   }
 
   @Override
@@ -228,9 +266,9 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
   postStudiesEntitiesVariablesDistributionByStudyIdAndEntityIdAndVariableId(
       String studyId, String entityId, String variableId, VariableDistributionPostRequest request) {
 
-  //  long start = System.currentTimeMillis();
+    // long start = System.currentTimeMillis();
     DataSource datasource = Resources.getApplicationDataSource();
-   // System.out.println("---------------- 1: " + String.valueOf(System.currentTimeMillis() - start));
+    // System.out.println("---------------- 1: " + String.valueOf(System.currentTimeMillis() - start));
     
     // unpack data from API input to model objects
     List<VariableSpec> vars = new ArrayList<>();
@@ -238,15 +276,15 @@ public class Studies implements org.veupathdb.service.eda.generated.resources.St
     varSpec.setVariableId(variableId);
     vars.add(varSpec);  // force into a list of varspec for the unpacker
     UnpackedRequest unpacked = unpack(datasource, studyId, entityId, request.getFilters(), vars);
-   // System.out.println("---------------- 2: " + String.valueOf(System.currentTimeMillis() - start));
+    // System.out.println("---------------- 2: " + String.valueOf(System.currentTimeMillis() - start));
 
     Variable var = unpacked.getTargetEntity().getVariable(variableId)
         .orElseThrow(() -> new NotFoundException("Variable ID not found: " + variableId));
-   // System.out.println("---------------- 3: " + String.valueOf(System.currentTimeMillis() - start));
+    // System.out.println("---------------- 3: " + String.valueOf(System.currentTimeMillis() - start));
 
     VariableDistributionPostResponseStream streamer = getDistributionResponseStreamer(
         datasource, unpacked.getStudy(), unpacked.getTargetEntity(), unpacked.getFilters(), var);
-   // System.out.println("---------------- 4: " + String.valueOf(System.currentTimeMillis() - start));
+    // System.out.println("---------------- 4: " + String.valueOf(System.currentTimeMillis() - start));
 
     return PostStudiesEntitiesVariablesDistributionByStudyIdAndEntityIdAndVariableIdResponse.
         respond200WithApplicationJson(streamer);

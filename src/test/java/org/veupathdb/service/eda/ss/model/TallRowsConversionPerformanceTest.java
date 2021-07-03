@@ -36,8 +36,12 @@ public class TallRowsConversionPerformanceTest {
   public void doTallRowsPerfTest() throws Exception {
     Entity entity = TEST_ENTITY.apply(new TestModel());
     List<VariableSpecification> varSpecs = new ArrayList<>();
-    for (Variable var : entity.getVariables())
-      varSpecs.add(new VariableSpecification(var, var.getUnitsId(), var.getScaleId()));
+    for (Variable var : entity.getVariables()) {
+      varSpecs.add(
+          var.getType() != Variable.VariableType.NUMBER ?
+              new VariableSpecification(var, null, null) :
+              new VariableSpecification(var, ((NumberVariable)var).getUnitsId(), ((NumberVariable)var).getScaleId()));
+    }
     List<VariableDef> outputColumnVars = StudySubsettingUtils.getTabularOutputColumns(entity, varSpecs);
     List<String> outputColumns = outputColumnVars.stream().map(var -> var.getVariableId()).collect(Collectors.toList());
     TallRowsGeneratedResultIterator iterator = new TallRowsGeneratedResultIterator(entity, NUM_RECORDS_TO_PROCESS, CACHE_SAMPLE_RECORD);

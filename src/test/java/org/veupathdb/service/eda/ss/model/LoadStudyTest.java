@@ -88,11 +88,9 @@ public class LoadStudyTest {
     assertEquals("GEMS_Part", var.getEntityId());
     assertEquals(Variable.VariableDataShape.CONTINUOUS, var.getDataShape());
     assertNull(var.getParentId());
-    assertEquals(2, var.getPrecision());
     assertEquals("_networth", var.getProviderLabel());
     assertEquals(VariableType.NUMBER, var.getType());
     assertEquals(Variable.VariableDisplayType.DEFAULT, var.getDisplayType());
-    assertEquals("dollars", var.getUnitsId());
     assertTrue(var.getHasValues());
 
   }

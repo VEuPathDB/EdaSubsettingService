@@ -78,7 +78,8 @@ public class UnitsAndScale {
                 .findAll(e -> true).stream()
                 .map(node -> node.getContents().getVariables())
                 .forEach(varList -> varList.stream()
-                    .map(var -> var.getUnitsId())
+                    .filter(var -> var.getType() == Variable.VariableType.NUMBER)
+                    .map(var -> ((NumberVariable)var).getUnitsId())
                     .filter(Objects::nonNull)
                     .forEach(id -> uniqueUnitIds.add(id)));
           }
