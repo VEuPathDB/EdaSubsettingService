@@ -28,8 +28,8 @@ public class NumberVariable extends VariableWithValues {
 
     String errPrefix = "In entity " + entity.getId() + " variable " + id + " has a null ";
 
-    if (unitsId == null)
-      throw new RuntimeException(errPrefix + "units");
+    if (scaleId == null)
+      throw new RuntimeException(errPrefix + "scale");
     if (precision == null)
       throw new RuntimeException(errPrefix + "precision");
 

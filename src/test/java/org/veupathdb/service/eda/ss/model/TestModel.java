@@ -118,7 +118,7 @@ public class TestModel {
             "Their hair color", null, null, null, null, 21, false);
     participant.addVariable(haircolor);
     
-    mood  = new StringVariable("mood", "var_16", observation, VariableDataShape.CATEGORICAL,
+    mood = new StringVariable("mood", "var_16", observation, VariableDataShape.CATEGORICAL,
             Variable.VariableDisplayType.DEFAULT, "Mood", null, null,
             "Their mood", null, null, null, null, 96, false);
     observation.addVariable(mood);
@@ -134,22 +134,22 @@ public class TestModel {
     participant.addVariable(earsize);
 
     shoesize = new NumberVariable("shoesize", "var_11", participant, false, VariableDataShape.CATEGORICAL,
-            Variable.VariableDisplayType.DEFAULT, null, null, null, 1, "Shoe size", null,
+            Variable.VariableDisplayType.DEFAULT, null, null, UnitsAndScale.LINEAR_SCALE_ID, 1, "Shoe size", null,
             "their shoe size", null, null, null, null, null, null, null, null, null, null, 47, false);
     participant.addVariable(shoesize);
 
     networth = new NumberVariable("networth", "var_10", participant, false, VariableDataShape.CONTINUOUS,
-            Variable.VariableDisplayType.DEFAULT, null, null, null, 1, "Net worth", null,
+            Variable.VariableDisplayType.DEFAULT, null, null, UnitsAndScale.LINEAR_SCALE_ID, 1, "Net worth", null,
             "Their net worth", null, null, null, null, null, null, null, null, null, null, 875, false);
     participant.addVariable(networth);
 
     weight = new NumberVariable("weight", "var_12", observation, false, Variable.VariableDataShape.CONTINUOUS,
-            Variable.VariableDisplayType.DEFAULT, null, null, null, 1, "Weight", null,
+            Variable.VariableDisplayType.DEFAULT, null, null, UnitsAndScale.LINEAR_SCALE_ID, 1, "Weight", null,
             "Their weight", null, null, null, null, null, null, null, null, null, null, 65, false);
     observation.addVariable(weight);
 
     favNumber = new NumberVariable("favNumber", "var_13", observation, false, Variable.VariableDataShape.CATEGORICAL,
-            Variable.VariableDisplayType.DEFAULT, null, null, null, 1, "Favorite number", null,
+            Variable.VariableDisplayType.DEFAULT, null, null, UnitsAndScale.LINEAR_SCALE_ID, 1, "Favorite number", null,
             "Their favorite number", null, null, null, null, null, null, null, null, null, null, 312, false);
     observation.addVariable(favNumber);
 
