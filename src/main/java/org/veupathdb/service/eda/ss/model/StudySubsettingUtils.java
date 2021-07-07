@@ -363,7 +363,10 @@ public class StudySubsettingUtils {
   static String generateJoiningSelectClause(Entity outputEntity, boolean returnAncestorIds) {
     List<String> returnedCols = ListBuilder.asList(outputEntity.getSelectPKColName());
     if (returnAncestorIds) {
-      returnedCols.addAll(outputEntity.getAncestorPkColNames());
+      returnedCols.addAll(
+          outputEntity.getAncestorPkColNames().stream()
+              .map(pk -> outputEntity.getId() + "." + pk)
+              .collect(Collectors.toList()));
     }
     return "  SELECT " + returnedCols.stream().collect(Collectors.joining(", "));
   }
