@@ -112,7 +112,6 @@ class VariableResultSetUtils {
                 entity,
                 Variable.VariableDataShape.fromString(getRsStringNotNull(rs, DATA_SHAPE_COL_NAME)),
                 Variable.VariableDisplayType.fromString(getRsStringWithDefault(rs, DISPLAY_TYPE_COL_NAME, "default")),
-                getRsStringWithDefault(rs, UNITS_COL_NAME, ""), 
                 displayName,
                 rs.getInt(DISPLAY_ORDER_COL_NAME),
                 parentId,

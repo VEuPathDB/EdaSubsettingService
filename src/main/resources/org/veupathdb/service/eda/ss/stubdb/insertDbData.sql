@@ -80,8 +80,8 @@ insert into AttributeValue_ds2324_Prtcpnt values ('204', 'var_17', null, 'silver
 -- stable_id, parent_stable_id, provider_label, display_name, definition, ordinal_values, display_type, display_order, display_range_min, display_range_max, range_min, range_max, bin_width_override, bin_width_computed, is_temporal, is_featured, is_merge_key, is_repeated, has_values, data_type, distinct_values_count, is_multi_valued, data_shape, unit, precision
 insert into AttributeGraph_ds2324_PrtcpntObsrvtn values ('var_12', null, '_weight', 'Weight', 'Their weight', null, 'default', 1, null, null, null, null, null, null, 0, 0, 0, 0, 1, 'number', 10, 0, 'continuous', 'pounds', 2);
 insert into AttributeGraph_ds2324_PrtcpntObsrvtn values ('var_13', null, '_favnumber', 'Favorite number', 'Their favorite number', null, 'default', 1, null, null, null, null, null, null, 0, 0, 0, 0, 1, 'number', 10, 0, 'categorical', null, null);
-insert into AttributeGraph_ds2324_PrtcpntObsrvtn values ('var_14', null, '_startdate', 'Start date', 'Their start date', null, 'default', 1, null, null, null, null, null, null, 0, 0, 0, 0, 1, 'date', 10, 0, 'continuous', 'date', null);
-insert into AttributeGraph_ds2324_PrtcpntObsrvtn values ('var_15', null, '_visitdate', 'Visit date', 'Their visit date', null, 'default', 1, null, null, null, null, null, null, 0, 0, 0, 0, 1, 'date', 10, 0, 'continuous', 'date', null);
+insert into AttributeGraph_ds2324_PrtcpntObsrvtn values ('var_14', null, '_startdate', 'Start date', 'Their start date', null, 'default', 1, null, null, null, null, null, 'week', 0, 0, 0, 0, 1, 'date', 10, 0, 'continuous', 'date', null);
+insert into AttributeGraph_ds2324_PrtcpntObsrvtn values ('var_15', null, '_visitdate', 'Visit date', 'Their visit date', null, 'default', 1, null, null, null, null, null, 'week', 0, 0, 0, 0, 1, 'date', 10, 0, 'continuous', 'date', null);
 insert into AttributeGraph_ds2324_PrtcpntObsrvtn values ('var_16', null, '_mood', 'Mood', 'Their mood', null, 'default', 1, null, null, null, null, null, null, 0, 0, 0, 0, 1, 'string', 10, 0, 'categorical', null, null);
 
 -- samples

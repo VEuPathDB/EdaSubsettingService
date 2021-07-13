@@ -170,19 +170,19 @@ public class TestModel {
     
     /*
 	public DateVariable(String providerLabel, String id, Entity entity,
-			VariableDataShape dataShape, VariableDisplayType displayType, String units,
+			VariableDataShape dataShape, VariableDisplayType displayType,
 			String displayName, Integer displayOrder, String parentId, String definition, List<String> vocabulary, String displayRangeMin,
 			String displayRangeMax, String rangeMin, String rangeMax, String binWidthOverride,
 			String binWidth, Boolean isTemporal, Boolean isFeatured, Boolean isMergeKey, 
 			Number distinctValuesCount, Boolean isMultiValued) {			
 */	  
     birthDate  = new DateVariable("birthDate", "var_14", observation, Variable.VariableDataShape.CONTINUOUS,
-            Variable.VariableDisplayType.DEFAULT, "", "Birth date", null, null,
-            "Their birth date", null, null, null, null, null, null, null, null, null, null, 13, false);
+            Variable.VariableDisplayType.DEFAULT, "Birth date", null, null,
+            "Their birth date", null, null, null, null, null, null, "week", null, null, null, 13, false);
     observation.addVariable(birthDate);
     
     favNewYears = new DateVariable("favNewYears", "var_15", observation, Variable.VariableDataShape.CATEGORICAL,
-            Variable.VariableDisplayType.DEFAULT, "", "Fav new years", null, null,
+            Variable.VariableDisplayType.DEFAULT, "Fav new years", null, null,
             "Their fav new years", null, null, null, null, null, null, null, null, null, null, 74, false);
     observation.addVariable(favNewYears);
     

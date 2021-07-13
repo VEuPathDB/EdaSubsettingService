@@ -1,21 +1,22 @@
 package org.veupathdb.service.eda.ss.model;
 
 import java.util.List;
+import org.veupathdb.service.eda.generated.model.BinUnits;
 
 public class DateVariable extends VariableWithValues {
+
 	private final String displayRangeMin;
 	private final String displayRangeMax;
 	private final String rangeMin;
 	private final String rangeMax;
-	private final String binWidthOverride;
-	private final String binWidth;
-	private final String units;
+	private final BinUnits binUnitsOverride;
+	private final BinUnits binUnits;
 
 	public DateVariable(String providerLabel, String id, Entity entity,
-			VariableDataShape dataShape, VariableDisplayType displayType, String units,
+			VariableDataShape dataShape, VariableDisplayType displayType,
 			String displayName, Integer displayOrder, String parentId, String definition, List<String> vocabulary, String displayRangeMin,
-			String displayRangeMax, String rangeMin, String rangeMax, String binWidthOverride,
-			String binWidth, Boolean isTemporal, Boolean isFeatured, Boolean isMergeKey, 
+			String displayRangeMax, String rangeMin, String rangeMax, String binUnitsOverride,
+			String binUnits, Boolean isTemporal, Boolean isFeatured, Boolean isMergeKey,
 			Number distinctValuesCount, Boolean isMultiValued) {
 
 		super(providerLabel, id, entity, VariableType.DATE, dataShape, displayType, displayName, displayOrder, parentId, definition,
@@ -23,20 +24,21 @@ public class DateVariable extends VariableWithValues {
 
 		String errPrefix = "In entity " + entity.getId() + " variable " + id + " has a null ";
 
-		if (units == null)
-			throw new RuntimeException(errPrefix + "units");
+		if (dataShape == VariableDataShape.CONTINUOUS) {
+      this.binUnits = BinUnits.valueOf(binUnits.toUpperCase());
+      this.binUnitsOverride = binUnitsOverride == null ? null :
+          BinUnits.valueOf(binUnitsOverride.toUpperCase());
+    }
+		else {
+		  this.binUnits = null;
+		  this.binUnitsOverride = null;
+    }
 
-		this.units = units;
-		this.displayRangeMin = displayRangeMin;
-		this.displayRangeMax = displayRangeMax;
+    this.displayRangeMin = displayRangeMin;
+    this.displayRangeMax = displayRangeMax;
+
 		this.rangeMin = rangeMin;
 		this.rangeMax = rangeMax;
-		this.binWidthOverride = binWidthOverride;
-		this.binWidth = binWidth;
-	}
-
-	public String getUnits() {
-		return units;
 	}
 
 	public String getDisplayRangeMin() {
@@ -55,11 +57,15 @@ public class DateVariable extends VariableWithValues {
 		return rangeMax;
 	}
 
-	public String getBinWidthOverride() {
-		return binWidthOverride;
+	public BinUnits getBinUnitsOverride() {
+		return binUnitsOverride;
 	}
 
-	public String getBinWidth() {
-		return binWidth;
+	public BinUnits getBinUnits() {
+		return binUnits;
 	}
+
+	public BinUnits getDefaultBinUnits() {
+	  return binUnitsOverride != null ? binUnitsOverride : binUnits;
+  }
 }

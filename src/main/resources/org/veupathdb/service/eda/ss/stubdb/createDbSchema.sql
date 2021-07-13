@@ -297,8 +297,3 @@ UNIT                           varchar(30),
 PRECISION                      integer,
 PRIMARY KEY (stable_id)
 );
-
-
-
-
-

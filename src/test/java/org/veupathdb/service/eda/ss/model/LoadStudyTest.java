@@ -42,9 +42,9 @@ public class LoadStudyTest {
 
     assertEquals("GEMS_House", entity.getId());
     assertEquals("Households in the study", entity.getDescription());
-    assertEquals( "Household", entity.getDisplayName());
-    assertEquals( "Households", entity.getDisplayNamePlural());
-    assertEquals( "Hshld", entity.getAbbreviation());
+    assertEquals("Household", entity.getDisplayName());
+    assertEquals("Households", entity.getDisplayNamePlural());
+    assertEquals("Hshld", entity.getAbbreviation());
   }
   
   @Test
@@ -113,13 +113,7 @@ public class LoadStudyTest {
   @Test
   @DisplayName("Load study test") 
   void testLoadStudy() {
-    
     Study study = Study.loadStudy(datasource, STUDY_ID);
     assertNotNull(study);
   }
-  
-
-  
-
-
 }

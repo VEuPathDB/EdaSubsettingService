@@ -507,10 +507,10 @@ public class StudySubsettingUtilsTest {
 
     List<Filter> filters = Collections.emptyList();
 
-    Map<String, Integer> expectedDistribution = new HashMap<>(){{
-      put("blond", 2);
-      put("brown", 1);
-      put("silver", 1);
+    Map<String, Long> expectedDistribution = new HashMap<>(){{
+      put("blond", 2L);
+      put("brown", 1L);
+      put("silver", 1L);
     }};
 
     testDistributionResponse(study, entity, var, filters, expectedDistribution);
@@ -532,22 +532,22 @@ public class StudySubsettingUtilsTest {
     filters.add(_filtersForTesting.houseCityFilter);
     filters.add(_filtersForTesting.houseObsWaterSupplyFilter);
 
-    Map<String, Integer> expectedDistribution = new HashMap<>(){{
-      put("brown", 1);
-      put("silver", 1);
+    Map<String, Long> expectedDistribution = new HashMap<>(){{
+      put("brown", 1L);
+      put("silver", 1L);
     }};
 
     testDistributionResponse(study, entity, var, filters, expectedDistribution);
   }
 
-  private void testDistributionResponse(Study study, Entity entity, Variable var, List<Filter> filters, Map<String, Integer> expectedDistribution) {
+  private void testDistributionResponse(Study study, Entity entity, Variable var, List<Filter> filters, Map<String, Long> expectedDistribution) {
 
     TreeNode<Entity> prunedEntityTree = StudySubsettingUtils.pruneTree(study.getEntityTree(), filters, entity);
 
-    Stream<TwoTuple<String,Integer>> distributionStream = StudySubsettingUtils.produceVariableDistribution(
+    Stream<TwoTuple<String,Long>> distributionStream = StudySubsettingUtils.produceVariableDistribution(
         _dataSource, prunedEntityTree, entity, var, filters);
 
-    Map<String,Integer> result = Functions.getMapFromList(IteratorUtil.toIterable(distributionStream.iterator()), tuple -> tuple);
+    Map<String,Long> result = Functions.getMapFromList(IteratorUtil.toIterable(distributionStream.iterator()), tuple -> tuple);
 
     assertEquals(result, expectedDistribution);
   }

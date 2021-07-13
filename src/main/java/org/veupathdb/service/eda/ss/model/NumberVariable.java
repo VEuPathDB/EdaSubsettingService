@@ -71,4 +71,7 @@ public class NumberVariable extends VariableWithValues {
 		return binWidth;
 	}
 
+  public Number getDefaultBinWidth() {
+	  return binWidthOverride == null ? binWidth : binWidthOverride;
+  }
 }
