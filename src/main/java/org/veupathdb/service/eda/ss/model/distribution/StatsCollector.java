@@ -5,7 +5,7 @@ import org.veupathdb.service.eda.generated.model.HistogramStatsImpl;
 
 public class StatsCollector<T> {
 
-  public static final String NOT_APPLICABLE_VALUE = null; // "N/A"
+  public static final String NOT_APPLICABLE_VALUE = "N/A";
 
   private boolean _isDataPresent = false;
   protected T _subsetMin;
