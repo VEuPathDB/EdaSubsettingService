@@ -3,7 +3,7 @@ package org.veupathdb.service.eda.ss.model;
 
 import javax.sql.DataSource;
 
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.veupathdb.service.eda.ss.model.variable.Variable;

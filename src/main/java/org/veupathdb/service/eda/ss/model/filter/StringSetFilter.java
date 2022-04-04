@@ -3,7 +3,7 @@ package org.veupathdb.service.eda.ss.model.filter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 import org.veupathdb.service.eda.ss.model.Entity;
 import org.veupathdb.service.eda.ss.model.RdbmsColumnNames;
 import org.veupathdb.service.eda.ss.model.variable.StringVariable;

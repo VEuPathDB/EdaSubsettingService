@@ -3,12 +3,15 @@ package org.veupathdb.service.eda.ss.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.veupathdb.service.eda.generated.model.APITabularReportConfig;
 import org.veupathdb.service.eda.generated.model.SortSpecEntry;
 import org.veupathdb.service.eda.generated.model.TabularHeaderFormat;
 
 public class TabularReportConfig {
+  private static final Logger LOG = LogManager.getLogger(TabularReportConfig.class);
 
   private List<SortSpecEntry> _sorting = new ArrayList<>();
   private Optional<Long> _numRows = Optional.empty();
@@ -25,6 +28,7 @@ public class TabularReportConfig {
 
     // assign submitted paging if present
     if (apiConfig.getPaging() != null) {
+      LOG.info("Num rows type: {}", apiConfig.getPaging().getNumRows().getClass());
       Long numRows = apiConfig.getPaging().getNumRows();
       if (numRows != null) {
         if (numRows <= 0)

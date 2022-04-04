@@ -1,6 +1,6 @@
 package org.veupathdb.service.eda.ss.model.variable;
 
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 import org.veupathdb.service.eda.generated.model.BinUnits;
 
 public class DateVariable extends VariableWithValues {

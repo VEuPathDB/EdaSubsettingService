@@ -11,6 +11,7 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.veupathdb.lib.container.jaxrs.server.middleware.JacksonFilter;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
 import org.veupathdb.service.eda.ss.stubdb.StubDb;
 
@@ -25,7 +26,7 @@ public class EntityResultSetUtilsTest {
     Study study = Study.loadStudy(_dataSource, LoadStudyTest.STUDY_ID);
     new FiltersForTesting(study);
   }
-
+  
   @Test
   @DisplayName("Test getting set of entity IDs from set of filters ")
   void testPutMultiValuesAsJsonIntoWideRow() {

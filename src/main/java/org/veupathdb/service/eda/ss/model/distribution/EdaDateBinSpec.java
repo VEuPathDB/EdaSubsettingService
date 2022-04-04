@@ -2,7 +2,7 @@ package org.veupathdb.service.eda.ss.model.distribution;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 import org.gusdb.fgputil.functional.Functions;
 import org.veupathdb.service.eda.generated.model.BinSpecWithRange;
 import org.veupathdb.service.eda.generated.model.BinUnits;

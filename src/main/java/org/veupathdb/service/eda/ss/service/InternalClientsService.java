@@ -1,6 +1,6 @@
 package org.veupathdb.service.eda.ss.service;
 
-import javax.ws.rs.core.Context;
+import jakarta.ws.rs.core.Context;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.veupathdb.lib.container.jaxrs.server.annotations.Authenticated;
 import org.veupathdb.service.eda.common.client.TabularResponseType;

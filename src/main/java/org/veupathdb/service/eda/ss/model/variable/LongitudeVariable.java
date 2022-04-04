@@ -1,6 +1,6 @@
 package org.veupathdb.service.eda.ss.model.variable;
 
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 
 public class LongitudeVariable extends VariableWithValues {
 

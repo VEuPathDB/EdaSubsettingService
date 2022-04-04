@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 import org.gusdb.fgputil.Tuples;
 import org.gusdb.fgputil.functional.TreeNode;
 import org.veupathdb.service.eda.generated.model.BinSpecWithRange;
