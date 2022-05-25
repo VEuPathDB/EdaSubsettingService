@@ -2,7 +2,9 @@ package org.veupathdb.service.eda.ss.service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import org.gusdb.fgputil.SortDirection;
 import org.gusdb.fgputil.functional.Functions;
 import org.gusdb.fgputil.functional.TreeNode;
 import org.veupathdb.service.eda.generated.model.APICollection;
@@ -33,6 +35,7 @@ import org.veupathdb.service.eda.generated.model.APIStringVariableImpl;
 import org.veupathdb.service.eda.generated.model.APIStudyDetail;
 import org.veupathdb.service.eda.generated.model.APIStudyDetailImpl;
 import org.veupathdb.service.eda.generated.model.APIVariable;
+import org.veupathdb.service.eda.generated.model.APIVariableDataShape;
 import org.veupathdb.service.eda.generated.model.APIVariableDisplayType;
 import org.veupathdb.service.eda.generated.model.APIVariableWithValues;
 import org.veupathdb.service.eda.generated.model.APIVariablesCategoryImpl;
@@ -40,10 +43,15 @@ import org.veupathdb.service.eda.generated.model.HistogramBin;
 import org.veupathdb.service.eda.generated.model.HistogramBinImpl;
 import org.veupathdb.service.eda.generated.model.HistogramStats;
 import org.veupathdb.service.eda.generated.model.HistogramStatsImpl;
+import org.veupathdb.service.eda.generated.model.SortSpecEntry;
 import org.veupathdb.service.eda.ss.model.Entity;
 import org.veupathdb.service.eda.ss.model.Study;
+import org.veupathdb.service.eda.ss.model.distribution.BinSpecWithRange;
+import org.veupathdb.service.eda.ss.model.distribution.BinUnits;
 import org.veupathdb.service.eda.ss.model.distribution.DateDistributionConfig;
 import org.veupathdb.service.eda.ss.model.distribution.NumberDistributionConfig;
+import org.veupathdb.service.eda.ss.model.distribution.ValueSpec;
+import org.veupathdb.service.eda.ss.model.tabular.TabularHeaderFormat;
 import org.veupathdb.service.eda.ss.model.varcollection.DateVarCollection;
 import org.veupathdb.service.eda.ss.model.varcollection.FloatingPointVarCollection;
 import org.veupathdb.service.eda.ss.model.varcollection.IntegerVarCollection;
@@ -54,6 +62,7 @@ import org.veupathdb.service.eda.ss.model.variable.IntegerVariable;
 import org.veupathdb.service.eda.ss.model.variable.LongitudeVariable;
 import org.veupathdb.service.eda.ss.model.variable.StringVariable;
 import org.veupathdb.service.eda.ss.model.variable.Variable;
+import org.veupathdb.service.eda.ss.model.variable.VariableDataShape;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
 
 public class ApiConversionUtil {
@@ -97,12 +106,16 @@ public class ApiConversionUtil {
     };
     collection.setId(col.getId());
     collection.setDisplayName(col.getDisplayName());
-    collection.setDataShape(col.getDataShape().toApiShape());
+    collection.setDataShape(toApiShape(col.getDataShape()));
     collection.setImputeZero(col.getImputeZero());
     collection.setDistinctValuesCount(col.getDistinctValuesCount());
     collection.setVocabulary(col.getVocabulary());
     collection.setMemberVariableIds(col.getMemberVariableIds());
     return collection;
+  }
+
+  private static APIVariableDataShape toApiShape(VariableDataShape dataShape) {
+    return APIVariableDataShape.valueOf(dataShape.name());
   }
 
   private static APICollection getDateCollection(DateVarCollection col) {
@@ -154,7 +167,7 @@ public class ApiConversionUtil {
       default -> Functions.doThrow(() -> new RuntimeException("Invalid variable type " + var.getType()));
     };
     // set props common to all variables with values
-    apiVar.setDataShape(var.getDataShape().toApiShape());
+    apiVar.setDataShape(toApiShape(var.getDataShape()));
     apiVar.setVocabulary(var.getVocabulary());
     apiVar.setDistinctValuesCount(var.getDistinctValuesCount());
     apiVar.setIsFeatured(var.getIsFeatured());
@@ -180,7 +193,7 @@ public class ApiConversionUtil {
     defaults.setDisplayRangeMax(distributionConfig.displayRangeMax);
     defaults.setBinWidth(distributionConfig.binSize);
     defaults.setBinWidthOverride(null);
-    defaults.setBinUnits(distributionConfig.binUnits);
+    defaults.setBinUnits(toApiBinUnits(distributionConfig.binUnits));
     return defaults;
   }
 
@@ -258,4 +271,38 @@ public class ApiConversionUtil {
     stats.setNumMissingCases(statistics.getNumMissingCases());
     return stats;
   }
+
+  public static Optional<BinSpecWithRange> toInternalBinSpecWithRange(org.veupathdb.service.eda.generated.model.BinSpecWithRange binSpec) {
+    return Optional.ofNullable(binSpec)
+        .map(b -> new BinSpecWithRange()
+            .setDisplayRangeMin(b.getDisplayRangeMin())
+            .setDisplayRangeMax(b.getDisplayRangeMax())
+            .setBinWidth(b.getBinWidth())
+            .setBinUnits(toInternalBinUnits(b.getBinUnits())));
+  }
+
+  private static BinUnits toInternalBinUnits(org.veupathdb.service.eda.generated.model.BinUnits binUnits) {
+    return binUnits == null ? null : BinUnits.valueOf(binUnits.name());
+  }
+
+  private static org.veupathdb.service.eda.generated.model.BinUnits toApiBinUnits(BinUnits binUnits) {
+    return binUnits == null ? null : org.veupathdb.service.eda.generated.model.BinUnits.valueOf(binUnits.name());
+  }
+
+  public static ValueSpec toInternalValueSpec(org.veupathdb.service.eda.generated.model.ValueSpec valueSpec) {
+    return valueSpec == null ? null : ValueSpec.valueOf(valueSpec.name());
+  }
+
+  public static List<org.veupathdb.service.eda.ss.model.tabular.SortSpecEntry> toInternalSorting(List<SortSpecEntry> sorting) {
+    return sorting == null ? null : sorting.stream()
+        .map(e -> new org.veupathdb.service.eda.ss.model.tabular.SortSpecEntry()
+            .setDirection(SortDirection.valueOf(e.getDirection().name()))
+            .setKey(e.getKey()))
+        .collect(Collectors.toList());
+  }
+
+  public static TabularHeaderFormat toInternalTabularHeaderFormat(org.veupathdb.service.eda.generated.model.TabularHeaderFormat headerFormat) {
+    return headerFormat == null ? null : TabularHeaderFormat.valueOf(headerFormat.name());
+  }
+
 }

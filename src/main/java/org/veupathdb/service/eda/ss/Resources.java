@@ -1,5 +1,6 @@
 package org.veupathdb.service.eda.ss;
 
+import javax.sql.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.gusdb.fgputil.db.runner.SQLRunner;
@@ -11,12 +12,7 @@ import org.veupathdb.lib.container.jaxrs.utils.db.DbManager;
 import org.veupathdb.service.eda.ss.service.ClearMetadataCacheService;
 import org.veupathdb.service.eda.ss.service.InternalClientsService;
 import org.veupathdb.service.eda.ss.service.StudiesService;
-import org.veupathdb.service.eda.ss.stubdb.StubDb;
-
-import javax.sql.DataSource;
-
-import static org.gusdb.fgputil.runtime.Environment.getOptionalVar;
-import static org.gusdb.fgputil.runtime.Environment.getRequiredVar;
+import org.veupathdb.service.eda.ss.test.StubDb;
 
 /**
  * Service Resource Registration.
@@ -75,7 +71,7 @@ public class Resources extends ContainerResources {
         // if any rows exist, set assay entities' hasCollections flag to true
         CONVERT_ASSAYS_TO_HAS_COLLECTIONS =
             Functions.wrapException(() -> new SQLRunner(getApplicationDataSource(), sql)
-                .executeQuery(new SingleLongResultSetHandler()).get() > 0);
+                .executeQuery(new SingleLongResultSetHandler()).orElseThrow() > 0);
         LOG.info("Setting CONVERT_ASSAYS_TO_HAS_COLLECTIONS to " + CONVERT_ASSAYS_TO_HAS_COLLECTIONS);
       }
     }

@@ -9,6 +9,8 @@ import javax.sql.DataSource;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.gusdb.fgputil.FormatUtil;
 import org.veupathdb.service.eda.generated.model.APIDateRangeFilter;
 import org.veupathdb.service.eda.generated.model.APIDateSetFilter;
@@ -20,10 +22,11 @@ import org.veupathdb.service.eda.generated.model.APINumberRangeFilter;
 import org.veupathdb.service.eda.generated.model.APINumberSetFilter;
 import org.veupathdb.service.eda.generated.model.APIStringSetFilter;
 import org.veupathdb.service.eda.generated.model.APITabularReportConfig;
+import org.veupathdb.service.eda.generated.model.SortSpecEntry;
+import org.veupathdb.service.eda.ss.Utils;
 import org.veupathdb.service.eda.ss.model.Entity;
-import org.veupathdb.service.eda.ss.model.MetadataCache;
 import org.veupathdb.service.eda.ss.model.Study;
-import org.veupathdb.service.eda.ss.model.TabularReportConfig;
+import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.variable.DateVariable;
 import org.veupathdb.service.eda.ss.model.variable.LongitudeVariable;
 import org.veupathdb.service.eda.ss.model.variable.NumberVariable;
@@ -43,7 +46,9 @@ import org.veupathdb.service.eda.ss.model.filter.StringSetFilter;
 
 public class RequestBundle {
 
-  static RequestBundle unpack(DataSource datasource, String studyId, String entityId, List<APIFilter> apiFilters, List<String> variableIds, APITabularReportConfig apiReportConfig) {
+  private static final Logger LOG = LogManager.getLogger(RequestBundle.class);
+
+  static RequestBundle unpack(DataSource datasource, String appDbSchema, String studyId, String entityId, List<APIFilter> apiFilters, List<String> variableIds, APITabularReportConfig apiReportConfig) {
     String studIdStr = "Study ID " + studyId;
     if (!validateStudyId(datasource, studyId))
       throw new NotFoundException(studIdStr + " is not found.");
@@ -53,11 +58,60 @@ public class RequestBundle {
 
     List<Variable> variables = getEntityVariables(entity, variableIds);
 
-    List<Filter> filters = constructFiltersFromAPIFilters(study, apiFilters);
+    List<Filter> filters = constructFiltersFromAPIFilters(study, apiFilters, appDbSchema);
 
-    TabularReportConfig reportConfig = new TabularReportConfig(entity, Optional.ofNullable(apiReportConfig));
+    TabularReportConfig reportConfig = getTabularReportConfig(entity, Optional.ofNullable(apiReportConfig));
 
     return new RequestBundle(study, entity, variables, filters, reportConfig);
+  }
+
+  private static TabularReportConfig getTabularReportConfig(Entity entity, Optional<APITabularReportConfig> configOpt) {
+    TabularReportConfig config = new TabularReportConfig();
+
+    if (configOpt.isEmpty()) {
+      // use defaults for config
+      return config;
+    }
+
+    APITabularReportConfig apiConfig = configOpt.get();
+
+    // assign submitted paging if present
+    if (apiConfig.getPaging() != null) {
+      LOG.info("Num rows type: {}", apiConfig.getPaging().getNumRows().getClass());
+      Long numRows = apiConfig.getPaging().getNumRows();
+      if (numRows != null) {
+        if (numRows <= 0)
+          throw new BadRequestException("In paging config, numRows must a positive integer.");
+        config.setNumRows(Optional.of(numRows));
+      }
+      Long offset = apiConfig.getPaging().getOffset();
+      if (offset != null) {
+        if (offset < 0)
+          throw new BadRequestException("In paging config, offset must a non-negative integer.");
+        config.setOffset(offset);
+      }
+    }
+
+    // assign submitted sorting if present
+    List<SortSpecEntry> sorting = apiConfig.getSorting();
+    if (sorting != null && !sorting.isEmpty()) {
+      for (SortSpecEntry entry : sorting) {
+        entity.getVariableOrThrow(entry.getKey());
+      }
+      config.setSorting(ApiConversionUtil.toInternalSorting(sorting));
+    }
+
+    // assign header format if present
+    if (apiConfig.getHeaderFormat() != null) {
+      config.setHeaderFormat(ApiConversionUtil.toInternalTabularHeaderFormat(apiConfig.getHeaderFormat()));
+    }
+
+    // assign date trimming flag if present
+    if (apiConfig.getTrimTimeFromDateVars() != null) {
+      config.setTrimTimeFromDateVars(apiConfig.getTrimTimeFromDateVars());
+    }
+
+    return config;
   }
 
   /*
@@ -83,8 +137,11 @@ public class RequestBundle {
    * Given a study and a set of API filters, construct and return a set of filters, each being the appropriate
    * filter subclass
    */
-  static List<Filter> constructFiltersFromAPIFilters(Study study, List<APIFilter> filters) {
+  static List<Filter> constructFiltersFromAPIFilters(Study study, List<APIFilter> filters, String appDbSchema) {
     List<Filter> subsetFilters = new ArrayList<>();
+
+    // FIXME: need this until we turn on schema-level checking to enforce requiredness
+    if (filters == null) return subsetFilters;
 
     String errPrfx = "A filter references an unfound ";
 
@@ -97,25 +154,25 @@ public class RequestBundle {
 
       Filter newFilter;
       if (apiFilter instanceof APIDateRangeFilter) {
-        newFilter = unpackDateRangeFilter(apiFilter, entity);
+        newFilter = unpackDateRangeFilter(apiFilter, entity, appDbSchema);
       }
       else if (apiFilter instanceof APIDateSetFilter) {
-        newFilter = unpackDateSetFilter(apiFilter, entity);
+        newFilter = unpackDateSetFilter(apiFilter, entity, appDbSchema);
       }
       else if (apiFilter instanceof APINumberRangeFilter) {
-        newFilter = unpackNumberRangeFilter(apiFilter, entity);
+        newFilter = unpackNumberRangeFilter(apiFilter, entity, appDbSchema);
       }
       else if (apiFilter instanceof APINumberSetFilter) {
-        newFilter = unpackNumberSetFilter(apiFilter, entity);
+        newFilter = unpackNumberSetFilter(apiFilter, entity, appDbSchema);
       }
       else if (apiFilter instanceof APILongitudeRangeFilter) {
-        newFilter = unpackLongitudeRangeFilter(apiFilter, entity);
+        newFilter = unpackLongitudeRangeFilter(apiFilter, entity, appDbSchema);
       }
       else if (apiFilter instanceof APIStringSetFilter) {
-        newFilter = unpackStringSetFilter(apiFilter, entity);
+        newFilter = unpackStringSetFilter(apiFilter, entity, appDbSchema);
       }
       else if (apiFilter instanceof APIMultiFilter) {
-        newFilter = unpackMultiFilter(apiFilter, entity);
+        newFilter = unpackMultiFilter(apiFilter, entity, appDbSchema);
       }
       else
         throw new InternalServerErrorException("Input filter not an expected subclass of Filter");
@@ -125,46 +182,50 @@ public class RequestBundle {
     return subsetFilters;
   }
 
-  private static DateRangeFilter unpackDateRangeFilter(APIFilter apiFilter, Entity entity) {
+  private static DateRangeFilter unpackDateRangeFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APIDateRangeFilter f = (APIDateRangeFilter)apiFilter;
     DateVariable var = DateVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
-    return new DateRangeFilter(entity, var, FormatUtil.parseDateTime(standardizeLocalDateTime(f.getMin())), FormatUtil.parseDateTime(standardizeLocalDateTime(f.getMax())));
+    return new DateRangeFilter(appDbSchema, entity, var,
+        FormatUtil.parseDateTime(Utils.standardizeLocalDateTime(f.getMin())),
+        FormatUtil.parseDateTime(Utils.standardizeLocalDateTime(f.getMax())));
   }
 
-  private static DateSetFilter unpackDateSetFilter(APIFilter apiFilter, Entity entity) {
+  private static DateSetFilter unpackDateSetFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APIDateSetFilter f = (APIDateSetFilter)apiFilter;
     DateVariable var = DateVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
     List<LocalDateTime> dateSet = new ArrayList<>();
-    for (String dateStr : f.getDateSet()) dateSet.add(FormatUtil.parseDateTime(standardizeLocalDateTime(dateStr)));
-    return new DateSetFilter(entity, var, dateSet);
+    for (String dateStr : f.getDateSet()) {
+      dateSet.add(FormatUtil.parseDateTime(Utils.standardizeLocalDateTime(dateStr)));
+    }
+    return new DateSetFilter(appDbSchema, entity, var, dateSet);
   }
 
-  private static NumberRangeFilter unpackNumberRangeFilter(APIFilter apiFilter, Entity entity) {
+  private static NumberRangeFilter unpackNumberRangeFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APINumberRangeFilter f = (APINumberRangeFilter)apiFilter;
     NumberVariable<?> var = NumberVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
-    return new NumberRangeFilter(entity, var, f.getMin(), f.getMax());
+    return new NumberRangeFilter(appDbSchema, entity, var, f.getMin(), f.getMax());
   }
 
-  private static NumberSetFilter unpackNumberSetFilter(APIFilter apiFilter, Entity entity) {
+  private static NumberSetFilter unpackNumberSetFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APINumberSetFilter f = (APINumberSetFilter)apiFilter;
     NumberVariable<?> var = NumberVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
-    return new NumberSetFilter(entity, var, f.getNumberSet());
+    return new NumberSetFilter(appDbSchema, entity, var, f.getNumberSet());
   }
 
-  private static LongitudeRangeFilter unpackLongitudeRangeFilter(APIFilter apiFilter, Entity entity) {
+  private static LongitudeRangeFilter unpackLongitudeRangeFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APILongitudeRangeFilter f = (APILongitudeRangeFilter)apiFilter;
     LongitudeVariable var = LongitudeVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
-    return new LongitudeRangeFilter(entity, var, f.getLeft(), f.getRight());
+    return new LongitudeRangeFilter(appDbSchema, entity, var, f.getLeft(), f.getRight());
   }
 
-  private static StringSetFilter unpackStringSetFilter(APIFilter apiFilter, Entity entity) {
+  private static StringSetFilter unpackStringSetFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APIStringSetFilter f = (APIStringSetFilter)apiFilter;
     String varId = f.getVariableId();
     StringVariable stringVar = StringVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
-    return new StringSetFilter(entity, stringVar, f.getStringSet());
+    return new StringSetFilter(appDbSchema, entity, stringVar, f.getStringSet());
   }
 
-  private static MultiFilter unpackMultiFilter(APIFilter apiFilter, Entity entity) {
+  private static MultiFilter unpackMultiFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APIMultiFilter f = (APIMultiFilter)apiFilter;
     if (f.getSubFilters().isEmpty())
       throw new BadRequestException("Multifilter may not have an empty list of subFilters");
@@ -186,14 +247,7 @@ public class RequestBundle {
       subFilters.add(new MultiFilterSubFilter(var, apiSubFilter.getStringSet()));
     }
 
-    return new MultiFilter(entity, subFilters, MultiFilterOperation.fromString(f.getOperation().getValue()));
-  }
-
-  // TODO: remove once the client is fixed to not send in trailing 'Z'
-  public static String standardizeLocalDateTime(String dateTimeString) {
-    return (dateTimeString == null || !dateTimeString.endsWith("Z"))
-        ? dateTimeString
-        : dateTimeString.substring(0, dateTimeString.length() - 1);
+    return new MultiFilter(appDbSchema, entity, subFilters, MultiFilterOperation.fromString(f.getOperation().getValue()));
   }
 
   private final Study _study;

@@ -2,13 +2,8 @@ package org.veupathdb.service.eda.ss.service;
 
 import jakarta.ws.rs.InternalServerErrorException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import javax.sql.DataSource;
-import org.gusdb.fgputil.distribution.DistributionResult;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,18 +15,10 @@ import org.veupathdb.service.eda.generated.model.APINumberRangeFilterImpl;
 import org.veupathdb.service.eda.generated.model.APIStringSetFilter;
 import org.veupathdb.service.eda.generated.model.APIStringSetFilterImpl;
 import org.veupathdb.service.eda.generated.model.APIStudyDetail;
-import org.veupathdb.service.eda.generated.model.HistogramBin;
-import org.veupathdb.service.eda.generated.model.ValueSpec;
-import org.veupathdb.service.eda.ss.Resources;
-import org.veupathdb.service.eda.ss.model.Entity;
-import org.veupathdb.service.eda.ss.model.FiltersForTesting;
 import org.veupathdb.service.eda.ss.model.Study;
-import org.veupathdb.service.eda.ss.model.TestModel;
 import org.veupathdb.service.eda.ss.model.db.StudyFactory;
-import org.veupathdb.service.eda.ss.model.distribution.DistributionFactory;
-import org.veupathdb.service.eda.ss.model.filter.Filter;
-import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
-import org.veupathdb.service.eda.ss.stubdb.StubDb;
+import org.veupathdb.service.eda.ss.test.MockModel;
+import org.veupathdb.service.eda.ss.test.StubDb;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -39,17 +26,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class StudiesTest {
 
-  private static TestModel _model;
-  private static DataSource _dataSource;
-  private static FiltersForTesting _filtersForTesting;
+  private static MockModel _model;
   private static Study _study;
 
   @BeforeAll
   public static void setUp() {
-    _model = new TestModel();
-    _dataSource = StubDb.getDataSource();
-    _study = new StudyFactory(_dataSource).loadStudy("DS-2324");
-    _filtersForTesting = new FiltersForTesting(_study);
+    _model = new MockModel();
+    DataSource dataSource = StubDb.getDataSource();
+    _study = new StudyFactory(dataSource, StubDb.APP_DB_SCHEMA, StubDb.ASSAY_CONVERSION_FLAG).loadStudy("DS-2324");
   }
 
   @Test
@@ -86,7 +70,7 @@ public class StudiesTest {
     numberFilter.setVariableId(_model.weight.getId());
     afs.add(numberFilter);
     
-    RequestBundle.constructFiltersFromAPIFilters(_model.study, afs);
+    RequestBundle.constructFiltersFromAPIFilters(_model.study, afs, StubDb.APP_DB_SCHEMA);
     
     assertEquals(2, afs.size());
   }
@@ -110,83 +94,8 @@ public class StudiesTest {
       nakedFilter.setEntityId(_model.observation.getId());
       afs.add(nakedFilter);
 
-      RequestBundle.constructFiltersFromAPIFilters(_model.study, afs);
+      RequestBundle.constructFiltersFromAPIFilters(_model.study, afs, StubDb.APP_DB_SCHEMA);
     });
-  }
-
-  @Test
-  @DisplayName("Test variable distribution - no filters")
-  void testVariableDistributionNoFilters() {
-
-    Study study = new StudyFactory(Resources.getApplicationDataSource()).loadStudy("DS-2324");
-
-    String entityId = "GEMS_Part";
-    Entity entity = study.getEntity(entityId).orElseThrow();
-
-    String varId = "var_p4";
-    VariableWithValues var = (VariableWithValues)entity.getVariable(varId).orElseThrow();
-
-    List<Filter> filters = Collections.emptyList();
-
-    int expectedVariableCount = 4;
-
-    Map<String, Integer> expectedDistribution = new HashMap<>(){{
-      put("blond", 2);
-      put("brown", 1);
-      put("silver", 1);
-    }};
-
-    testDistributionResponse(study, entity, var, filters, expectedVariableCount, expectedDistribution);
-  }
-
-  @Test
-  @DisplayName("Test variable distribution - with filters")
-  void testVariableDistribution() {
-
-    Study study = new StudyFactory(Resources.getApplicationDataSource()).loadStudy("DS-2324");
-
-    String entityId = "GEMS_Part";
-    Entity entity = study.getEntity(entityId).orElseThrow();
-
-    String varId = "var_p4";
-    VariableWithValues var = (VariableWithValues)entity.getVariable(varId).orElseThrow();
-
-    List<Filter> filters = new ArrayList<>();
-    filters.add(_filtersForTesting.houseCityFilter);
-    filters.add(_filtersForTesting.houseObsWaterSupplyFilter);
-
-    int expectedVariableCount = 2;
-
-    Map<String, Integer> expectedDistribution = new HashMap<>(){{
-      put("brown", 1);
-      put("silver", 1);
-    }};
-
-    testDistributionResponse(study, entity, var, filters, expectedVariableCount, expectedDistribution);
-  }
-
-  private void testDistributionResponse(Study study, Entity entity, VariableWithValues var,
-      List<Filter> filters, int expectedVariableCount, Map<String, Integer> expectedDistribution) {
-
-    DistributionResult result = DistributionFactory.processDistributionRequest(
-        _dataSource, study, entity, var, filters, ValueSpec.COUNT, Optional.empty());
-
-    // check variable count
-    assertEquals(expectedVariableCount, result.getStatistics().getNumDistinctEntityRecords());
-
-    List<HistogramBin> responseRows = ApiConversionUtil.toApiHistogramBins(result.getHistogramData());
-
-    // check number of distribution rows
-    assertEquals(expectedDistribution.size(), responseRows.size());
-
-    for (Map.Entry<String,Integer> expectedRow : expectedDistribution.entrySet()) {
-      // find row in list
-      HistogramBin bin = responseRows.stream().filter(b -> b.getBinLabel().equals(expectedRow.getKey())).findFirst()
-          .orElseThrow(() -> new RuntimeException("expected bin row '" + expectedRow.getKey() + "' not found in result"));
-      int count = bin.getValue().intValue(); // will throw if not integer
-      // check distribution size for key
-      assertEquals(expectedRow.getValue(), count);
-    }
   }
 
 }

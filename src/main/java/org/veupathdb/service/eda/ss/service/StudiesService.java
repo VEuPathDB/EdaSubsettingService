@@ -24,7 +24,6 @@ import org.veupathdb.lib.container.jaxrs.providers.UserProvider;
 import org.veupathdb.lib.container.jaxrs.server.annotations.Authenticated;
 import org.veupathdb.lib.container.jaxrs.server.middleware.CustomResponseHeadersFilter;
 import org.veupathdb.service.eda.common.auth.StudyAccess;
-import org.veupathdb.service.eda.common.client.TabularResponseType;
 import org.veupathdb.service.eda.generated.model.APIEntity;
 import org.veupathdb.service.eda.generated.model.APIStudyDetail;
 import org.veupathdb.service.eda.generated.model.EntityCountPostRequest;
@@ -38,17 +37,18 @@ import org.veupathdb.service.eda.generated.model.StudiesGetResponse;
 import org.veupathdb.service.eda.generated.model.StudiesGetResponseImpl;
 import org.veupathdb.service.eda.generated.model.StudyIdGetResponse;
 import org.veupathdb.service.eda.generated.model.StudyIdGetResponseImpl;
+import org.veupathdb.service.eda.generated.model.ValueSpec;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostRequest;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponse;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponseImpl;
 import org.veupathdb.service.eda.generated.resources.Studies;
 import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Entity;
-import org.veupathdb.service.eda.ss.model.MetadataCache;
 import org.veupathdb.service.eda.ss.model.Study;
 import org.veupathdb.service.eda.ss.model.db.FilteredResultFactory;
-import org.veupathdb.service.eda.ss.model.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.distribution.DistributionFactory;
+import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
+import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
 import org.veupathdb.service.eda.ss.model.variable.Variable;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
 
@@ -107,12 +107,17 @@ public class StudiesService implements Studies {
 
       // unpack data from API input to model objects
       DataSource ds = Resources.getApplicationDataSource();
-      RequestBundle req = RequestBundle.unpack(ds, studyId, entityId, request.getFilters(), ListBuilder.asList(variableId), null);
+      RequestBundle req = RequestBundle.unpack(ds, Resources.getAppDbSchema(), studyId, entityId, request.getFilters(), ListBuilder.asList(variableId), null);
       VariableWithValues var = getRequestedVariable(req);
 
-      DistributionResult result = DistributionFactory.processDistributionRequest(ds, req.getStudy(),
-          req.getTargetEntity(), var, req.getFilters(), request.getValueSpec(),
-          Optional.ofNullable(request.getBinSpec()));
+
+      // FIXME: need this until we turn on schema-level checking to enforce requiredness
+      if (request.getValueSpec() == null) request.setValueSpec(ValueSpec.COUNT);
+
+      DistributionResult result = DistributionFactory.processDistributionRequest(
+          ds, Resources.getAppDbSchema(), req.getStudy(), req.getTargetEntity(), var,
+          req.getFilters(), ApiConversionUtil.toInternalValueSpec(request.getValueSpec()),
+          ApiConversionUtil.toInternalBinSpecWithRange(request.getBinSpec()));
 
       VariableDistributionPostResponse response = new VariableDistributionPostResponseImpl();
       response.setHistogram(ApiConversionUtil.toApiHistogramBins(result.getHistogramData()));
@@ -131,7 +136,7 @@ public class StudiesService implements Studies {
   public PostStudiesEntitiesTabularByStudyIdAndEntityIdResponse postStudiesEntitiesTabularByStudyIdAndEntityId(String studyId,
       String entityId, EntityTabularPostRequest requestBody) {
     return handleTabularRequest(_request, studyId, entityId, requestBody, true, (streamer, responseType) ->
-      responseType == TabularResponseType.JSON
+      responseType == TabularResponses.Type.JSON
         ? PostStudiesEntitiesTabularByStudyIdAndEntityIdResponse
             .respond200WithApplicationJson(streamer)
         : PostStudiesEntitiesTabularByStudyIdAndEntityIdResponse
@@ -165,21 +170,21 @@ public class StudiesService implements Studies {
   public static <T> T handleTabularRequest(
       ContainerRequest requestContext, String studyId, String entityId,
       EntityTabularPostRequest requestBody, boolean checkUserPermissions,
-      BiFunction<EntityTabularPostResponseStream,TabularResponseType,T> responseConverter) {
+      BiFunction<EntityTabularPostResponseStream,TabularResponses.Type,T> responseConverter) {
 
     DataSource dataSource = Resources.getApplicationDataSource();
-    RequestBundle request = RequestBundle.unpack(dataSource, studyId, entityId, requestBody.getFilters(), requestBody.getOutputVariableIds(), requestBody.getReportConfig());
+    RequestBundle request = RequestBundle.unpack(dataSource, Resources.getAppDbSchema(), studyId, entityId, requestBody.getFilters(), requestBody.getOutputVariableIds(), requestBody.getReportConfig());
 
     if (checkUserPermissions) {
       // if requested, make sure user has permission to access this amount of tabular data (may differ based on report config)
       checkPerms(requestContext, studyId, getTabularAccessPredicate(request.getReportConfig()));
     }
 
-    TabularResponseType responseType = TabularResponseType.fromAcceptHeader(requestContext);
+    TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
 
     EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream
-        (outStream -> FilteredResultFactory.produceTabularSubset(dataSource, request.getStudy(),
-            request.getTargetEntity(), request.getRequestedVariables(), request.getFilters(),
+        (outStream -> FilteredResultFactory.produceTabularSubset(dataSource, Resources.getAppDbSchema(),
+            request.getStudy(), request.getTargetEntity(), request.getRequestedVariables(), request.getFilters(),
             request.getReportConfig(), responseType.getFormatter(), outStream));
 
     return responseConverter.apply(streamer, responseType);
@@ -202,15 +207,17 @@ public class StudiesService implements Studies {
     checkPerms(_request, studyId, StudyAccess::allowSubsetting);
 
     DataSource datasource = Resources.getApplicationDataSource();
+    String appDbSchema = Resources.getAppDbSchema();
 
     // unpack data from API input to model objects
-    RequestBundle request = RequestBundle.unpack(datasource, studyId, entityId, rawRequest.getFilters(), Collections.emptyList(), null);
+    RequestBundle request = RequestBundle.unpack(datasource, appDbSchema,
+        studyId, entityId, rawRequest.getFilters(), Collections.emptyList(), null);
 
     TreeNode<Entity> prunedEntityTree = FilteredResultFactory.pruneTree(
         request.getStudy().getEntityTree(), request.getFilters(), request.getTargetEntity());
 
     long count = FilteredResultFactory.getEntityCount(
-        datasource, prunedEntityTree, request.getTargetEntity(), request.getFilters());
+        datasource, appDbSchema, prunedEntityTree, request.getTargetEntity(), request.getFilters());
 
     EntityCountPostResponse response = new EntityCountPostResponseImpl();
     response.setCount(count);

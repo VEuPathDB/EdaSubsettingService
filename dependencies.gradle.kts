@@ -1,20 +1,16 @@
 //
 // Version Numbers
 //
-val coreLib   = "6.4.0"  // Container core lib version
-val edaCommon = "8.1.0"  // EDA Common version
+val coreLib       = "6.4.0"  // Container core lib version
+val edaCommon     = "8.1.0"  // EDA Common version
+val libSubsetting = "1.2.0"  // lib-eda-subsetting version
 
 val jersey    = "3.0.4"   // Jersey/JaxRS version
-val jackson   = "2.12.2" // FasterXML Jackson version
-val junit     = "5.7.1"  // JUnit version
-val log4j     = "2.16.0" // Log4J version
+val jackson   = "2.13.3" // FasterXML Jackson version
+val junit     = "5.7.2"  // JUnit version
+val log4j     = "2.17.2" // Log4J version
 val metrics   = "0.9.0"  // Prometheus lib version
 
-val implementation by configurations
-val runtimeOnly    by configurations
-
-val testImplementation by configurations
-val testRuntimeOnly    by configurations
 
 // use local EdaCommon compiled schema if project exists, else use released version;
 //    this mirrors the way we use local EdaCommon code if available
@@ -28,11 +24,14 @@ val edaCommonSchemaFetch =
 // register a task that prints the command to fetch EdaCommon schema; used to pull down raml lib
 tasks.register("print-eda-common-schema-fetch") { print(edaCommonSchemaFetch) }
 
+val implementation     by configurations
+val runtimeOnly        by configurations
+val testImplementation by configurations
+val testRuntimeOnly    by configurations
+
 dependencies {
 
-  //
-  // FgpUtil & Compatibility Dependencies
-  //
+  implementation("org.veupathdb.eda:lib-eda-subsetting:${libSubsetting}")
 
   // FgpUtil jars
   implementation(files(
@@ -67,6 +66,7 @@ dependencies {
   ))
 
   // VEuPathDB libs, prefer local checkouts if available
+  implementation("org.veupathdb.eda:lib-eda-subsetting:1.1.0")
   implementation(findProject(":core") ?: "org.veupathdb.lib:jaxrs-container-core:${coreLib}")
   implementation(findProject(":edaCommon") ?: "org.veupathdb.service.eda:eda-common:${edaCommon}")
 
@@ -86,7 +86,6 @@ dependencies {
   // Log4J
   implementation("org.apache.logging.log4j:log4j-api:${log4j}")
   implementation("org.apache.logging.log4j:log4j-core:${log4j}")
-  implementation("org.apache.logging.log4j:log4j:${log4j}")
 
   // Metrics
   implementation("io.prometheus:simpleclient:${metrics}")

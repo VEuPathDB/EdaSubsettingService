@@ -10,7 +10,7 @@ public class EnvironmentVars {
   protected String _datasetAccessServiceUrl;
 
   public void load() {
-    _developmentMode = Boolean.valueOf(getOptionalVar("DEVELOPMENT_MODE", "true"));
+    _developmentMode = Boolean.parseBoolean(getOptionalVar("DEVELOPMENT_MODE", "true"));
     _appDbSchema = getOptionalVar("APP_DB_SCHEMA", "eda.");
     _datasetAccessServiceUrl = getRequiredVar("DATASET_ACCESS_SERVICE_URL");
   }
