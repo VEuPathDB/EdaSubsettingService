@@ -3,7 +3,7 @@
 //
 val coreLib       = "6.4.0"  // Container core lib version
 val edaCommon     = "8.1.0"  // EDA Common version
-val libSubsetting = "1.2.0"  // lib-eda-subsetting version
+val libSubsetting = "1.2.1"  // lib-eda-subsetting version
 
 val jersey    = "3.0.4"   // Jersey/JaxRS version
 val jackson   = "2.13.3" // FasterXML Jackson version
@@ -28,6 +28,10 @@ val implementation     by configurations
 val runtimeOnly        by configurations
 val testImplementation by configurations
 val testRuntimeOnly    by configurations
+
+configurations.all {
+  resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
+}
 
 dependencies {
 
@@ -66,7 +70,7 @@ dependencies {
   ))
 
   // VEuPathDB libs, prefer local checkouts if available
-  implementation("org.veupathdb.eda:lib-eda-subsetting:1.1.0")
+  implementation("org.veupathdb.eda:lib-eda-subsetting:${libSubsetting}")
   implementation(findProject(":core") ?: "org.veupathdb.lib:jaxrs-container-core:${coreLib}")
   implementation(findProject(":edaCommon") ?: "org.veupathdb.service.eda:eda-common:${edaCommon}")
 

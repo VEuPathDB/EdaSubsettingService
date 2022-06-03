@@ -26,6 +26,7 @@ version = buildProps["project.version"] ?: error("empty 2")
 
 repositories {
   mavenCentral()
+  mavenLocal()
   maven {
     name = "GitHubPackages"
     url  = uri("https://maven.pkg.github.com/veupathdb/maven-packages")
