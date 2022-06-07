@@ -1,6 +1,6 @@
 package org.veupathdb.service.eda.ss.service;
 
-import jakarta.ws.rs.InternalServerErrorException;
+import jakarta.ws.rs.BadRequestException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;
@@ -33,7 +33,7 @@ public class StudiesTest {
   public static void setUp() {
     _model = new MockModel();
     DataSource dataSource = StubDb.getDataSource();
-    _study = new StudyFactory(dataSource, StubDb.APP_DB_SCHEMA, StubDb.ASSAY_CONVERSION_FLAG).loadStudy("DS-2324");
+    _study = new StudyFactory(dataSource, StubDb.APP_DB_SCHEMA, false, StubDb.ASSAY_CONVERSION_FLAG).getStudyById("DS-2324");
   }
 
   @Test
@@ -62,12 +62,14 @@ public class StudiesTest {
     APIStringSetFilter stringFilter = new APIStringSetFilterImpl();
     stringFilter.setEntityId(_model.participant.getId());
     stringFilter.setVariableId(_model.earsize.getId());
-    
+    stringFilter.setStringSet(List.of("a", "b", "c"));
     afs.add(stringFilter);
     
     APINumberRangeFilter numberFilter = new APINumberRangeFilterImpl();
     numberFilter.setEntityId(_model.observation.getId());
     numberFilter.setVariableId(_model.weight.getId());
+    numberFilter.setMin(0);
+    numberFilter.setMax(10);
     afs.add(numberFilter);
     
     RequestBundle.constructFiltersFromAPIFilters(_model.study, afs, StubDb.APP_DB_SCHEMA);
@@ -79,7 +81,7 @@ public class StudiesTest {
   @DisplayName("Test rejection of invalid API filters")
   void testIncorrectConstructFilters() {
     
-    assertThrows(InternalServerErrorException.class, () -> {
+    assertThrows(BadRequestException.class, () -> {
       List<APIFilter> afs = new ArrayList<>();
 
       // a legit filter

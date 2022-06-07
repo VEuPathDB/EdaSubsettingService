@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
-import javax.sql.DataSource;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
@@ -27,12 +26,7 @@ import org.veupathdb.service.eda.ss.Utils;
 import org.veupathdb.service.eda.ss.model.Entity;
 import org.veupathdb.service.eda.ss.model.Study;
 import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
-import org.veupathdb.service.eda.ss.model.variable.DateVariable;
-import org.veupathdb.service.eda.ss.model.variable.LongitudeVariable;
-import org.veupathdb.service.eda.ss.model.variable.NumberVariable;
-import org.veupathdb.service.eda.ss.model.variable.StringVariable;
-import org.veupathdb.service.eda.ss.model.variable.Variable;
-import org.veupathdb.service.eda.ss.model.variable.VariableDisplayType;
+import org.veupathdb.service.eda.ss.model.variable.*;
 import org.veupathdb.service.eda.ss.model.filter.DateRangeFilter;
 import org.veupathdb.service.eda.ss.model.filter.DateSetFilter;
 import org.veupathdb.service.eda.ss.model.filter.Filter;
@@ -48,17 +42,13 @@ public class RequestBundle {
 
   private static final Logger LOG = LogManager.getLogger(RequestBundle.class);
 
-  static RequestBundle unpack(DataSource datasource, String appDbSchema, String studyId, String entityId, List<APIFilter> apiFilters, List<String> variableIds, APITabularReportConfig apiReportConfig) {
-    String studIdStr = "Study ID " + studyId;
-    if (!validateStudyId(datasource, studyId))
-      throw new NotFoundException(studIdStr + " is not found.");
+  static RequestBundle unpack(String dataSchema, Study study, String entityId, List<APIFilter> apiFilters, List<String> variableIds, APITabularReportConfig apiReportConfig) {
 
-    Study study = MetadataCache.getStudy(studyId);
-    Entity entity = study.getEntity(entityId).orElseThrow(() -> new NotFoundException("In " + studIdStr + " Entity ID not found: " + entityId));
+    Entity entity = study.getEntity(entityId).orElseThrow(() -> new NotFoundException("In " + study.getStudyId() + " Entity ID not found: " + entityId));
 
     List<Variable> variables = getEntityVariables(entity, variableIds);
 
-    List<Filter> filters = constructFiltersFromAPIFilters(study, apiFilters, appDbSchema);
+    List<Filter> filters = constructFiltersFromAPIFilters(study, apiFilters, dataSchema);
 
     TabularReportConfig reportConfig = getTabularReportConfig(entity, Optional.ofNullable(apiReportConfig));
 
@@ -112,14 +102,6 @@ public class RequestBundle {
     }
 
     return config;
-  }
-
-  /*
-   * return true if valid study id
-   */
-  private static boolean validateStudyId(DataSource datasource, String studyId) {
-    return MetadataCache.getStudyOverviews().stream()
-        .anyMatch(study -> study.getId().equals(studyId));
   }
 
   private static List<Variable> getEntityVariables(Entity entity, List<String> variableIds) {
@@ -184,6 +166,8 @@ public class RequestBundle {
 
   private static DateRangeFilter unpackDateRangeFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APIDateRangeFilter f = (APIDateRangeFilter)apiFilter;
+    if (f.getMin() == null) throw new BadRequestException("Date range filter: min is a required property");
+    if (f.getMax() == null) throw new BadRequestException("Date range filter: max is a required property");
     DateVariable var = DateVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
     return new DateRangeFilter(appDbSchema, entity, var,
         FormatUtil.parseDateTime(Utils.standardizeLocalDateTime(f.getMin())),
@@ -192,6 +176,8 @@ public class RequestBundle {
 
   private static DateSetFilter unpackDateSetFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APIDateSetFilter f = (APIDateSetFilter)apiFilter;
+    if (f.getDateSet() == null || f.getDateSet().isEmpty())
+      throw new BadRequestException(("Date set filter: >0 dates must be specified"));
     DateVariable var = DateVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
     List<LocalDateTime> dateSet = new ArrayList<>();
     for (String dateStr : f.getDateSet()) {
@@ -200,27 +186,56 @@ public class RequestBundle {
     return new DateSetFilter(appDbSchema, entity, var, dateSet);
   }
 
-  private static NumberRangeFilter unpackNumberRangeFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
+  private static NumberRangeFilter<?> unpackNumberRangeFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APINumberRangeFilter f = (APINumberRangeFilter)apiFilter;
-    NumberVariable<?> var = NumberVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
-    return new NumberRangeFilter(appDbSchema, entity, var, f.getMin(), f.getMax());
+    if (f.getMin() == null) throw new BadRequestException("Number range filter: min is a required property");
+    if (f.getMax() == null) throw new BadRequestException("Number range filter: max is a required property");
+
+    Variable var = entity.getVariableOrThrow(f.getVariableId());
+
+    // need to check for each number variable type
+    Optional<NumberRangeFilter<Long>> intFilter = IntegerVariable.assertType(var)
+        .map(intVar -> new NumberRangeFilter<>(appDbSchema, entity, intVar, f.getMin(), f.getMax()));
+    if (intFilter.isPresent()) return intFilter.get();
+
+    // not integer var; try floating point or else throw
+    return FloatingPointVariable.assertType(var)
+        .map(floatVar -> new NumberRangeFilter<>(appDbSchema, entity, floatVar, f.getMin(), f.getMax()))
+        .orElseThrow(() -> new BadRequestException("Variable " + var.getId() +
+            " of entity " + var.getEntityId() + " is not a number or integer variable."));
   }
 
-  private static NumberSetFilter unpackNumberSetFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
+  private static NumberSetFilter<?> unpackNumberSetFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APINumberSetFilter f = (APINumberSetFilter)apiFilter;
-    NumberVariable<?> var = NumberVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
-    return new NumberSetFilter(appDbSchema, entity, var, f.getNumberSet());
+    if (f.getNumberSet() == null || f.getNumberSet().isEmpty())
+      throw new BadRequestException(("Number set filter: >0 numbers must be specified"));
+
+    Variable var = entity.getVariableOrThrow(f.getVariableId());
+
+    // need to check for each number variable type
+    Optional<NumberSetFilter<Long>> intFilter = IntegerVariable.assertType(var)
+        .map(intVar -> new NumberSetFilter<>(appDbSchema, entity, intVar, f.getNumberSet()));
+    if (intFilter.isPresent()) return intFilter.get();
+
+    // not integer var; try floating point or else throw
+    return FloatingPointVariable.assertType(var)
+        .map(floatVar -> new NumberSetFilter<>(appDbSchema, entity, floatVar, f.getNumberSet()))
+        .orElseThrow(() -> new BadRequestException("Variable " + var.getId() +
+            " of entity " + var.getEntityId() + " is not a number or integer variable."));
   }
 
   private static LongitudeRangeFilter unpackLongitudeRangeFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APILongitudeRangeFilter f = (APILongitudeRangeFilter)apiFilter;
+    if (f.getLeft() == null) throw new BadRequestException("Longitude range filter: left is a required property");
+    if (f.getRight() == null) throw new BadRequestException("Longitude range filter: right is a required property");
     LongitudeVariable var = LongitudeVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
     return new LongitudeRangeFilter(appDbSchema, entity, var, f.getLeft(), f.getRight());
   }
 
   private static StringSetFilter unpackStringSetFilter(APIFilter apiFilter, Entity entity, String appDbSchema) {
     APIStringSetFilter f = (APIStringSetFilter)apiFilter;
-    String varId = f.getVariableId();
+    if (f.getStringSet() == null || f.getStringSet().isEmpty())
+      throw new BadRequestException(("String set filter: >0 strings must be specified"));
     StringVariable stringVar = StringVariable.assertType(entity.getVariableOrThrow(f.getVariableId()));
     return new StringSetFilter(appDbSchema, entity, stringVar, f.getStringSet());
   }

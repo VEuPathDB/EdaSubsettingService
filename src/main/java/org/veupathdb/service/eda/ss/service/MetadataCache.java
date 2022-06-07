@@ -1,50 +1,53 @@
 package org.veupathdb.service.eda.ss.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.veupathdb.service.eda.generated.model.APIStudyOverview;
-import org.veupathdb.service.eda.generated.model.APIStudyOverviewImpl;
 import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Study;
 import org.veupathdb.service.eda.ss.model.StudyOverview;
 import org.veupathdb.service.eda.ss.model.db.StudyFactory;
+import org.veupathdb.service.eda.ss.model.db.StudyProvider;
 
-public class MetadataCache {
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-  private static Map<String, APIStudyOverview> apiStudyOverviews;  // cache the overviews
-  private static final Map<String, Study> studies = new HashMap<>(); // cache the studies
+public class MetadataCache implements StudyProvider {
 
-  public static synchronized Study getStudy(String studyId) {
-    return studies.computeIfAbsent(studyId,
+  // singleton pattern
+  private static final MetadataCache _instance = new MetadataCache();
+  public static MetadataCache instance() { return _instance; }
+
+  // instance fields
+  private List<StudyOverview> _studyOverviews;  // cache the overviews
+  private final Map<String, Study> _studies = new HashMap<>(); // cache the studies
+
+  @Override
+  public synchronized Study getStudyById(String studyId) {
+    return _studies.computeIfAbsent(studyId,
         id -> new StudyFactory(
             Resources.getApplicationDataSource(),
             Resources.getAppDbSchema(),
+            false,
             Resources.getConvertAssaysFlag()
-        ).loadStudy(id));
+        ).getStudyById(id));
   }
 
-  public static synchronized List<APIStudyOverview> getStudyOverviews() {
-    if (apiStudyOverviews == null) {
-      apiStudyOverviews = new HashMap<>();
-      List<StudyOverview> overviews = new StudyFactory(
+  @Override
+  public synchronized List<StudyOverview> getStudyOverviews() {
+    if (_studyOverviews == null) {
+      _studyOverviews = new StudyFactory(
           Resources.getApplicationDataSource(),
           Resources.getAppDbSchema(),
+          false,
           Resources.getConvertAssaysFlag()
       ).getStudyOverviews();
-      for (StudyOverview overview : overviews) {
-        APIStudyOverview study = new APIStudyOverviewImpl();
-        study.setId(overview.getStudyId());
-        apiStudyOverviews.put(study.getId(), study);
-      }
     }
-    return new ArrayList<>(apiStudyOverviews.values());
+    return Collections.unmodifiableList(_studyOverviews);
   }
 
-  public static synchronized void clear() {
-    apiStudyOverviews = null;
-    studies.clear();
+  public synchronized void clear() {
+    _studyOverviews = null;
+    _studies.clear();
   }
 }
 

@@ -6,7 +6,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
-import javax.sql.DataSource;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Context;
@@ -46,11 +45,16 @@ import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Entity;
 import org.veupathdb.service.eda.ss.model.Study;
 import org.veupathdb.service.eda.ss.model.db.FilteredResultFactory;
+import org.veupathdb.service.eda.ss.model.db.StudyFactory;
+import org.veupathdb.service.eda.ss.model.db.StudyProvider;
+import org.veupathdb.service.eda.ss.model.db.StudyResolver;
 import org.veupathdb.service.eda.ss.model.distribution.DistributionFactory;
 import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
 import org.veupathdb.service.eda.ss.model.variable.Variable;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
+
+import static org.veupathdb.service.eda.ss.service.ApiConversionUtil.*;
 
 @Authenticated(allowGuests = true)
 public class StudiesService implements Studies {
@@ -65,14 +69,14 @@ public class StudiesService implements Studies {
   @Override
   public GetStudiesResponse getStudies() {
     StudiesGetResponse out = new StudiesGetResponseImpl();
-    out.setStudies(MetadataCache.getStudyOverviews());
+    out.setStudies(ApiConversionUtil.toApiStudyOverviews(getStudyResolver().getStudyOverviews()));
     return GetStudiesResponse.respond200WithApplicationJson(out);
   }
 
   @Override
   public GetStudiesByStudyIdResponse getStudiesByStudyId(String studyId) {
     checkPerms(_request, studyId, StudyAccess::allowStudyMetadata);
-    Study study = MetadataCache.getStudy(studyId);
+    Study study = getStudyResolver().getStudyById(studyId);
     APIStudyDetail apiStudyDetail = ApiConversionUtil.getApiStudyDetail(study);
     StudyIdGetResponse response = new StudyIdGetResponseImpl();
     response.setStudy(apiStudyDetail);
@@ -82,7 +86,7 @@ public class StudiesService implements Studies {
   @Override
   public GetStudiesEntitiesByStudyIdAndEntityIdResponse getStudiesEntitiesByStudyIdAndEntityId(String studyId, String entityId) {
     checkPerms(_request, studyId, StudyAccess::allowStudyMetadata);
-    APIStudyDetail apiStudyDetail = ApiConversionUtil.getApiStudyDetail(MetadataCache.getStudy(studyId));
+    APIStudyDetail apiStudyDetail = ApiConversionUtil.getApiStudyDetail(getStudyResolver().getStudyById(studyId));
     APIEntity entity = findEntityById(apiStudyDetail.getRootEntity(), entityId).orElseThrow(NotFoundException::new);
     EntityIdGetResponse response = new EntityIdGetResponseImpl();
     // copy properties of found entity, skipping children
@@ -104,24 +108,23 @@ public class StudiesService implements Studies {
       String studyId, String entityId, String variableId, VariableDistributionPostRequest request) {
     try {
       checkPerms(_request, studyId, StudyAccess::allowSubsetting);
+      Study study = getStudyResolver().getStudyById(studyId);
+      String dataSchema = resolveSchema(study);
 
       // unpack data from API input to model objects
-      DataSource ds = Resources.getApplicationDataSource();
-      RequestBundle req = RequestBundle.unpack(ds, Resources.getAppDbSchema(), studyId, entityId, request.getFilters(), ListBuilder.asList(variableId), null);
-      VariableWithValues var = getRequestedVariable(req);
-
+      RequestBundle req = RequestBundle.unpack(dataSchema, study, entityId, request.getFilters(), ListBuilder.asList(variableId), null);
 
       // FIXME: need this until we turn on schema-level checking to enforce requiredness
       if (request.getValueSpec() == null) request.setValueSpec(ValueSpec.COUNT);
 
       DistributionResult result = DistributionFactory.processDistributionRequest(
-          ds, Resources.getAppDbSchema(), req.getStudy(), req.getTargetEntity(), var,
-          req.getFilters(), ApiConversionUtil.toInternalValueSpec(request.getValueSpec()),
-          ApiConversionUtil.toInternalBinSpecWithRange(request.getBinSpec()));
+          Resources.getApplicationDataSource(), dataSchema, req.getStudy(), req.getTargetEntity(),
+          getRequestedVariable(req), req.getFilters(), toInternalValueSpec(request.getValueSpec()),
+          toInternalBinSpecWithRange(request.getBinSpec()));
 
       VariableDistributionPostResponse response = new VariableDistributionPostResponseImpl();
-      response.setHistogram(ApiConversionUtil.toApiHistogramBins(result.getHistogramData()));
-      response.setStatistics(ApiConversionUtil.toApiHistogramStats(result.getStatistics()));
+      response.setHistogram(toApiHistogramBins(result.getHistogramData()));
+      response.setStatistics(toApiHistogramStats(result.getStatistics()));
 
       return PostStudiesEntitiesVariablesDistributionByStudyIdAndEntityIdAndVariableIdResponse.
           respond200WithApplicationJson(response);
@@ -155,11 +158,11 @@ public class StudiesService implements Studies {
       PostStudiesEntitiesTabularByStudyIdAndEntityIdResponse typedResponse =
           postStudiesEntitiesTabularByStudyIdAndEntityId(studyId, entityId, request);
       // success so far; add header to response
-      String entityDisplay = MetadataCache.getStudy(studyId).getEntity(entityId).get().getDisplayName();
+      String entityDisplay = getStudyResolver().getStudyById(studyId).getEntity(entityId).orElseThrow().getDisplayName();
       String fileName = studyId + "_" + entityDisplay + "_subsettedData.txt";
       String dispositionHeaderValue = "attachment; filename=\"" + fileName + "\"";
       _request.setProperty(CustomResponseHeadersFilter.CUSTOM_HEADERS_KEY,
-          new MapBuilder<String,String>(HttpHeaders.CONTENT_DISPOSITION, dispositionHeaderValue).toMap());
+          new MapBuilder<>(HttpHeaders.CONTENT_DISPOSITION, dispositionHeaderValue).toMap());
       return typedResponse;
     }
     catch (JsonProcessingException e) {
@@ -172,8 +175,9 @@ public class StudiesService implements Studies {
       EntityTabularPostRequest requestBody, boolean checkUserPermissions,
       BiFunction<EntityTabularPostResponseStream,TabularResponses.Type,T> responseConverter) {
 
-    DataSource dataSource = Resources.getApplicationDataSource();
-    RequestBundle request = RequestBundle.unpack(dataSource, Resources.getAppDbSchema(), studyId, entityId, requestBody.getFilters(), requestBody.getOutputVariableIds(), requestBody.getReportConfig());
+    Study study = getStudyResolver().getStudyById(studyId);
+    String dataSchema = resolveSchema(study);
+    RequestBundle request = RequestBundle.unpack(dataSchema, study, entityId, requestBody.getFilters(), requestBody.getOutputVariableIds(), requestBody.getReportConfig());
 
     if (checkUserPermissions) {
       // if requested, make sure user has permission to access this amount of tabular data (may differ based on report config)
@@ -183,8 +187,9 @@ public class StudiesService implements Studies {
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
 
     EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream
-        (outStream -> FilteredResultFactory.produceTabularSubset(dataSource, Resources.getAppDbSchema(),
-            request.getStudy(), request.getTargetEntity(), request.getRequestedVariables(), request.getFilters(),
+        (outStream -> FilteredResultFactory.produceTabularSubset(
+            Resources.getApplicationDataSource(), dataSchema, request.getStudy(),
+            request.getTargetEntity(), request.getRequestedVariables(), request.getFilters(),
             request.getReportConfig(), responseType.getFormatter(), outStream));
 
     return responseConverter.apply(streamer, responseType);
@@ -204,20 +209,19 @@ public class StudiesService implements Studies {
   @Override
   public PostStudiesEntitiesCountByStudyIdAndEntityIdResponse postStudiesEntitiesCountByStudyIdAndEntityId(
       String studyId, String entityId, EntityCountPostRequest rawRequest) {
-    checkPerms(_request, studyId, StudyAccess::allowSubsetting);
 
-    DataSource datasource = Resources.getApplicationDataSource();
-    String appDbSchema = Resources.getAppDbSchema();
+    checkPerms(_request, studyId, StudyAccess::allowSubsetting);
+    Study study = getStudyResolver().getStudyById(studyId);
+    String dataSchema = resolveSchema(study);
 
     // unpack data from API input to model objects
-    RequestBundle request = RequestBundle.unpack(datasource, appDbSchema,
-        studyId, entityId, rawRequest.getFilters(), Collections.emptyList(), null);
+    RequestBundle request = RequestBundle.unpack(dataSchema, study, entityId, rawRequest.getFilters(), Collections.emptyList(), null);
 
     TreeNode<Entity> prunedEntityTree = FilteredResultFactory.pruneTree(
         request.getStudy().getEntityTree(), request.getFilters(), request.getTargetEntity());
 
     long count = FilteredResultFactory.getEntityCount(
-        datasource, appDbSchema, prunedEntityTree, request.getTargetEntity(), request.getFilters());
+        Resources.getApplicationDataSource(), dataSchema, prunedEntityTree, request.getTargetEntity(), request.getFilters());
 
     EntityCountPostResponse response = new EntityCountPostResponseImpl();
     response.setCount(count);
@@ -228,6 +232,24 @@ public class StudiesService implements Studies {
   private static void checkPerms(ContainerRequest request, String studyId, Predicate<StudyAccess> accessPredicate) {
     Entry<String, String> authHeader = UserProvider.getSubmittedAuth(request).orElseThrow();
     StudyAccess.confirmPermission(authHeader, Resources.ENV.getDatasetAccessServiceUrl(), studyId, accessPredicate);
+  }
+
+  private static StudyProvider getStudyResolver() {
+    return new StudyResolver(
+        MetadataCache.instance(),
+        new StudyFactory(
+            Resources.getApplicationDataSource(),
+            Resources.getUserStudySchema(),
+            true,
+            false
+        )
+    );
+  }
+
+  private static String resolveSchema(Study study) {
+    return study.isUserStudy()
+        ? Resources.getUserStudySchema()
+        : Resources.getAppDbSchema();
   }
 
   private Optional<APIEntity> findEntityById(APIEntity entity, String entityId) {
@@ -241,7 +263,7 @@ public class StudiesService implements Studies {
     return Optional.empty();
   }
 
-  private VariableWithValues getRequestedVariable(RequestBundle req) {
+  private VariableWithValues<?> getRequestedVariable(RequestBundle req) {
     if (req.getRequestedVariables().isEmpty()) {
       throw new RuntimeException("No requested variables (empty URL segment?)");
     }
@@ -249,7 +271,7 @@ public class StudiesService implements Studies {
     if (!(var instanceof VariableWithValues)) {
       throw new BadRequestException("Distribution endpoint can only be called with a variable that has values.");
     }
-    return (VariableWithValues)var;
+    return (VariableWithValues<?>)var;
   }
 
 }

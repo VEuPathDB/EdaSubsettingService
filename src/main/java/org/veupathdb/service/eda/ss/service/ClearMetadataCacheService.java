@@ -11,7 +11,7 @@ public class ClearMetadataCacheService implements ClearMetadataCache {
 
   @Override
   public GetClearMetadataCacheResponse getClearMetadataCache() {
-    MetadataCache.clear();
+    MetadataCache.instance().clear();
     String message = "Cache successfully cleared at " + new Date();
     LOG.info(message);
     return GetClearMetadataCacheResponse.respond200WithTextPlain(message);

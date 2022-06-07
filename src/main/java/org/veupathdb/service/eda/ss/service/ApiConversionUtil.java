@@ -5,47 +5,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.gusdb.fgputil.SortDirection;
-import org.gusdb.fgputil.functional.Functions;
 import org.gusdb.fgputil.functional.TreeNode;
-import org.veupathdb.service.eda.generated.model.APICollection;
-import org.veupathdb.service.eda.generated.model.APIDateCollection;
-import org.veupathdb.service.eda.generated.model.APIDateCollectionImpl;
-import org.veupathdb.service.eda.generated.model.APIDateDistributionDefaults;
-import org.veupathdb.service.eda.generated.model.APIDateDistributionDefaultsImpl;
-import org.veupathdb.service.eda.generated.model.APIDateVariable;
-import org.veupathdb.service.eda.generated.model.APIDateVariableImpl;
-import org.veupathdb.service.eda.generated.model.APIEntity;
-import org.veupathdb.service.eda.generated.model.APIEntityImpl;
-import org.veupathdb.service.eda.generated.model.APIIntegerCollection;
-import org.veupathdb.service.eda.generated.model.APIIntegerCollectionImpl;
-import org.veupathdb.service.eda.generated.model.APIIntegerDistributionDefaults;
-import org.veupathdb.service.eda.generated.model.APIIntegerDistributionDefaultsImpl;
-import org.veupathdb.service.eda.generated.model.APIIntegerVariable;
-import org.veupathdb.service.eda.generated.model.APIIntegerVariableImpl;
-import org.veupathdb.service.eda.generated.model.APILongitudeVariable;
-import org.veupathdb.service.eda.generated.model.APILongitudeVariableImpl;
-import org.veupathdb.service.eda.generated.model.APINumberCollection;
-import org.veupathdb.service.eda.generated.model.APINumberCollectionImpl;
-import org.veupathdb.service.eda.generated.model.APINumberDistributionDefaults;
-import org.veupathdb.service.eda.generated.model.APINumberDistributionDefaultsImpl;
-import org.veupathdb.service.eda.generated.model.APINumberVariable;
-import org.veupathdb.service.eda.generated.model.APINumberVariableImpl;
-import org.veupathdb.service.eda.generated.model.APIStringVariable;
-import org.veupathdb.service.eda.generated.model.APIStringVariableImpl;
-import org.veupathdb.service.eda.generated.model.APIStudyDetail;
-import org.veupathdb.service.eda.generated.model.APIStudyDetailImpl;
-import org.veupathdb.service.eda.generated.model.APIVariable;
-import org.veupathdb.service.eda.generated.model.APIVariableDataShape;
-import org.veupathdb.service.eda.generated.model.APIVariableDisplayType;
-import org.veupathdb.service.eda.generated.model.APIVariableWithValues;
-import org.veupathdb.service.eda.generated.model.APIVariablesCategoryImpl;
-import org.veupathdb.service.eda.generated.model.HistogramBin;
-import org.veupathdb.service.eda.generated.model.HistogramBinImpl;
-import org.veupathdb.service.eda.generated.model.HistogramStats;
-import org.veupathdb.service.eda.generated.model.HistogramStatsImpl;
-import org.veupathdb.service.eda.generated.model.SortSpecEntry;
+import org.veupathdb.service.eda.generated.model.*;
 import org.veupathdb.service.eda.ss.model.Entity;
 import org.veupathdb.service.eda.ss.model.Study;
+import org.veupathdb.service.eda.ss.model.StudyOverview;
 import org.veupathdb.service.eda.ss.model.distribution.BinSpecWithRange;
 import org.veupathdb.service.eda.ss.model.distribution.BinUnits;
 import org.veupathdb.service.eda.ss.model.distribution.DateDistributionConfig;
@@ -97,12 +61,11 @@ public class ApiConversionUtil {
     });
   }
 
-  private static APICollection collectionToAPICollection(VarCollection col) {
+  private static APICollection collectionToAPICollection(VarCollection<?,?> col) {
     APICollection collection = switch(col.getType()) {
       case DATE -> getDateCollection((DateVarCollection)col);
       case INTEGER -> getIntegerCollection((IntegerVarCollection)col);
       case NUMBER -> getFloatCollection((FloatingPointVarCollection)col);
-      default -> Functions.doThrow(() -> new RuntimeException("Invalid variable type " + col.getType()));
     };
     collection.setId(col.getId());
     collection.setDisplayName(col.getDisplayName());
@@ -142,7 +105,7 @@ public class ApiConversionUtil {
   /** converts model variable object to API variable object */
   private static APIVariable variableToAPIVariable(Variable var) {
     APIVariable apiVar = var.hasValues()
-        ? getValuesVar((VariableWithValues)var)
+        ? getValuesVar((VariableWithValues<?>)var)
         : new APIVariablesCategoryImpl();
     // set props common to all variables
     apiVar.setId(var.getId());
@@ -157,14 +120,13 @@ public class ApiConversionUtil {
   }
 
   /** instantiates API values var and sets values-var-specific props */
-  private static APIVariableWithValues getValuesVar(VariableWithValues var) {
+  private static APIVariableWithValues getValuesVar(VariableWithValues<?> var) {
     APIVariableWithValues apiVar = switch(var.getType()) {
       case DATE -> getDateVar((DateVariable)var);
       case INTEGER -> getIntegerVar((IntegerVariable)var);
       case NUMBER -> getFloatVar((FloatingPointVariable)var);
       case LONGITUDE -> getLongitudeVar((LongitudeVariable)var);
       case STRING -> getStringVar((StringVariable)var);
-      default -> Functions.doThrow(() -> new RuntimeException("Invalid variable type " + var.getType()));
     };
     // set props common to all variables with values
     apiVar.setDataShape(toApiShape(var.getDataShape()));
@@ -198,7 +160,6 @@ public class ApiConversionUtil {
   }
 
   private static APIIntegerVariable getIntegerVar(IntegerVariable var) {
-    NumberDistributionConfig<Long> bins = var.getDistributionConfig();
     APIIntegerVariable apiVar = new APIIntegerVariableImpl();
     apiVar.setDistributionDefaults(getIntegerDistributionDefaults(var.getDistributionConfig()));
     apiVar.setUnits(var.getUnits());
@@ -217,7 +178,6 @@ public class ApiConversionUtil {
   }
 
   private static APINumberVariable getFloatVar(FloatingPointVariable var) {
-    NumberDistributionConfig<Double> bins = var.getDistributionConfig();
     APINumberVariable apiVar = new APINumberVariableImpl();
     apiVar.setDistributionDefaults(getFloatDistributionDefaults(var.getDistributionConfig()));
     apiVar.setUnits(var.getUnits());
@@ -305,4 +265,11 @@ public class ApiConversionUtil {
     return headerFormat == null ? null : TabularHeaderFormat.valueOf(headerFormat.name());
   }
 
+  public static List<APIStudyOverview> toApiStudyOverviews(List<StudyOverview> studyOverviews) {
+    return studyOverviews.stream().map(overview -> {
+      APIStudyOverview study = new APIStudyOverviewImpl();
+      study.setId(overview.getStudyId());
+      return study;
+    }).collect(Collectors.toList());
+  }
 }

@@ -88,6 +88,10 @@ public class Resources extends ContainerResources {
     return USE_IN_MEMORY_TEST_DATABASE ? "" : ENV.getAppDbSchema();
   }
 
+  public static String getUserStudySchema() {
+    return USE_IN_MEMORY_TEST_DATABASE ? "" : ENV.getUserStudySchema();
+  }
+
   /**
    * Returns an array of JaxRS endpoints, providers, and contexts.
    *
