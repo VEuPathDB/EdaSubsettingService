@@ -24,25 +24,24 @@ public class MetadataCache implements StudyProvider {
   @Override
   public synchronized Study getStudyById(String studyId) {
     return _studies.computeIfAbsent(studyId,
-        id -> new StudyFactory(
-            Resources.getApplicationDataSource(),
-            Resources.getAppDbSchema(),
-            false,
-            Resources.getConvertAssaysFlag()
-        ).getStudyById(id));
+        id -> getCuratedStudyFactory().getStudyById(id));
   }
 
   @Override
   public synchronized List<StudyOverview> getStudyOverviews() {
     if (_studyOverviews == null) {
-      _studyOverviews = new StudyFactory(
-          Resources.getApplicationDataSource(),
-          Resources.getAppDbSchema(),
-          false,
-          Resources.getConvertAssaysFlag()
-      ).getStudyOverviews();
+      _studyOverviews = getCuratedStudyFactory().getStudyOverviews();
     }
     return Collections.unmodifiableList(_studyOverviews);
+  }
+
+  private static StudyProvider getCuratedStudyFactory() {
+    return new StudyFactory(
+        Resources.getApplicationDataSource(),
+        Resources.getAppDbSchema(),
+        StudyOverview.StudySourceType.CURATED,
+        Resources.getConvertAssaysFlag()
+    );
   }
 
   public synchronized void clear() {

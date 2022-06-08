@@ -260,16 +260,17 @@ public class StudiesService implements Studies {
         new StudyFactory(
             Resources.getApplicationDataSource(),
             Resources.getUserStudySchema(),
-            true,
+            StudyOverview.StudySourceType.USER_SUBMITTED,
             false
         )
     );
   }
 
   private static String resolveSchema(Study study) {
-    return study.isUserStudy()
-        ? Resources.getUserStudySchema()
-        : Resources.getAppDbSchema();
+    return switch(study.getStudySourceType()) {
+      case USER_SUBMITTED -> Resources.getUserStudySchema();
+      case CURATED -> Resources.getAppDbSchema();
+    };
   }
 
   private Optional<APIEntity> findEntityById(APIEntity entity, String entityId) {
