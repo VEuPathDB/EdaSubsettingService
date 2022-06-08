@@ -111,6 +111,7 @@ val edaCommonSchemaFetch =
 // register a task that prints the command to fetch EdaCommon schema; used to pull down raml lib
 tasks.register("print-eda-common-schema-fetch") { print(edaCommonSchemaFetch) }
 
+// ensures changing modules are never cached
 configurations.all {
   resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
 }
@@ -129,11 +130,11 @@ dependencies {
   implementation("org.gusdb:fgputil-web:${fgputil}")
 
   // Jersey
-  implementation("org.glassfish.jersey.core:jersey-server:3.0.4")
+  implementation("org.glassfish.jersey.core:jersey-server:${jersey}")
 
   // Jackson
-  implementation("com.fasterxml.jackson.core:jackson-databind:2.13.3")
-  implementation("com.fasterxml.jackson.core:jackson-annotations:2.13.3")
+  implementation("com.fasterxml.jackson.core:jackson-databind:${jackson}")
+  implementation("com.fasterxml.jackson.core:jackson-annotations:${jackson}")
 
   // Log4J
   implementation("org.apache.logging.log4j:log4j-api:${log4j}")
