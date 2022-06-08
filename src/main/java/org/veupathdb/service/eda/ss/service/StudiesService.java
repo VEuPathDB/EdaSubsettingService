@@ -2,10 +2,14 @@ package org.veupathdb.service.eda.ss.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Context;
@@ -23,6 +27,7 @@ import org.veupathdb.lib.container.jaxrs.providers.UserProvider;
 import org.veupathdb.lib.container.jaxrs.server.annotations.Authenticated;
 import org.veupathdb.lib.container.jaxrs.server.middleware.CustomResponseHeadersFilter;
 import org.veupathdb.service.eda.common.auth.StudyAccess;
+import org.veupathdb.service.eda.common.client.DatasetAccessClient;
 import org.veupathdb.service.eda.generated.model.APIEntity;
 import org.veupathdb.service.eda.generated.model.APIStudyDetail;
 import org.veupathdb.service.eda.generated.model.EntityCountPostRequest;
@@ -44,6 +49,7 @@ import org.veupathdb.service.eda.generated.resources.Studies;
 import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Entity;
 import org.veupathdb.service.eda.ss.model.Study;
+import org.veupathdb.service.eda.ss.model.StudyOverview;
 import org.veupathdb.service.eda.ss.model.db.FilteredResultFactory;
 import org.veupathdb.service.eda.ss.model.db.StudyFactory;
 import org.veupathdb.service.eda.ss.model.db.StudyProvider;
@@ -68,8 +74,22 @@ public class StudiesService implements Studies {
 
   @Override
   public GetStudiesResponse getStudies() {
+
+    // get IDs of studies visible to this user
+    Set<String> visibleStudies = new DatasetAccessClient(
+        Resources.ENV.getDatasetAccessServiceUrl(),
+        UserProvider.getSubmittedAuth(_request).orElseThrow()
+    ).getStudyDatasetInfoMapForUser().keySet();
+
+    // filter overviews by visible studies
+    List<StudyOverview> visibleOverviews = getStudyResolver()
+        .getStudyOverviews().stream()
+        .filter(overview -> visibleStudies.contains(overview.getStudyId()))
+        .collect(Collectors.toList());
+
+    // convert to API objects and return
     StudiesGetResponse out = new StudiesGetResponseImpl();
-    out.setStudies(ApiConversionUtil.toApiStudyOverviews(getStudyResolver().getStudyOverviews()));
+    out.setStudies(ApiConversionUtil.toApiStudyOverviews(visibleOverviews));
     return GetStudiesResponse.respond200WithApplicationJson(out);
   }
 
