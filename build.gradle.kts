@@ -2,7 +2,7 @@ import org.veupathdb.lib.gradle.container.util.Logger.Level
 
 plugins {
   java
-  id("org.veupathdb.lib.gradle.container.container-utils") version "3.4.0"
+  id("org.veupathdb.lib.gradle.container.container-utils") version "3.4.1"
   id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
@@ -88,9 +88,9 @@ repositories {
 //
 
 // versions
-val coreLib       = "6.5.1"       // Container core lib version
+val coreLib       = "6.7.0"       // Container core lib version
 val edaCommon     = "9.0.0"       // EDA Common version
-val libSubsetting = "1.4.0"       // lib-eda-subsetting version
+val libSubsetting = "1.5.0"       // lib-eda-subsetting version
 val fgputil       = "2.5-jakarta" // FgpUtil version
 
 val jersey        = "3.0.4"       // Jersey/JaxRS version
@@ -151,7 +151,7 @@ dependencies {
 
   // Unit Testing
   testImplementation("org.junit.jupiter:junit-jupiter-api:${junit}")
-  testImplementation("org.mockito:mockito-core:2.+")
+  testImplementation("org.mockito:mockito-core:4.6.1")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junit}")
 }
 
