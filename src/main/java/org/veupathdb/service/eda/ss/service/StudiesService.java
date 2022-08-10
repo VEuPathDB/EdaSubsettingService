@@ -1,6 +1,8 @@
 package org.veupathdb.service.eda.ss.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
@@ -59,15 +61,17 @@ import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
 import org.veupathdb.service.eda.ss.model.variable.Variable;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
+import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
+import org.veupathdb.service.eda.ss.service.metrics.ReducerMetrics;
 
 import static org.veupathdb.service.eda.ss.service.ApiConversionUtil.*;
 
 @Authenticated(allowGuests = true)
 public class StudiesService implements Studies {
-
   private static final Logger LOG = LogManager.getLogger(StudiesService.class);
 
   private static final long MAX_ROWS_FOR_SINGLE_PAGE_ACCESS = 20;
+  private static final String BINARY_FILES_DIR = System.getenv("BINARY_FILES_DIR");
 
   @Context
   ContainerRequest _request;
@@ -194,7 +198,7 @@ public class StudiesService implements Studies {
       ContainerRequest requestContext, String studyId, String entityId,
       EntityTabularPostRequest requestBody, boolean checkUserPermissions,
       BiFunction<EntityTabularPostResponseStream,TabularResponses.Type,T> responseConverter) {
-
+    LOG.info("Handling tabular request for study {} and entity {}.", studyId, entityId);
     Study study = getStudyResolver().getStudyById(studyId);
     String dataSchema = resolveSchema(study);
     RequestBundle request = RequestBundle.unpack(dataSchema, study, entityId, requestBody.getFilters(), requestBody.getOutputVariableIds(), requestBody.getReportConfig());
@@ -205,13 +209,17 @@ public class StudiesService implements Studies {
     }
 
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
-
-    EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream
-        (outStream -> FilteredResultFactory.produceTabularSubset(
-            Resources.getApplicationDataSource(), dataSchema, request.getStudy(),
-            request.getTargetEntity(), request.getRequestedVariables(), request.getFilters(),
+    if (request.getReportConfig().getUseBinaryFiles()) {
+      EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
+          ReducerMetrics.emitDuration(() -> FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), request.getTargetEntity(),
+              request.getRequestedVariables(), request.getFilters(), responseType.getFormatter(),
+              request.getReportConfig(), outStream, Path.of(BINARY_FILES_DIR))));
+      return responseConverter.apply(streamer, responseType);
+    }
+    EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
+        FilteredResultFactory.produceTabularSubset(Resources.getApplicationDataSource(), Resources.getAppDbSchema(),
+            request.getStudy(), request.getTargetEntity(), request.getRequestedVariables(), request.getFilters(),
             request.getReportConfig(), responseType.getFormatter(), outStream));
-
     return responseConverter.apply(streamer, responseType);
   }
 
@@ -294,5 +302,4 @@ public class StudiesService implements Studies {
     }
     return (VariableWithValues<?>)var;
   }
-
 }

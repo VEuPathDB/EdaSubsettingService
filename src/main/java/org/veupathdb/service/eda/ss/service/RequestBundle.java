@@ -101,6 +101,8 @@ public class RequestBundle {
       config.setTrimTimeFromDateVars(apiConfig.getTrimTimeFromDateVars());
     }
 
+    // Default to false if value is absent
+    config.setUseBinaryFiles(Boolean.TRUE.equals(apiConfig.getUseBinaryFiles()));
     return config;
   }
 
@@ -259,7 +261,8 @@ public class RequestBundle {
       if (!entity.getMultiFilterMap().get(mfVarId).contains(variableId))
         throw new BadRequestException("Multifilter includes subfilter with invalid variable: " + variableId);
       Variable var = entity.getVariable(variableId).orElseThrow(() -> new BadRequestException("Multifilter includes invalid variable ID: " + variableId));
-      subFilters.add(new MultiFilterSubFilter(var, apiSubFilter.getStringSet()));
+      StringVariable subFilterVar = StringVariable.assertType(var);
+      subFilters.add(new MultiFilterSubFilter(subFilterVar, apiSubFilter.getStringSet()));
     }
 
     return new MultiFilter(appDbSchema, entity, subFilters, MultiFilterOperation.fromString(f.getOperation().getValue()));
