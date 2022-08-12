@@ -101,8 +101,9 @@ public class RequestBundle {
       config.setTrimTimeFromDateVars(apiConfig.getTrimTimeFromDateVars());
     }
 
-    // Default to false if value is absent
-    config.setUseBinaryFiles(Boolean.TRUE.equals(apiConfig.getUseBinaryFiles()));
+    if (apiConfig.getDataSource() != null) {
+      config.setDataSourceType(ApiConversionUtil.toInternalDataSourceType(apiConfig.getDataSource()));
+    }
     return config;
   }
 

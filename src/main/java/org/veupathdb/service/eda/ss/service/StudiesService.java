@@ -57,6 +57,7 @@ import org.veupathdb.service.eda.ss.model.db.StudyFactory;
 import org.veupathdb.service.eda.ss.model.db.StudyProvider;
 import org.veupathdb.service.eda.ss.model.db.StudyResolver;
 import org.veupathdb.service.eda.ss.model.distribution.DistributionFactory;
+import org.veupathdb.service.eda.ss.model.tabular.DataSourceType;
 import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
 import org.veupathdb.service.eda.ss.model.variable.Variable;
@@ -209,7 +210,7 @@ public class StudiesService implements Studies {
     }
 
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
-    if (request.getReportConfig().getUseBinaryFiles()) {
+    if (request.getReportConfig().getDataSourceType() == DataSourceType.FILES) {
       EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
           ReducerMetrics.emitDuration(() -> FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), request.getTargetEntity(),
               request.getRequestedVariables(), request.getFilters(), responseType.getFormatter(),

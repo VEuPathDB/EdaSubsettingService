@@ -89,8 +89,8 @@ repositories {
 
 // versions
 val coreLib       = "6.8.0"         // Container core lib version
-val edaCommon     = "9.1.0"         // EDA Common version
-val libSubsetting = "1.7.0"         // lib-eda-subsetting version
+val edaCommon     = "9.2.0"         // EDA Common version
+val libSubsetting = "1.9.0"         // lib-eda-subsetting version
 val fgputil       = "2.7.1-jakarta" // FgpUtil version
 
 val jersey        = "3.0.4"       // Jersey/JaxRS version
@@ -122,9 +122,9 @@ dependencies {
   // VEuPathDB libs, prefer local checkouts if available
   implementation(findProject(":core") ?: "org.veupathdb.lib:jaxrs-container-core:${coreLib}")
   implementation(findProject(":edaCommon") ?: "org.veupathdb.service.eda:eda-common:${edaCommon}")
+  implementation(findProject(":libSubsetting") ?: "org.veupathdb.eda:lib-eda-subsetting:${libSubsetting}")
 
   // published VEuPathDB libs
-  implementation("org.veupathdb.eda:lib-eda-subsetting:${libSubsetting}")
   implementation("org.gusdb:fgputil-core:${fgputil}")
   implementation("org.gusdb:fgputil-db:${fgputil}")
   implementation("org.gusdb:fgputil-json:${fgputil}")
