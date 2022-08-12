@@ -9,12 +9,14 @@ public class EnvironmentVars {
   protected String _appDbSchema;
   protected String _userStudySchema;
   protected String _datasetAccessServiceUrl;
+  protected String _binaryFilesDirectory;
 
   public void load() {
     _developmentMode = Boolean.parseBoolean(getOptionalVar("DEVELOPMENT_MODE", "true"));
     _appDbSchema = getOptionalVar("APP_DB_SCHEMA", "eda.");
     _userStudySchema = getOptionalVar("USER_STUDY_SCHEMA", "apidbuserdatasets.");
     _datasetAccessServiceUrl = getRequiredVar("DATASET_ACCESS_SERVICE_URL");
+    _binaryFilesDirectory = getRequiredVar("BINARY_FILES_DIR");
   }
 
   public boolean isDevelopmentMode() {
@@ -31,5 +33,9 @@ public class EnvironmentVars {
 
   public String getDatasetAccessServiceUrl() {
     return _datasetAccessServiceUrl;
+  }
+
+  public String getBinaryFilesDirectory() {
+    return _binaryFilesDirectory;
   }
 }

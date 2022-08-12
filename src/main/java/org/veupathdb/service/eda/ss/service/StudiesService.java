@@ -72,7 +72,6 @@ public class StudiesService implements Studies {
   private static final Logger LOG = LogManager.getLogger(StudiesService.class);
 
   private static final long MAX_ROWS_FOR_SINGLE_PAGE_ACCESS = 20;
-  private static final String BINARY_FILES_DIR = System.getenv("BINARY_FILES_DIR");
 
   @Context
   ContainerRequest _request;
@@ -212,9 +211,9 @@ public class StudiesService implements Studies {
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
     if (request.getReportConfig().getDataSourceType() == DataSourceType.FILES) {
       EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
-          ReducerMetrics.emitDuration(() -> FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), request.getTargetEntity(),
+          FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), request.getTargetEntity(),
               request.getRequestedVariables(), request.getFilters(), responseType.getFormatter(),
-              request.getReportConfig(), outStream, Path.of(BINARY_FILES_DIR))));
+              request.getReportConfig(), outStream, Resources.getBinaryFilesDirectory()));
       return responseConverter.apply(streamer, responseType);
     }
     EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
