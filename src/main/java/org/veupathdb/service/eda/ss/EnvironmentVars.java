@@ -15,8 +15,9 @@ public class EnvironmentVars {
     _developmentMode = Boolean.parseBoolean(getOptionalVar("DEVELOPMENT_MODE", "true"));
     _appDbSchema = getOptionalVar("APP_DB_SCHEMA", "eda.");
     _userStudySchema = getOptionalVar("USER_STUDY_SCHEMA", "apidbuserdatasets.");
+    // TODO Make this mandatory once docker-compose changes are deployed.
+    _binaryFilesDirectory = getOptionalVar("BINARY_FILES_DIR", "/tmp/binaryFilesDir");
     _datasetAccessServiceUrl = getRequiredVar("DATASET_ACCESS_SERVICE_URL");
-    _binaryFilesDirectory = getRequiredVar("BINARY_FILES_DIR");
   }
 
   public boolean isDevelopmentMode() {

@@ -62,8 +62,6 @@ import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
 import org.veupathdb.service.eda.ss.model.variable.Variable;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
-import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
-import org.veupathdb.service.eda.ss.service.metrics.ReducerMetrics;
 
 import static org.veupathdb.service.eda.ss.service.ApiConversionUtil.*;
 
