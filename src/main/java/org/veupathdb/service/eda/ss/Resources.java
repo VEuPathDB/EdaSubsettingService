@@ -14,6 +14,8 @@ import org.veupathdb.service.eda.ss.service.InternalClientsService;
 import org.veupathdb.service.eda.ss.service.StudiesService;
 import org.veupathdb.service.eda.ss.test.StubDb;
 
+import java.nio.file.Path;
+
 /**
  * Service Resource Registration.
  *
@@ -90,6 +92,10 @@ public class Resources extends ContainerResources {
 
   public static String getUserStudySchema() {
     return USE_IN_MEMORY_TEST_DATABASE ? "" : ENV.getUserStudySchema();
+  }
+
+  public static Path getBinaryFilesDirectory() {
+    return Path.of(ENV.getBinaryFilesDirectory());
   }
 
   /**

@@ -7,26 +7,6 @@
 ################################################################################
 
 types:
-  VisualizationDataElementConstraint:
-    type: object
-    additionalProperties: false
-    properties:
-      isRequired: boolean
-      isTemporal: boolean
-      minNumVars: number
-      maxNumVars: number
-      maxNumValues: number
-      allowedTypes:
-        type: API_VariableType[]
-        required: false
-      allowedShapes:
-        type: API_VariableDataShape[]
-        required: false
-      description: string
-  VisualizationDataElementConstraintPattern:
-    type: object
-    properties:
-      //: VisualizationDataElementConstraint
   API_Filter:
     type: object
     discriminator: type
@@ -183,6 +163,11 @@ types:
     enum:
       - standard
       - display
+  DataSourceType:
+    type: string
+    enum:
+      - database
+      - file
   API_TabularReportConfig:
     type: object
     properties:
@@ -190,6 +175,7 @@ types:
       paging?: API_PagingConfig
       headerFormat?: TabularHeaderFormat
       trimTimeFromDateVars?: boolean
+      dataSource?: DataSourceType
   BinUnits:
     type: string
     enum:
@@ -449,4 +435,24 @@ types:
     discriminatorValue: date
     properties:
       distributionDefaults: API_DateDistributionDefaults
+  VisualizationDataElementConstraint:
+    type: object
+    additionalProperties: false
+    properties:
+      isRequired: boolean
+      isTemporal: boolean
+      minNumVars: number
+      maxNumVars: number
+      maxNumValues: number
+      allowedTypes:
+        type: API_VariableType[]
+        required: false
+      allowedShapes:
+        type: API_VariableDataShape[]
+        required: false
+      description: string
+  VisualizationDataElementConstraintPattern:
+    type: object
+    properties:
+      //: VisualizationDataElementConstraint
 

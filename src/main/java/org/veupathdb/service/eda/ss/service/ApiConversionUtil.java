@@ -265,6 +265,10 @@ public class ApiConversionUtil {
     return headerFormat == null ? null : TabularHeaderFormat.valueOf(headerFormat.name());
   }
 
+  public static org.veupathdb.service.eda.ss.model.tabular.DataSourceType toInternalDataSourceType(DataSourceType dataSourceType) {
+    return org.veupathdb.service.eda.ss.model.tabular.DataSourceType.fromValue(dataSourceType.getValue());
+  }
+
   public static List<APIStudyOverview> toApiStudyOverviews(List<StudyOverview> studyOverviews) {
     return studyOverviews.stream().map(overview -> {
       APIStudyOverview study = new APIStudyOverviewImpl();
