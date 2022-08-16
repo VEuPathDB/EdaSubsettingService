@@ -266,8 +266,7 @@ public class StudiesService implements Studies {
         new StudyFactory(
             Resources.getApplicationDataSource(),
             Resources.getUserStudySchema(),
-            StudyOverview.StudySourceType.USER_SUBMITTED,
-            false
+            StudyOverview.StudySourceType.USER_SUBMITTED
         )
     );
   }

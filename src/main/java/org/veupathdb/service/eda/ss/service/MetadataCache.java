@@ -39,8 +39,7 @@ public class MetadataCache implements StudyProvider {
     return new StudyFactory(
         Resources.getApplicationDataSource(),
         Resources.getAppDbSchema(),
-        StudyOverview.StudySourceType.CURATED,
-        Resources.getConvertAssaysFlag()
+        StudyOverview.StudySourceType.CURATED
     );
   }
 
