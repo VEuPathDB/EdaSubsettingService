@@ -70,6 +70,13 @@ tasks.shadowJar {
   archiveFileName.set("service.jar")
 }
 
+tasks.register("regression-test") {
+  project.exec {
+    workingDir("$projectDir/api-test")
+    commandLine("./test-directory.sh", "$projectDir/api-test/requests")
+  }
+}
+
 repositories {
   mavenCentral()
   mavenLocal()

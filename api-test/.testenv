@@ -1,0 +1,8 @@
+
+# Configure your favorite EDA endpoint
+# BASE_URL="https://dgaldi.clinepidb.org/eda"
+export BASE_URL="https://edadata-dev.local.apidb.org:8443"
+
+# Configure your auth key.
+# AUTH_KEY="SECRET"
+export AUTH_KEY="dmgaldi%40upenn.edu-aa3294809b5139988b7c7d178470eda5"
