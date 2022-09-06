@@ -24,9 +24,6 @@ ENV DOCKER=build
 COPY makefile build.gradle.kts settings.gradle.kts gradlew ./
 COPY gradle gradle
 
-RUN mkdir /lib-subsetting-build
-COPY --from=lib-subsetting-build /dev-dependencies /lib-subsetting-build
-
 # cache build environment
 RUN make install-dev-env
 
@@ -61,4 +58,4 @@ ENV JAVA_HOME=/opt/jdk \
 COPY --from=prep /jlinked /opt/jdk
 COPY --from=prep /workspace/build/libs/service.jar /service.jar
 
-CMD java -jar -XX:+HeapDumpOnOutOfMemoryError -Xms2G -Xmx5G $JVM_ARGS /service.jar
+CMD java -jar -XX:+CrashOnOutOfMemoryError $JVM_MEM_ARGS $JVM_ARGS /service.jar
