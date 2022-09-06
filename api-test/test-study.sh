@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+#######################################
+# Run a regression test, comparing the results of the map-reduce subsetting with the database subsetting.
+# Returns with a non-zero exit code if the results differ. Prints the CURL request times to STDOUT to compare performance.
+# Arguments:
+#   $1 REQUEST_FILE: File containing a request body. Must have the following directory structure: ${STUDY_ID}/${OUTPUT_ENTITY_ID}/*.json.
+#######################################
+
 if (( $# != 1 ))
 then
   print "USAGE: $0 <request_body_file>"
@@ -33,6 +40,15 @@ REQUEST_DIR=$(dirname "$1")
 OUTPUT_ENTITY_ID=$(echo "$REQUEST_DIR" | rev | cut -d"/" -f1 | rev)
 STUDY_ID=$(dirname "$REQUEST_DIR" | rev | cut -d"/" -f1 | rev)
 
+#######################################
+# Executes a CURL request against the BASE_URL
+# Globals:
+#   BASE_URL: The base URL used to construct CURL request
+#   AUTH_KEY: Auth key passed as a header to authenticate with EDA service
+# Arguments:
+#   $1 REQUEST_BODY: Request body of CURL request
+#   $2 OUTPUT_FILE:  File to write the response of the CURL to
+#######################################
 curl_endpoint ()
 {
   curl -o $2 -w 'Establish Connection: %{time_connect}s\nTTFB: %{time_starttransfer}s\nTotal: %{time_total}s\n' -s --location --request POST "${BASE_URL}/studies/${STUDY_ID}/entities/${OUTPUT_ENTITY_ID}/tabular" \
