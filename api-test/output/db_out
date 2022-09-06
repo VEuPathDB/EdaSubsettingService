@@ -1,1 +1,488 @@
-{"status":"server-error","message":"Login failed due to internal server error.","requestId":"2GHfxbbXnXHas99OBaAI0g"}
+Participant_stable_id	Household_stable_id	EUPATH_0000427
+mbi0006	h_rc0781	
+mbi0007	h_rc0781	
+mbi0102	h_rc0781	
+mbi0103	h_rc0781	
+mbi0008	h_rc0782	
+mbi0012	h_rc0783	
+mbi0013	h_rc0783	
+mbi0014	h_rc0783	
+mbi0015	h_rc0783	
+mbi0016	h_rc0783	
+mbi0017	h_rc0783	
+mbi0105	h_rc0783	
+mbi0104	h_rc0787	
+mbi0100	h_rc0788	120
+mbi0031	h_rc0789	
+mbi0032	h_rc0789	
+mbi0108	h_rc0789	
+mbi0018	h_rc0790	
+mbi0019	h_rc0790	
+mbi0020	h_rc0790	
+mbi0033	h_rc0791	
+mbi0034	h_rc0791	270
+mbi0022	h_rc0792	
+mbi0021	h_rc0793	
+mbi0092	h_rc0794	180
+mbi0093	h_rc0794	
+mbi0094	h_rc0794	
+mbi0095	h_rc0794	
+mbi0035	h_rc0795	
+mbi0009	h_rc0796	
+mbi0010	h_rc0796	60
+mbi0011	h_rc0796	
+mbi0098	h_rc0796	
+mbi0099	h_rc0796	90
+mbi0001	h_rc0797	
+mbi0002	h_rc0797	30
+mbi0003	h_rc0797	150
+mbi0004	h_rc0797	120
+mbi0005	h_rc0797	
+mbi0023	h_rc0797	
+mbi0027	h_rc0798	
+mbi0028	h_rc0798	
+mbi0029	h_rc0798	
+mbi0036	h_rc0800	
+mbi0037	h_rc0800	
+mbi0038	h_rc0800	
+mbi0111	h_rc0800	
+mbi0024	h_rc0801	
+mbi0025	h_rc0801	
+mbi0026	h_rc0801	
+mbi0039	h_rc0802	210
+mbi0096	h_rc0802	
+mbi0101	h_rc0802	
+mbi0110	h_rc0802	
+mbi0097	h_rc0803	
+mbi0106	h_rc0803	
+mbi0107	h_rc0803	
+mbi0030	h_rc0804	
+mbi0109	h_rc0804	150
+mbi0495	h_rc0813	
+mbi0499	h_rc0813	
+mbi0387	h_rc0814	
+mbi0409	h_rc0814	90
+mbi0410	h_rc0814	8
+mbi0411	h_rc0814	
+mbi0484	h_rc0815	7
+mbi0384	h_rc0816	
+mbi0385	h_rc0816	14
+mbi0399	h_rc0816	180
+mbi0394	h_rc0818	
+mbi0395	h_rc0819	
+mbi0396	h_rc0819	
+mbi0380	h_rc0820	60
+mbi0390	h_rc0820	120
+mbi0381	h_rc0822	
+mbi0383	h_rc0822	
+mbi0388	h_rc0822	60
+mbi0414	h_rc0873	
+mbi0415	h_rc0873	
+mbi0378	h_rc0875	120
+mbi0379	h_rc0875	
+mbi0400	h_rc0875	240
+mbi0401	h_rc0876	120
+mbi0402	h_rc0876	
+mbi0403	h_rc0876	
+mbi0404	h_rc0876	
+mbi0405	h_rc0876	
+mbi0406	h_rc0876	
+mbi0407	h_rc0876	
+mbi0393	h_rc0877	
+mbi0389	h_rc0878	
+mbi0397	h_rc0878	180
+mbi0398	h_rc0878	120
+mbi0386	h_rc0879	
+mbi0391	h_rc0879	
+mbi0392	h_rc0879	
+mbi0412	h_rc0880	150
+mbi0413	h_rc0880	120
+mbi0377	h_rc0881	
+mbi0491	h_rc0886	
+mbi0408	h_rc0887	90
+mbi0492	h_rc0887	
+mbi0416	h_rc0888	
+mbi0417	h_rc0888	
+mbi0418	h_rc0888	
+mbi0419	h_rc0888	
+mbi0497	h_rc0889	
+mbi0498	h_rc0889	
+mbi0483	h_rc0890	
+mbi0432	h_rc0891	
+mbi0433	h_rc0891	
+mbi0434	h_rc0891	120
+mbi0478	h_rc0891	
+mbi0485	h_rc0892	
+mbi0430	h_rc0894	
+mbi0482	h_rc0894	
+mbi0489	h_rc0894	
+mbi0480	h_rc0895	
+mbi0487	h_rc0895	
+mbi0435	h_rc0896	
+mbi0470	h_rc0896	
+mbi0474	h_rc0910	
+mbi0486	h_rc0910	
+mbi0469	h_rc0913	
+mbi0479	h_rc0914	9
+mbi0494	h_rc0915	
+mbi0431	h_rc0920	
+mbi0477	h_rc0920	
+mbi0500	h_rc0921	
+mbi0420	h_rc0922	
+mbi0421	h_rc0922	90
+mbi0422	h_rc0922	
+mbi0423	h_rc0922	
+mbi0424	h_rc0922	
+mbi0425	h_rc0922	90
+mbi0426	h_rc0922	
+mbi0428	h_rc0923	
+mbi0429	h_rc0923	
+mbi0496	h_rc0924	
+mbi0493	h_rc0925	1
+mbi0427	h_rc0927	
+mbi0471	h_rc0959	
+mbi0472	h_rc0959	
+mbi0313	h_rc0985	
+mbi0376	h_rc0987	210
+mbi0316	h_rc0990	
+mbi0358	h_rc0990	
+mbi0359	h_rc0990	
+mbi0360	h_rc0990	
+mbi0314	h_rc0991	
+mbi0309	h_rc0992	
+mbi0310	h_rc0992	
+mbi0317	h_rc0993	
+mbi0318	h_rc0993	
+mbi0307	h_rc0994	
+mbi0308	h_rc0994	
+mbi0322	h_rc0994	
+mbi0374	h_rc1005	
+mbi0375	h_rc1005	
+mbi0368	h_rc1006	
+mbi0250	h_rc1008	
+mbi0255	h_rc1010	
+mbi0257	h_rc1010	
+mbi0348	h_rc1010	
+mbi0249	h_rc1011	
+mbi0253	h_rc1011	
+mbi0334	h_rc1013	
+mbi0335	h_rc1013	
+mbi0336	h_rc1013	
+mbi0343	h_rc1013	
+mbi0344	h_rc1013	
+mbi0345	h_rc1013	
+mbi0248	h_rc1016	
+mbi0246	h_rc1018	
+mbi0251	h_rc1018	
+mbi0252	h_rc1018	330
+mbi0351	h_rc1018	
+mbi0247	h_rc1019	
+mbi0254	h_rc1019	
+mbi0256	h_rc1019	300
+mbi0347	h_rc1019	
+mbi0338	h_rc1024	
+mbi0339	h_rc1024	180
+mbi0340	h_rc1024	120
+mbi0361	h_rc1024	
+mbi0366	h_rc1027	
+mbi0367	h_rc1027	
+mbi0341	h_rc1028	30
+mbi0342	h_rc1028	
+mbi0369	h_rc1028	
+mbi0370	h_rc1028	
+mbi0371	h_rc1028	
+mbi0372	h_rc1028	
+mbi0349	h_rc1029	
+mbi0350	h_rc1029	30
+mbi0362	h_rc1030	
+mbi0363	h_rc1030	270
+mbi0311	h_rc1033	
+mbi0312	h_rc1033	10
+mbi0315	h_rc1034	300
+mbi0321	h_rc1034	
+mbi0373	h_rc1039	
+mbi0270	h_rc1041	330
+mbi0274	h_rc1041	
+mbi0292	h_rc1041	
+mbi0328	h_rc1042	
+mbi0333	h_rc1042	
+mbi0299	h_rc1044	
+mbi0271	h_rc1045	
+mbi0272	h_rc1045	
+mbi0296	h_rc1045	
+mbi0269	h_rc1046	
+mbi0275	h_rc1046	
+mbi0276	h_rc1046	
+mbi0293	h_rc1046	
+mbi0288	h_rc1047	
+mbi0320	h_rc1047	
+mbi0265	h_rc1049	
+mbi0266	h_rc1050	240
+mbi0273	h_rc1050	180
+mbi0280	h_rc1050	
+mbi0268	h_rc1051	
+mbi0277	h_rc1051	
+mbi0279	h_rc1051	
+mbi0297	h_rc1051	
+mbi0304	h_rc1051	
+mbi0258	h_rc1054	
+mbi0261	h_rc1054	
+mbi0259	h_rc1055	
+mbi0260	h_rc1055	
+mbi0262	h_rc1056	
+mbi0263	h_rc1058	
+mbi0264	h_rc1058	
+mbi0267	h_rc1058	
+mbi0323	h_rc1070	
+mbi0324	h_rc1070	270
+mbi0325	h_rc1071	
+mbi0326	h_rc1071	
+mbi0327	h_rc1071	
+mbi0353	h_rc1072	
+mbi0354	h_rc1072	
+mbi0355	h_rc1072	
+mbi0352	h_rc1073	
+mbi0357	h_rc1073	
+mbi0329	h_rc1075	
+mbi0356	h_rc1076	240
+mbi0330	h_rc1077	
+mbi0331	h_rc1078	
+mbi0332	h_rc1078	
+mbi0337	h_rc1079	
+mbi0346	h_rc1079	
+mbi0282	h_rc1082	
+mbi0283	h_rc1082	
+mbi0284	h_rc1082	
+mbi0286	h_rc1082	
+mbi0281	h_rc1083	
+mbi0285	h_rc1083	270
+mbi0289	h_rc1083	
+mbi0298	h_rc1083	
+mbi0278	h_rc1085	
+mbi0364	h_rc1085	
+mbi0365	h_rc1085	
+mbi0287	h_rc1089	
+mbi0300	h_rc1094	
+mbi0301	h_rc1095	
+mbi0302	h_rc1095	30
+mbi0295	h_rc1096	
+mbi0290	h_rc1099	
+mbi0291	h_rc1099	8
+mbi0303	h_rc1099	
+mbi0305	h_rc1099	180
+mbi0306	h_rc1099	
+mbi0319	h_rc1099	330
+mbi0162	h_rc1142	
+mbi0168	h_rc1142	90
+mbi0176	h_rc1142	
+mbi0173	h_rc1143	
+mbi0174	h_rc1143	
+mbi0178	h_rc1143	
+mbi0163	h_rc1144	
+mbi0164	h_rc1144	270
+mbi0165	h_rc1144	
+mbi0166	h_rc1144	
+mbi0167	h_rc1144	
+mbi0169	h_rc1145	
+mbi0170	h_rc1145	
+mbi0180	h_rc1146	60
+mbi0181	h_rc1146	30
+mbi0171	h_rc1147	
+mbi0172	h_rc1147	
+mbi0175	h_rc1147	
+mbi0177	h_rc1147	
+mbi0179	h_rc1147	
+mbi0123	h_rc1148	
+mbi0124	h_rc1148	
+mbi0125	h_rc1148	
+mbi0126	h_rc1148	
+mbi0132	h_rc1149	210
+mbi0185	h_rc1149	120
+mbi0127	h_rc1150	
+mbi0128	h_rc1150	
+mbi0129	h_rc1150	
+mbi0130	h_rc1150	
+mbi0131	h_rc1151	
+mbi0135	h_rc1152	
+mbi0136	h_rc1152	
+mbi0150	h_rc1154	
+mbi0151	h_rc1154	
+mbi0187	h_rc1155	
+mbi0182	h_rc1156	
+mbi0186	h_rc1156	
+mbi0146	h_rc1164	
+mbi0138	h_rc1165	
+mbi0145	h_rc1166	
+mbi0133	h_rc1168	
+mbi0134	h_rc1168	
+mbi0139	h_rc1169	
+mbi0140	h_rc1170	
+mbi0141	h_rc1170	
+mbi0137	h_rc1171	
+mbi0144	h_rc1173	
+mbi0147	h_rc1173	
+mbi0148	h_rc1173	
+mbi0149	h_rc1173	
+mbi0142	h_rc1174	
+mbi0143	h_rc1174	
+mbi0183	h_rc1174	
+mbi0184	h_rc1174	
+mbi0117	h_rc1176	300
+mbi0112	h_rc1177	
+mbi0113	h_rc1177	
+mbi0152	h_rc1179	
+mbi0120	h_rc1181	
+mbi0121	h_rc1181	
+mbi0158	h_rc1186	
+mbi0159	h_rc1186	
+mbi0160	h_rc1186	
+mbi0116	h_rc1190	150
+mbi0118	h_rc1190	
+mbi0153	h_rc1190	300
+mbi0155	h_rc1190	
+mbi0157	h_rc1190	
+mbi0161	h_rc1195	
+mbi0114	h_rc1196	120
+mbi0154	h_rc1197	
+mbi0156	h_rc1197	
+mbi0115	h_rc1199	60
+mbi0119	h_rc1199	
+mbi0122	h_rc1200	
+mbi0188	h_rc1313	
+mbi0189	h_rc1313	
+mbi0227	h_rc1313	
+mbi0190	h_rc1314	
+mbi0200	h_rc1314	
+mbi0222	h_rc1314	180
+mbi0191	h_rc1315	4
+mbi0192	h_rc1315	4
+mbi0193	h_rc1316	
+mbi0194	h_rc1316	
+mbi0224	h_rc1316	
+mbi0225	h_rc1316	
+mbi0195	h_rc1317	
+mbi0196	h_rc1317	
+mbi0197	h_rc1317	
+mbi0198	h_rc1318	3
+mbi0199	h_rc1318	90
+mbi0226	h_rc1318	
+mbi0233	h_rc1318	
+mbi0201	h_rc1319	
+mbi0202	h_rc1320	12
+mbi0203	h_rc1323	
+mbi0204	h_rc1323	
+mbi0213	h_rc1323	
+mbi0218	h_rc1323	
+mbi0206	h_rc1324	
+mbi0207	h_rc1325	270
+mbi0208	h_rc1325	330
+mbi0209	h_rc1325	
+mbi0221	h_rc1325	
+mbi0210	h_rc1326	
+mbi0236	h_rc1326	
+mbi0205	h_rc1327	
+mbi0211	h_rc1327	
+mbi0212	h_rc1327	
+mbi0214	h_rc1328	240
+mbi0215	h_rc1329	
+mbi0216	h_rc1329	
+mbi0217	h_rc1330	
+mbi0228	h_rc1330	180
+mbi0238	h_rc1330	
+mbi0239	h_rc1330	240
+mbi0240	h_rc1330	
+mbi0241	h_rc1330	240
+mbi0242	h_rc1330	
+mbi0243	h_rc1330	
+mbi0244	h_rc1330	
+mbi0245	h_rc1330	
+mbi0219	h_rc1331	
+mbi0230	h_rc1331	
+mbi0220	h_rc1332	
+mbi0232	h_rc1332	210
+mbi0235	h_rc1332	
+mbi0237	h_rc1332	300
+mbi0223	h_rc1333	
+mbi0229	h_rc1334	
+mbi0231	h_rc1334	
+mbi0234	h_rc1335	
+mbi0071	h_rc1336	
+mbi0065	h_rc1337	
+mbi0088	h_rc1338	
+mbi0079	h_rc1339	
+mbi0078	h_rc1340	
+mbi0087	h_rc1341	
+mbi0070	h_rc1342	
+mbi0090	h_rc1343	
+mbi0085	h_rc1344	
+mbi0076	h_rc1345	
+mbi0075	h_rc1346	360
+mbi0083	h_rc1347	
+mbi0056	h_rc1348	180
+mbi0057	h_rc1349	
+mbi0081	h_rc1350	
+mbi0089	h_rc1351	
+mbi0091	h_rc1351	
+mbi0061	h_rc1352	
+mbi0072	h_rc1352	90
+mbi0080	h_rc1353	
+mbi0066	h_rc1354	60
+mbi0058	h_rc1355	180
+mbi0067	h_rc1356	210
+mbi0069	h_rc1358	120
+mbi0077	h_rc1359	
+mbi0052	h_rc1360	
+mbi0059	h_rc1361	
+mbi0040	h_rc1362	
+mbi0060	h_rc1363	180
+mbi0041	h_rc1364	180
+mbi0042	h_rc1365	
+mbi0044	h_rc1366	90
+mbi0045	h_rc1367	
+mbi0046	h_rc1368	210
+mbi0047	h_rc1369	
+mbi0048	h_rc1370	
+mbi0049	h_rc1371	
+mbi0050	h_rc1372	
+mbi0051	h_rc1373	
+mbi0053	h_rc1374	
+mbi0054	h_rc1375	
+mbi0055	h_rc1376	270
+mbi0436	h_rc1377	
+mbi0437	h_rc1377	
+mbi0438	h_rc1377	
+mbi0439	h_rc1377	
+mbi0443	h_rc1379	
+mbi0448	h_rc1379	
+mbi0449	h_rc1379	
+mbi0446	h_rc1380	
+mbi0447	h_rc1380	
+mbi0450	h_rc1381	150
+mbi0451	h_rc1382	
+mbi0453	h_rc1382	180
+mbi0452	h_rc1383	
+mbi0454	h_rc1383	
+mbi0455	h_rc1383	
+mbi0456	h_rc1384	
+mbi0457	h_rc1384	
+mbi0458	h_rc1384	
+mbi0465	h_rc1385	
+mbi0466	h_rc1385	
+mbi0467	h_rc1385	
+mbi0468	h_rc1385	
+mbi0459	h_rc1386	
+mbi0460	h_rc1387	240
+mbi0462	h_rc1389	180
+mbi0463	h_rc1390	
+mbi0473	h_rc1390	
+mbi0043	h_rc1391	
+mbi0084	h_rc1392	
+mbi0073	h_rc1393	
+mbi0074	h_rc1394	
+mbi0063	h_rc1395	
+mbi0062	h_rc1396	
+mbi0082	h_rc1397	
+mbi0086	h_rc1398	
+mbi0064	h_rc1399	
+mbi0476	h_rc1400	
+mbi0475	h_rc1401	
