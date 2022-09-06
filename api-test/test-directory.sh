@@ -8,11 +8,6 @@ CYAN="\e[36m"
 ENDCOLOR="\e[0m"
 FAILED_TESTS=()
 
-for file in "$1/*"
-do
-  echo $file
-done
-
 for file in $(find "$1")
 do
     if [[ $file == *.json ]]

@@ -29,41 +29,30 @@ fi
 
 FILE_REQUEST_BODY=$(cat "$1" | sed 's/{{data_source}}/file/g')
 DB_REQUEST_BODY=$(cat "$1" | sed 's/{{data_source}}/database/g')
-
 REQUEST_DIR=$(dirname "$1")
 OUTPUT_ENTITY_ID=$(echo "$REQUEST_DIR" | rev | cut -d"/" -f1 | rev)
 STUDY_ID=$(dirname "$REQUEST_DIR" | rev | cut -d"/" -f1 | rev)
 
+curl_endpoint ()
+{
+  curl -o $2 -w 'Establish Connection: %{time_connect}s\nTTFB: %{time_starttransfer}s\nTotal: %{time_total}s\n' -s --location --request POST "${BASE_URL}/studies/${STUDY_ID}/entities/${OUTPUT_ENTITY_ID}/tabular" \
+  --header "Auth-Key: ${AUTH_KEY}" \
+  --header 'Content-Type: application/json' \
+  --data-raw "$1" \
+  --insecure
+  grep "\"status\":\"server-error\"" $2
+  if [[ $? -eq 0 ]]
+  then
+    echo $(printf "${RED}FAILED: Received server error when calling using map reduce configuration.${ENDCOLOR}")
+    exit 1
+  fi
+}
+
 echo "MAP REDUCE:"
-curl -o output/file_out -w 'Establish Connection: %{time_connect}s\nTTFB: %{time_starttransfer}s\nTotal: %{time_total}s\n' -s --location --request POST "${BASE_URL}/studies/${STUDY_ID}/entities/${OUTPUT_ENTITY_ID}/tabular" \
---header "Auth-Key: ${AUTH_KEY}" \
---header 'Content-Type: application/json' \
---data-raw "$FILE_REQUEST_BODY" \
---insecure
-grep "\"status\":\"server-error\"" output/file_out
-
-if [[ $? -eq 0 ]]
-then
-  echo $(printf "${RED}FAILED: Received server error when calling using map reduce configuratoin.${ENDCOLOR}")
-  exit 1
-fi
-
+curl_endpoint "$FILE_REQUEST_BODY" output/file_out
 echo ""
 echo "DATABASE:"
-curl -o output/db_out -s \
--w 'Establish Connection: %{time_connect}s\nTTFB: %{time_starttransfer}s\nTotal: %{time_total}s\n' \
---location --request POST "${BASE_URL}/studies/${STUDY_ID}/entities/${OUTPUT_ENTITY_ID}/tabular" \
---header "Auth-Key: ${AUTH_KEY}" \
---header 'Content-Type: application/json' \
---data-raw "$DB_REQUEST_BODY" \
---insecure
-grep "\"status\":\"server-error\"" output/db_out
-
-if [[ $? -eq 0 ]]
-then
-  echo $(printf "${RED}FAILED: Received server error when calling using DB configuration.${ENDCOLOR}")
-  exit 1
-fi
+curl_endpoint "$DB_REQUEST_BODY" output/db_out
 
 echo ""
 if diff output/file_out output/db_out
