@@ -64,6 +64,7 @@ curl_endpoint ()
   fi
 }
 
+mkdir -p output
 echo "MAP REDUCE:"
 curl_endpoint "$FILE_REQUEST_BODY" output/file_out
 echo ""
