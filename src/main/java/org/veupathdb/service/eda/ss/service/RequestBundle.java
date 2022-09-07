@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
@@ -46,7 +48,7 @@ public class RequestBundle {
 
     Entity entity = study.getEntity(entityId).orElseThrow(() -> new NotFoundException("In " + study.getStudyId() + " Entity ID not found: " + entityId));
 
-    List<Variable> variables = getEntityVariables(entity, variableIds);
+    List<VariableWithValues> variables = getEntityVariables(entity, variableIds);
 
     List<Filter> filters = constructFiltersFromAPIFilters(study, apiFilters, dataSchema);
 
@@ -107,7 +109,7 @@ public class RequestBundle {
     return config;
   }
 
-  private static List<Variable> getEntityVariables(Entity entity, List<String> variableIds) {
+  private static List<VariableWithValues> getEntityVariables(Entity entity, List<String> variableIds) {
 
     List<Variable> variables = new ArrayList<>();
 
@@ -115,7 +117,16 @@ public class RequestBundle {
       String errMsg = "Variable '" + varId + "' is not found for entity with ID: '" + entity.getId() + "'";
       variables.add(entity.getVariable(varId).orElseThrow(() -> new BadRequestException(errMsg)));
     }
-    return variables;
+
+    for (Variable var: variables) {
+      if (!var.hasValues()) {
+        throw new BadRequestException("Variable " + var.getId() + " is not a variable with values.");
+      }
+    }
+
+    return variables.stream()
+        .map(var -> (VariableWithValues) var)
+        .collect(Collectors.toList());
   }
 
   /*
@@ -272,10 +283,10 @@ public class RequestBundle {
   private final Study _study;
   private final List<Filter> _filters;
   private final Entity _targetEntity;
-  private final List<Variable> _requestedVariables;
+  private final List<VariableWithValues> _requestedVariables;
   private final TabularReportConfig _reportConfig;
 
-  RequestBundle(Study study, Entity targetEntity, List<Variable> requestedVariables, List<Filter> filters, TabularReportConfig reportConfig) {
+  RequestBundle(Study study, Entity targetEntity, List<VariableWithValues> requestedVariables, List<Filter> filters, TabularReportConfig reportConfig) {
     _study = study;
     _targetEntity = targetEntity;
     _filters = filters;
@@ -295,7 +306,7 @@ public class RequestBundle {
     return _targetEntity;
   }
 
-  public List<Variable> getRequestedVariables() {
+  public List<VariableWithValues> getRequestedVariables() {
     return _requestedVariables;
   }
 
