@@ -1,0 +1,18 @@
+{
+  "reportConfig": {
+    "dataSource": "{{data_source}}"
+  },
+  "filters": [
+    {
+      "entityId": "EUPATH_0000096",
+      "variableId": "EUPATH_0000208",
+      "stringSet": [
+        "Participant unable to be located for > 60 days"
+      ],
+      "type": "stringSet"
+    }
+  ],
+  "outputVariableIds": [
+    "EUPATH_0000208"
+  ]
+}

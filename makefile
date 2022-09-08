@@ -85,6 +85,10 @@ merge-raml:
 	$(BIN_DIR)/merge-raml schema > schema/library.raml
 	rm schema/url/eda-common-lib.raml
 
+.PHONY: api-test
+api-test:
+	@./gradlew regression-test
+
 #
 # File based targets
 #
