@@ -10,7 +10,7 @@
 generated/
 .classpath
 .project
-api-test/ouptut/
+api-test/output/
 
 *.tmp
 *.bak
