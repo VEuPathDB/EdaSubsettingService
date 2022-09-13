@@ -51,7 +51,9 @@ STUDY_ID=$(dirname "$REQUEST_DIR" | rev | cut -d"/" -f1 | rev)
 #######################################
 curl_endpoint ()
 {
-  curl -o $2 -w 'Establish Connection: %{time_connect}s\nTTFB: %{time_starttransfer}s\nTotal: %{time_total}s\n' -s --location --request POST "${BASE_URL}/studies/${STUDY_ID}/entities/${OUTPUT_ENTITY_ID}/tabular" \
+  # FORMATTING='Establish Connection: %{time_connect}s\nTTFB: %{time_starttransfer}s\nTotal: %{time_total}s\n'
+  FORMATTING='%{time_connect},%{time_starttransfer},%{time_total}'
+  curl -o $2 -w $FORMATTING -s --location --request POST "${BASE_URL}/studies/${STUDY_ID}/entities/${OUTPUT_ENTITY_ID}/tabular" \
   --header "Auth-Key: ${AUTH_KEY}" \
   --header 'Content-Type: application/json' \
   --data-raw "$1" \
@@ -65,13 +67,18 @@ curl_endpoint ()
 }
 
 mkdir -p output
-echo "MAP REDUCE:"
-curl_endpoint "$FILE_REQUEST_BODY" output/file_out
+MR_CURL_RESULTS=$(curl_endpoint $FILE_REQUEST_BODY output/file_out)
+MR_ROWS_RETURNED=`wc -l output/file_out`
+echo "MAP REDUCE: ${MR_CURL_RESULTS}"
 echo ""
-echo "DATABASE:"
-curl_endpoint "$DB_REQUEST_BODY" output/db_out
+DB_CURL_RESULTS=$(curl_endpoint $DB_REQUEST_BODY output/db_out)
+DB_ROWS_RETURNED=`wc -l output/file_out`
+echo "DATABASE: ${DB_CURL_RESULTS}"
 
-echo ""
+NUM_FILTERS=`echo ${FILE_REQUEST_BODY} | jq '.["filters"] | length'`
+NUM_OUTPUT_VARIABLES=`echo ${FILE_REQUEST_BODY} | jq '.["outputVariableIds"] | length'`
+
+echo "${STUDY_ID},${OUTPUT_ENTITY_ID},${NUM_OUTPUT_VARIABLES},${NUM_FILTERS},${MR_CURL_RESULTS},${DB_CURL_RESULTS}" >> $PERFORMANCE_OUT_FILE
 if diff output/file_out output/db_out
 then
   echo -e $(printf "${GREEN}SUCCESS: No differences found in db output and file output!${ENDCOLOR}")
