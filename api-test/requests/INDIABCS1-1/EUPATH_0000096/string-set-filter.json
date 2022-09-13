@@ -1,0 +1,19 @@
+{
+  "reportConfig": {
+    "dataSource": "{{data_source}}"
+  },
+  "filters": [
+    {
+      "entityId": "EUPATH_0000096",
+      "variableId": "EUPATH_0021002",
+      "stringSet": [
+        "Aches and pains",
+        "Allergic rash"
+      ],
+      "type": "stringSet"
+    }
+  ],
+  "outputVariableIds": [
+    "EUPATH_0021002"
+  ]
+}
