@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.veupathdb.lib.container.jaxrs.config.Options;
 import org.veupathdb.lib.container.jaxrs.server.ContainerResources;
 import org.veupathdb.lib.container.jaxrs.utils.db.DbManager;
-import org.veupathdb.service.eda.ss.model.variable.binary.PathPattern;
 import org.veupathdb.service.eda.ss.service.ClearMetadataCacheService;
 import org.veupathdb.service.eda.ss.service.InternalClientsService;
 import org.veupathdb.service.eda.ss.service.StudiesService;
@@ -76,9 +75,9 @@ public class Resources extends ContainerResources {
     return Path.of(ENV.getBinaryFilesDirectory());
   }
 
-  public static List<PathPattern> getAvailableBinaryFilesPaths() {
+  public static List<String> getAvailableBinaryFilesPaths() {
     return Arrays.stream(ENV.getAvailableBinaryFilesPaths().split(";"))
-        .map(PathPattern::new)
+        .map(env -> env.replaceAll("%RELEASE%", ENV.getRelease()))
         .collect(Collectors.toList());
   }
 

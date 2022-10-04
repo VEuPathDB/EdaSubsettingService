@@ -1,1 +1,0 @@
-{"filters":[{"entityId":"PCO_0000024","type":"stringSet","variableId":"ENVO_00000009","stringSet":["Bangladesh","India","Nepal","Pakistan"]}],"outputVariableIds":["EUPATH_0011931","EUPATH_0011135"],"reportConfig":{"dataSource":"{{data_source}}"}}

@@ -1,1 +1,0 @@
-{"filters":[{"entityId":"PCO_0000024","type":"stringSet","variableId":"ENVO_00000009","stringSet":["Bangladesh"]}],"outputVariableIds":["EUPATH_0010519"],"reportConfig":{"dataSource":"{{data_source}}"}}
