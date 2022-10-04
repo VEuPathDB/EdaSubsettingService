@@ -6,12 +6,16 @@ import org.apache.logging.log4j.Logger;
 import org.veupathdb.lib.container.jaxrs.config.Options;
 import org.veupathdb.lib.container.jaxrs.server.ContainerResources;
 import org.veupathdb.lib.container.jaxrs.utils.db.DbManager;
+import org.veupathdb.service.eda.ss.model.variable.binary.PathPattern;
 import org.veupathdb.service.eda.ss.service.ClearMetadataCacheService;
 import org.veupathdb.service.eda.ss.service.InternalClientsService;
 import org.veupathdb.service.eda.ss.service.StudiesService;
 import org.veupathdb.service.eda.ss.test.StubDb;
 
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service Resource Registration.
@@ -70,6 +74,12 @@ public class Resources extends ContainerResources {
 
   public static Path getBinaryFilesDirectory() {
     return Path.of(ENV.getBinaryFilesDirectory());
+  }
+
+  public static List<PathPattern> getAvailableBinaryFilesPaths() {
+    return Arrays.stream(ENV.getAvailableBinaryFilesPaths().split(";"))
+        .map(PathPattern::new)
+        .collect(Collectors.toList());
   }
 
   /**

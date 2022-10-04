@@ -10,6 +10,7 @@ public class EnvironmentVars {
   protected String _userStudySchema;
   protected String _datasetAccessServiceUrl;
   protected String _binaryFilesDirectory;
+  protected String _availableBinaryFilesPaths;
 
   public void load() {
     _developmentMode = Boolean.parseBoolean(getOptionalVar("DEVELOPMENT_MODE", "true"));
@@ -18,6 +19,7 @@ public class EnvironmentVars {
     // TODO Make this mandatory once docker-compose changes are deployed.
     _binaryFilesDirectory = getOptionalVar("BINARY_FILES_DIR", "/tmp/binaryFilesDir");
     _datasetAccessServiceUrl = getRequiredVar("DATASET_ACCESS_SERVICE_URL");
+    _availableBinaryFilesPaths = getRequiredVar("AVAILABLE_BINARY_FILES_PATHS");
   }
 
   public boolean isDevelopmentMode() {
@@ -38,5 +40,9 @@ public class EnvironmentVars {
 
   public String getBinaryFilesDirectory() {
     return _binaryFilesDirectory;
+  }
+
+  public String getAvailableBinaryFilesPaths() {
+    return _availableBinaryFilesPaths;
   }
 }
