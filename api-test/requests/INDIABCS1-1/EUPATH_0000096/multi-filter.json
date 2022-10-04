@@ -1,0 +1,34 @@
+{
+  "reportConfig": {
+    "dataSource": "{{data_source}}"
+  },
+  "filters": [
+    {
+      "entityId": "PCO_0000024",
+      "variableId": "EUPATH_0021242",
+      "type": "multiFilter",
+      "operation": "intersect",
+      "subFilters": [
+        {
+          "entityId": "PCO_0000024",
+          "variableId": "EUPATH_0021243",
+          "type": "stringSet",
+          "stringSet": [
+            "No"
+          ]
+        },
+        {
+          "entityId": "PCO_0000024",
+          "variableId": "EUPATH_0021246",
+          "type": "stringSet",
+          "stringSet": [
+            "No"
+          ]
+        }
+      ]
+    }
+  ],
+  "outputVariableIds": [
+    "EUPATH_0000427"
+  ]
+}
