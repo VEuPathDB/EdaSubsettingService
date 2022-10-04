@@ -1,8 +1,0 @@
-{
-  "reportConfig": {
-    "dataSource": "{{data_source}}"
-  },
-  "outputVariableIds": [
-    "EUPATH_0000427"
-  ]
-}
