@@ -77,7 +77,7 @@ public class Resources extends ContainerResources {
 
   public static List<String> getAvailableBinaryFilesPaths() {
     return Arrays.stream(ENV.getAvailableBinaryFilesPaths().split(";"))
-        .map(env -> env.replaceAll("%RELEASE%", ENV.getRelease()))
+        .map(env -> env.replaceAll("%DB_BUILD%", ENV.getDbBuild()))
         .collect(Collectors.toList());
   }
 

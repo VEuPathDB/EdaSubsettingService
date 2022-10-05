@@ -11,7 +11,7 @@ public class EnvironmentVars {
   protected String _datasetAccessServiceUrl;
   protected String _binaryFilesDirectory;
   protected String _availableBinaryFilesPaths;
-  protected String _release;
+  protected String _dbBuild;
 
   public void load() {
     _developmentMode = Boolean.parseBoolean(getOptionalVar("DEVELOPMENT_MODE", "true"));
@@ -21,7 +21,7 @@ public class EnvironmentVars {
     _binaryFilesDirectory = getOptionalVar("BINARY_FILES_DIR", "/tmp/binaryFilesDir");
     _datasetAccessServiceUrl = getRequiredVar("DATASET_ACCESS_SERVICE_URL");
     _availableBinaryFilesPaths = getRequiredVar("AVAILABLE_BINARY_FILES_PATHS");
-    _release = getRequiredVar("RELEASE");
+    _dbBuild = getRequiredVar("DB_BUILD");
   }
 
   public boolean isDevelopmentMode() {
@@ -36,8 +36,8 @@ public class EnvironmentVars {
     return _userStudySchema;
   }
 
-  public String getRelease() {
-    return _release;
+  public String getDbBuild() {
+    return _dbBuild;
   }
 
   public String getDatasetAccessServiceUrl() {
