@@ -1,12 +1,13 @@
 if (( $# != 2 ))
 then
-  print "USAGE: $0 <directory> <output_file>"
+  echo "USAGE: $0 <directory> <output_file>"
   exit
 fi
 
 if [[ -f $2 ]]
 then
-  print "Output file ${$2} already exists"
+  echo "Output file $2 already exists"
+  exit
 fi
 
 CYAN="\e[36m"

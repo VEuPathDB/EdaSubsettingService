@@ -10,7 +10,7 @@
 
 if (( $# != 2 ))
 then
-  print "USAGE: $0 <request_body_file> <output_file>"
+  echo "USAGE: $0 <request_body_file> <output_file>"
   exit
 fi
 
@@ -57,7 +57,7 @@ curl_endpoint ()
 {
   # FORMATTING='Establish Connection: %{time_connect}s\nTTFB: %{time_starttransfer}s\nTotal: %{time_total}s\n'
   FORMATTING='%{time_connect},%{time_starttransfer},%{time_total}'
-  curl -o $OUTPUT_FILE -w $FORMATTING -s --location --request POST "${BASE_URL}/studies/${STUDY_ID}/entities/${OUTPUT_ENTITY_ID}/tabular" \
+  curl -o $2 -w $FORMATTING -s --location --request POST "${BASE_URL}/studies/${STUDY_ID}/entities/${OUTPUT_ENTITY_ID}/tabular" \
   --header "Auth-Key: ${AUTH_KEY}" \
   --header 'Content-Type: application/json' \
   --data "$1" \
@@ -71,11 +71,11 @@ curl_endpoint ()
 }
 
 mkdir -p output
-MR_CURL_RESULTS=$(curl_endpoint $FILE_REQUEST_BODY output/file_out)
+MR_CURL_RESULTS=$(curl_endpoint "$FILE_REQUEST_BODY" "output/file_out")
 MR_ROWS_RETURNED=`wc -l output/file_out`
 echo "MAP REDUCE: ${MR_CURL_RESULTS}"
 echo ""
-DB_CURL_RESULTS=$(curl_endpoint $DB_REQUEST_BODY output/db_out)
+DB_CURL_RESULTS=$(curl_endpoint "$DB_REQUEST_BODY" "output/db_out")
 DB_ROWS_RETURNED=`wc -l output/db_out`
 echo "DATABASE: ${DB_CURL_RESULTS}"
 
