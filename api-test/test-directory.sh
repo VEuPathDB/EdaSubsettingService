@@ -1,20 +1,28 @@
-if (( $# != 1 ))
+if (( $# != 2 ))
 then
-  print "USAGE: $0 <directory>"
+  print "USAGE: $0 <directory> <output_file>"
   exit
+fi
+
+if [[ -f $2 ]]
+then
+  print "Output file ${$2} already exists"
 fi
 
 CYAN="\e[36m"
 ENDCOLOR="\e[0m"
 FAILED_TESTS=()
 
-for file in $(find "$1")
+DIRECTORY=$1
+OUTPUT_FILE=$2
+
+for file in $(find "$DIRECTORY")
 do
     if [[ $file == *.json ]]
     then
       echo $(printf "${CYAN}Running test for request \"$file\"${ENDCOLOR}")
       echo ""
-      ./test-study.sh $file
+      ./test-study.sh $file $OUTPUT_FILE
       if [[ $? -ne 0 ]]
       then
         FAILED_TESTS+=($file)
