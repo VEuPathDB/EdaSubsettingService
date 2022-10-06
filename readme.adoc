@@ -1,7 +1,8 @@
 An EDA service that provides
-- metadata about EDA entities and their variables
-- for a given entity, a count of entities that satisfy provided filters
-- for a given entity, a stream of entities that satisfy provided filters, including a set of requested variables
+
+* metadata about EDA entities and their variables
+* for a given entity, a count of entities that satisfy provided filters
+* for a given entity, a stream of entities that satisfy provided filters, including a set of requested variables
 
 See the https://veupathdb.github.io/EdaSubsettingService/api.html[API Docs] for details.
 
