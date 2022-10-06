@@ -10,7 +10,7 @@
 
 if (( $# != 2 ))
 then
-  echo "USAGE: $0 <request_body_file> <output_file>"
+  echo "USAGE: $(basename $0) <request_body_file> <output_file>"
   exit
 fi
 

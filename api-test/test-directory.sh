@@ -1,6 +1,14 @@
+#######################################
+# Run all regression tests in a directory, for each request comparing the results of the map-reduce subsetting
+# with the database subsetting. Returns with a non-zero exit code if any of the results differ.
+# Arguments:
+#   $1 REQUEST_DIRECTORY: Directory containing request bodies. Requests in the directory must have the following directory structure: ${STUDY_ID}/${OUTPUT_ENTITY_ID}/*.json.
+#   $2 OUTPUT_FILE: File to write CSV performance results to.
+#######################################
+
 if (( $# != 2 ))
 then
-  echo "USAGE: $0 <directory> <output_file>"
+  echo "USAGE: $(basename $0) <directory> <output_file>"
   exit
 fi
 
