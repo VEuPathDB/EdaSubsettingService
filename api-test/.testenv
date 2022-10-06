@@ -1,5 +1,6 @@
 # Configure your favorite EDA endpoint and your auth key here.
 
 # export BASE_URL="https://xxx.clinepidb.org/eda"
-# export BASE_URL="https://edadata-dev.local.apidb.org:8443"
-# export AUTH_KEY=$SECRET
+export BASE_URL="https://edadata-dev.local.apidb.org:8443"
+export AUTH_KEY=$AUTH_KEY
+export PERFORMANCE_OUT_FILE=~/perf-out.txt

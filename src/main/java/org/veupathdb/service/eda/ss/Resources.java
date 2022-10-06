@@ -12,6 +12,9 @@ import org.veupathdb.service.eda.ss.service.StudiesService;
 import org.veupathdb.service.eda.ss.test.StubDb;
 
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service Resource Registration.
@@ -70,6 +73,12 @@ public class Resources extends ContainerResources {
 
   public static Path getBinaryFilesDirectory() {
     return Path.of(ENV.getBinaryFilesDirectory());
+  }
+
+  public static List<String> getAvailableBinaryFilesPaths() {
+    return Arrays.stream(ENV.getAvailableBinaryFilesPaths().split(";"))
+        .map(env -> env.replaceAll("%DB_BUILD%", ENV.getDbBuild()))
+        .collect(Collectors.toList());
   }
 
   /**

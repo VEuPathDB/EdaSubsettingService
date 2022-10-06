@@ -211,7 +211,7 @@ public class StudiesService implements Studies {
       EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
           FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), request.getTargetEntity(),
               request.getRequestedVariables(), request.getFilters(), responseType.getFormatter(),
-              request.getReportConfig(), outStream, Resources.getBinaryFilesDirectory()));
+              request.getReportConfig(), outStream, Resources.getBinaryFilesDirectory(), Resources.getAvailableBinaryFilesPaths()));
       return responseConverter.apply(streamer, responseType);
     }
     EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
