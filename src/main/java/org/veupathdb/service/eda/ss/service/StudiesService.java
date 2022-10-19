@@ -210,7 +210,7 @@ public class StudiesService implements Studies {
     if (request.getReportConfig().getDataSourceType() == DataSourceType.FILES) {
       EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
           FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), request.getTargetEntity(),
-              request.getRequestedVariables(), request.getFilters(), responseType.getFormatter(),
+              request.getRequestedVariables(), request.getFilters(), responseType.getBinaryFormatter(),
               request.getReportConfig(), outStream, Resources.getBinaryFilesDirectory(), Resources.getAvailableBinaryFilesPaths()));
       return responseConverter.apply(streamer, responseType);
     }
