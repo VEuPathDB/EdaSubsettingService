@@ -2,7 +2,6 @@ package org.veupathdb.service.eda.ss.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
@@ -206,11 +205,12 @@ public class StudiesService implements Studies {
       checkPerms(requestContext, studyId, getTabularAccessPredicate(request.getReportConfig()));
     }
 
+
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
     if (request.getReportConfig().getDataSourceType() == DataSourceType.FILES) {
       EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
           FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), request.getTargetEntity(),
-              request.getRequestedVariables(), request.getFilters(), responseType.getFormatter(),
+              request.getRequestedVariables(), request.getFilters(), responseType.getBinaryFormatter(),
               request.getReportConfig(), outStream, Resources.getBinaryFilesDirectory(), Resources.getAvailableBinaryFilesPaths()));
       return responseConverter.apply(streamer, responseType);
     }
