@@ -8,6 +8,7 @@ import org.veupathdb.lib.container.jaxrs.server.Server;
 import org.veupathdb.lib.container.jaxrs.server.middleware.PrometheusFilter;
 
 public class Main extends Server {
+  private static final String EDA_ID_REGEX = "[A-Z0-9_-]+";
 
   public static void main(String[] args) {
     new Main().start(args);
@@ -15,9 +16,9 @@ public class Main extends Server {
 
   public Main() {
     PrometheusFilter.setPathTransform(path ->
-        path.replace("studies/[A-Z0-9_-]+", "studies/{study-id}")
-            .replace("entities/[A-Z0-9_-]+", "entities/{entity-id}")
-            .replace("variables/[A-Z0-9_-]+", "variables/{variable-id}"));
+        path.replace("studies/" + EDA_ID_REGEX, "studies/{study-id}")
+            .replace("entities/" + EDA_ID_REGEX, "entities/{entity-id}")
+            .replace("variables/" + EDA_ID_REGEX, "variables/{variable-id}"));
     QueryLogger.initialize(new QLF(){});
   }
 
