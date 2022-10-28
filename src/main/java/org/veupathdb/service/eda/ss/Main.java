@@ -5,6 +5,7 @@ import org.gusdb.fgputil.db.slowquery.QueryLogger;
 import org.veupathdb.lib.container.jaxrs.config.Options;
 import org.veupathdb.lib.container.jaxrs.server.ContainerResources;
 import org.veupathdb.lib.container.jaxrs.server.Server;
+import org.veupathdb.lib.container.jaxrs.server.middleware.PrometheusFilter;
 
 public class Main extends Server {
 
@@ -13,6 +14,10 @@ public class Main extends Server {
   }
 
   public Main() {
+    PrometheusFilter.setPathTransform(path ->
+        path.replace("studies/[A-Z0-9_-]+", "studies/{study-id}")
+            .replace("entities/[A-Z0-9_-]+", "entities/{entity-id}")
+            .replace("variables/[A-Z0-9_-]+", "variables/{variable-id}"));
     QueryLogger.initialize(new QLF(){});
   }
 
