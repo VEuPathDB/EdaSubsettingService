@@ -73,7 +73,7 @@ tasks.shadowJar {
 tasks.register("regression-test") {
   project.exec {
     workingDir("$projectDir/api-test")
-    commandLine("./test-directory.sh", "$projectDir/api-test/requests")
+    commandLine("./test-directory.sh", "$projectDir/api-test/requests", "output/results")
   }
 }
 

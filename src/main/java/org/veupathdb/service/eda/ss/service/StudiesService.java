@@ -2,7 +2,6 @@ package org.veupathdb.service.eda.ss.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
@@ -57,11 +56,15 @@ import org.veupathdb.service.eda.ss.model.db.StudyFactory;
 import org.veupathdb.service.eda.ss.model.db.StudyProvider;
 import org.veupathdb.service.eda.ss.model.db.StudyResolver;
 import org.veupathdb.service.eda.ss.model.distribution.DistributionFactory;
+import org.veupathdb.service.eda.ss.model.filter.Filter;
+import org.veupathdb.service.eda.ss.model.filter.SingleValueFilter;
 import org.veupathdb.service.eda.ss.model.tabular.DataSourceType;
 import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
 import org.veupathdb.service.eda.ss.model.variable.Variable;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
+import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
+import org.veupathdb.service.eda.ss.model.variable.binary.MultiPathStudyFinder;
 
 import static org.veupathdb.service.eda.ss.service.ApiConversionUtil.*;
 
@@ -207,13 +210,17 @@ public class StudiesService implements Studies {
     }
 
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
-    if (request.getReportConfig().getDataSourceType() == DataSourceType.FILES) {
+    final BinaryFilesManager binaryFilesManager = new BinaryFilesManager(
+        new MultiPathStudyFinder(Resources.getAvailableBinaryFilesPaths(), Resources.getBinaryFilesDirectory()));
+    if (shouldRunFileBasedSubsetting(request, binaryFilesManager)) {
+      LOG.info("Running file-based subsetting for study " + studyId);
       EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
           FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), request.getTargetEntity(),
               request.getRequestedVariables(), request.getFilters(), responseType.getBinaryFormatter(),
-              request.getReportConfig(), outStream, Resources.getBinaryFilesDirectory(), Resources.getAvailableBinaryFilesPaths()));
+              request.getReportConfig(), outStream, binaryFilesManager));
       return responseConverter.apply(streamer, responseType);
     }
+    LOG.info("Performing oracle-based subsetting for study " + studyId);
     EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
         FilteredResultFactory.produceTabularSubset(Resources.getApplicationDataSource(), Resources.getAppDbSchema(),
             request.getStudy(), request.getTargetEntity(), request.getRequestedVariables(), request.getFilters(),
@@ -230,6 +237,45 @@ public class StudiesService implements Studies {
     }
     // if paging not present or does not meet single-page criteria, user needs all-results access
     return StudyAccess::allowResultsAll;
+  }
+
+  // Skip and do oracle-based subsetting if either:
+  //  1. File-based subsetting is disabled via environment variable
+  //  2. getReportConfig().getDataSourceType() is not specified or is specified as DATABASE
+  //  3. Any data is missing in files (i.e. MissingDataException is thrown).
+  private static boolean shouldRunFileBasedSubsetting(RequestBundle requestBundle, BinaryFilesManager binaryFilesManager) {
+    if (!binaryFilesManager.studyDirExists(requestBundle.getStudy())) {
+      return false;
+    }
+    if (!binaryFilesManager.entityDirExists(requestBundle.getStudy(), requestBundle.getTargetEntity())) {
+      LOG.info("Unable to find entity dir for " + requestBundle.getTargetEntity().getId() + " in study files.");
+      return false;
+    }
+    if (!binaryFilesManager.idMapFileExists(requestBundle.getStudy(), requestBundle.getTargetEntity())) {
+      LOG.info("Unable to find ID file for " + requestBundle.getTargetEntity().getId() + " in study files.");
+      return false;
+    }
+    if (!requestBundle.getTargetEntity().getAncestorEntities().isEmpty() && !binaryFilesManager.ancestorFileExists(requestBundle.getStudy(), requestBundle.getTargetEntity())) {
+      LOG.info("Unable to find ancestor file for " + requestBundle.getTargetEntity().getId() + " in study files.");
+      return false;
+    }
+    for (VariableWithValues outputVar: requestBundle.getRequestedVariables()) {
+      if (!binaryFilesManager.variableFileExists(requestBundle.getStudy(), requestBundle.getTargetEntity(), outputVar)) {
+        LOG.info("Unable to find output var " + outputVar.getId() + " in study files.");
+        return false;
+      }
+    }
+    List<VariableWithValues> filterVars = requestBundle.getFilters().stream()
+        .flatMap(filter -> filter.getAllVariables().stream())
+        .collect(Collectors.toList());
+    for (VariableWithValues filterVar: filterVars) {
+      if (!binaryFilesManager.variableFileExists(requestBundle.getStudy(), requestBundle.getTargetEntity(), filterVar)) {
+        LOG.info("Unable to find filterVar var " + filterVar.getId() + " in study files.");
+        return false;
+      }
+    }
+    return (!Resources.isFileBasedSubsettingDisabled()
+        || requestBundle.getReportConfig().getDataSourceType() == DataSourceType.FILES);
   }
 
   @Override

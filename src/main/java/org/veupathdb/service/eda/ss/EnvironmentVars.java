@@ -12,6 +12,7 @@ public class EnvironmentVars {
   protected String _binaryFilesDirectory;
   protected String _availableBinaryFilesPaths;
   protected String _dbBuild;
+  protected boolean _fileBasedSubsettingDisabled;
 
   public void load() {
     _developmentMode = Boolean.parseBoolean(getOptionalVar("DEVELOPMENT_MODE", "true"));
@@ -22,10 +23,15 @@ public class EnvironmentVars {
     // TODO Make this mandatory once docker-compose changes are deployed.
     _binaryFilesDirectory = getOptionalVar("BINARY_FILES_DIR", "/tmp/binaryFilesDir");
     _datasetAccessServiceUrl = getRequiredVar("DATASET_ACCESS_SERVICE_URL");
+    _fileBasedSubsettingDisabled = Boolean.parseBoolean(getOptionalVar("DEVELOPMENT_MODE", "false"));
   }
 
   public boolean isDevelopmentMode() {
     return _developmentMode;
+  }
+
+  public boolean isFileBasedSubsettingDisabled() {
+    return _fileBasedSubsettingDisabled;
   }
 
   public String getAppDbSchema() {

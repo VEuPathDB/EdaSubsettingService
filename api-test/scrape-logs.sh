@@ -9,7 +9,7 @@
 
 if (( $# != 2 ))
 then
-  print "USAGE: $0 <log_path> <output_dir>"
+  echo "USAGE: $0 <log_path> <output_dir>"
   exit
 fi
 
