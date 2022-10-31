@@ -57,8 +57,8 @@ public class Resources extends ContainerResources {
     }
   }
 
-  public static boolean isFileBasedSubsettingDisabled() {
-    return ENV.isFileBasedSubsettingDisabled();
+  public static boolean isFileBasedSubsettingEnabled() {
+    return ENV.isFileBasedSubsettingEnabled();
   }
 
   public static DataSource getApplicationDataSource() {

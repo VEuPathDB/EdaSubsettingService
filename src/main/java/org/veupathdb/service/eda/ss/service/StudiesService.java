@@ -56,8 +56,6 @@ import org.veupathdb.service.eda.ss.model.db.StudyFactory;
 import org.veupathdb.service.eda.ss.model.db.StudyProvider;
 import org.veupathdb.service.eda.ss.model.db.StudyResolver;
 import org.veupathdb.service.eda.ss.model.distribution.DistributionFactory;
-import org.veupathdb.service.eda.ss.model.filter.Filter;
-import org.veupathdb.service.eda.ss.model.filter.SingleValueFilter;
 import org.veupathdb.service.eda.ss.model.tabular.DataSourceType;
 import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
@@ -239,10 +237,12 @@ public class StudiesService implements Studies {
     return StudyAccess::allowResultsAll;
   }
 
-  // Skip and do oracle-based subsetting if either:
-  //  1. File-based subsetting is disabled via environment variable
-  //  2. getReportConfig().getDataSourceType() is not specified or is specified as DATABASE
-  //  3. Any data is missing in files (i.e. MissingDataException is thrown).
+  /**
+   * Skip and do oracle-based subsetting if either:
+   * 1. File-based subsetting is disabled via environment variable
+   * 2. getReportConfig().getDataSourceType() is not specified or is specified as DATABASE
+   * 3. Any data is missing in files (i.e. MissingDataException is thrown).
+   **/
   private static boolean shouldRunFileBasedSubsetting(RequestBundle requestBundle, BinaryFilesManager binaryFilesManager) {
     if (!binaryFilesManager.studyDirExists(requestBundle.getStudy())) {
       return false;
@@ -274,7 +274,7 @@ public class StudiesService implements Studies {
         return false;
       }
     }
-    return (!Resources.isFileBasedSubsettingDisabled()
+    return (Resources.isFileBasedSubsettingEnabled()
         || requestBundle.getReportConfig().getDataSourceType() == DataSourceType.FILES);
   }
 
