@@ -57,6 +57,10 @@ public class Resources extends ContainerResources {
     }
   }
 
+  public static boolean isFileBasedSubsettingEnabled() {
+    return ENV.isFileBasedSubsettingEnabled();
+  }
+
   public static DataSource getApplicationDataSource() {
     return USE_IN_MEMORY_TEST_DATABASE
       ? StubDb.getDataSource()
