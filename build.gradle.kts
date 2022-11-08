@@ -95,7 +95,7 @@ repositories {
 //
 
 // versions
-val coreLib       = "6.8.0"         // Container core lib version
+val coreLib       = "6.12.0"         // Container core lib version
 val edaCommon     = "9.2.0"         // EDA Common version
 val libSubsetting = "3.4.0"         // lib-eda-subsetting version
 val fgputil       = "2.8.1-jakarta" // FgpUtil version
