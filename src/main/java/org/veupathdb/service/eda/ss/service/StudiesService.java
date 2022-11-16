@@ -220,7 +220,7 @@ public class StudiesService implements Studies {
     }
     LOG.info("Performing oracle-based subsetting for study " + studyId);
     EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
-        FilteredResultFactory.produceTabularSubset(Resources.getApplicationDataSource(), Resources.getAppDbSchema(),
+        FilteredResultFactory.produceTabularSubset(Resources.getApplicationDataSource(), dataSchema,
             request.getStudy(), request.getTargetEntity(), request.getRequestedVariables(), request.getFilters(),
             request.getReportConfig(), responseType.getFormatter(), outStream));
     return responseConverter.apply(streamer, responseType);
