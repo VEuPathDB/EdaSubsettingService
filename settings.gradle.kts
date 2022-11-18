@@ -14,7 +14,7 @@ pluginManagement {
   }
 }
 
-val core = file("/cc-build");
+val core = file("../lib-jaxrs-container-core");
 if (core.exists()) {
   include(":core")
   project(":core").projectDir = core
