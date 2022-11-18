@@ -13,17 +13,19 @@ public class EnvironmentVars {
   protected String _availableBinaryFilesPaths;
   protected String _dbBuild;
   protected boolean _fileBasedSubsettingEnabled;
+  private String _binaryFilesMount;
 
   public void load() {
     _developmentMode = Boolean.parseBoolean(getOptionalVar("DEVELOPMENT_MODE", "true"));
     _appDbSchema = getOptionalVar("APP_DB_SCHEMA", "eda.");
     _userStudySchema = getOptionalVar("USER_STUDY_SCHEMA", "apidbuserdatasets.");
     _availableBinaryFilesPaths = getOptionalVar("AVAILABLE_BINARY_FILES_PATHS" ,"");
+    // All of these file-based subsetting variables should be marked as required once docker-compose files are deployed.
     _dbBuild = getOptionalVar("DB_BUILD", "");
-    // TODO Make this mandatory once docker-compose changes are deployed.
-    _binaryFilesDirectory = getOptionalVar("BINARY_FILES_DIR", "/tmp/binaryFilesDir");
+    _binaryFilesDirectory = getOptionalVar("BINARY_FILES_DIR", "");
+    _binaryFilesMount = getOptionalVar("BINARY_FILES_MOUNT", "");
     _datasetAccessServiceUrl = getRequiredVar("DATASET_ACCESS_SERVICE_URL");
-    _fileBasedSubsettingEnabled = Boolean.parseBoolean(getOptionalVar("FILE_SUBSETTING_ENABLED", "false"));
+    _fileBasedSubsettingEnabled = true; // Temporary override until systems wires up the environment variable.
   }
 
   public boolean isDevelopmentMode() {
@@ -54,7 +56,7 @@ public class EnvironmentVars {
     return _binaryFilesDirectory;
   }
 
-  public String getAvailableBinaryFilesPaths() {
-    return _availableBinaryFilesPaths;
+  public String getBinaryFilesMount() {
+    return _binaryFilesMount;
   }
 }
