@@ -20,6 +20,7 @@ public class EnvironmentVars {
     _appDbSchema = getOptionalVar("APP_DB_SCHEMA", "eda.");
     _userStudySchema = getOptionalVar("USER_STUDY_SCHEMA", "apidbuserdatasets.");
     _availableBinaryFilesPaths = getOptionalVar("AVAILABLE_BINARY_FILES_PATHS" ,"");
+    // All of these file-based subsetting variables should be marked as required once docker-compose files are deployed.
     _dbBuild = getOptionalVar("DB_BUILD", "");
     _binaryFilesDirectory = getOptionalVar("BINARY_FILES_DIR", "");
     _binaryFilesMount = getOptionalVar("BINARY_FILES_MOUNT", "");
