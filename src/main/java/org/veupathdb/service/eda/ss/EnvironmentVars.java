@@ -20,10 +20,10 @@ public class EnvironmentVars {
     _userStudySchema = getOptionalVar("USER_STUDY_SCHEMA", "apidbuserdatasets.");
     _availableBinaryFilesPaths = getOptionalVar("AVAILABLE_BINARY_FILES_PATHS" ,"");
     _dbBuild = getOptionalVar("DB_BUILD", "");
-    _binaryFilesDirectory = getOptionalVar("BINARY_FILES_DIR", "");
+    // TODO Make this mandatory once docker-compose changes are deployed.
+    _binaryFilesDirectory = getOptionalVar("BINARY_FILES_DIR", "/tmp/binaryFilesDir");
     _datasetAccessServiceUrl = getRequiredVar("DATASET_ACCESS_SERVICE_URL");
-    // Temporarily hard-code file-based subsetting to true to enable testing in development environments.
-    _fileBasedSubsettingEnabled = true;
+    _fileBasedSubsettingEnabled = Boolean.parseBoolean(getOptionalVar("FILE_SUBSETTING_ENABLED", "false"));
   }
 
   public boolean isDevelopmentMode() {
