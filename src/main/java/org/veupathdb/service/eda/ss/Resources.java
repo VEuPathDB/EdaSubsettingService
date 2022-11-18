@@ -76,7 +76,6 @@ public class Resources extends ContainerResources {
   }
 
   public static Path getBinaryFilesDirectory() {
-    LOG.info("Dir: " + Path.of(ENV.getBinaryFilesMount(), ENV.getBinaryFilesDirectory().replace("%DB_BUILD%", ENV.getDbBuild())).toString());
     return Path.of(ENV.getBinaryFilesMount(), ENV.getBinaryFilesDirectory().replace("%DB_BUILD%", ENV.getDbBuild()));
   }
 

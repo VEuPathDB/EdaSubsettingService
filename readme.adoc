@@ -12,5 +12,4 @@ The primary datastore for the subsetting service is an RDBMS that includes the E
 
 Additionally, data is stored in compact binary files used by a high-efficiency map-reduce algorithm, to provide rapid response for large requests
 
-## Local Development
-
+TODO: build out this documentation
