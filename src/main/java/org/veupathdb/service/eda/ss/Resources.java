@@ -76,13 +76,8 @@ public class Resources extends ContainerResources {
   }
 
   public static Path getBinaryFilesDirectory() {
-    return Path.of(ENV.getBinaryFilesDirectory());
-  }
-
-  public static List<String> getAvailableBinaryFilesPaths() {
-    return Arrays.stream(ENV.getAvailableBinaryFilesPaths().split(";"))
-        .map(env -> env.replaceAll("%DB_BUILD%", ENV.getDbBuild()))
-        .collect(Collectors.toList());
+    LOG.info("Dir: " + Path.of(ENV.getBinaryFilesMount(), ENV.getBinaryFilesDirectory().replace("%DB_BUILD%", ENV.getDbBuild())).toString());
+    return Path.of(ENV.getBinaryFilesMount(), ENV.getBinaryFilesDirectory().replace("%DB_BUILD%", ENV.getDbBuild()));
   }
 
   /**

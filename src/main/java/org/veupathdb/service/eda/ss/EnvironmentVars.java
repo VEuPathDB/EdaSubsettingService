@@ -13,6 +13,7 @@ public class EnvironmentVars {
   protected String _availableBinaryFilesPaths;
   protected String _dbBuild;
   protected boolean _fileBasedSubsettingEnabled;
+  private String _binaryFilesMount;
 
   public void load() {
     _developmentMode = Boolean.parseBoolean(getOptionalVar("DEVELOPMENT_MODE", "true"));
@@ -21,9 +22,9 @@ public class EnvironmentVars {
     _availableBinaryFilesPaths = getOptionalVar("AVAILABLE_BINARY_FILES_PATHS" ,"");
     _dbBuild = getOptionalVar("DB_BUILD", "");
     _binaryFilesDirectory = getOptionalVar("BINARY_FILES_DIR", "");
+    _binaryFilesMount = getOptionalVar("BINARY_FILES_MOUNT", "");
     _datasetAccessServiceUrl = getRequiredVar("DATASET_ACCESS_SERVICE_URL");
-    // Temporarily hard-code file-based subsetting to true to enable testing in development environments.
-    _fileBasedSubsettingEnabled = true;
+    _fileBasedSubsettingEnabled = Boolean.parseBoolean(getOptionalVar("FILE_SUBSETTING_ENABLED", "false"));
   }
 
   public boolean isDevelopmentMode() {
@@ -54,7 +55,7 @@ public class EnvironmentVars {
     return _binaryFilesDirectory;
   }
 
-  public String getAvailableBinaryFilesPaths() {
-    return _availableBinaryFilesPaths;
+  public String getBinaryFilesMount() {
+    return _binaryFilesMount;
   }
 }

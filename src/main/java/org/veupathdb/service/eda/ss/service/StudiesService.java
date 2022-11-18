@@ -63,6 +63,7 @@ import org.veupathdb.service.eda.ss.model.variable.Variable;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
 import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
 import org.veupathdb.service.eda.ss.model.variable.binary.MultiPathStudyFinder;
+import org.veupathdb.service.eda.ss.model.variable.binary.SimpleStudyFinder;
 
 import static org.veupathdb.service.eda.ss.service.ApiConversionUtil.*;
 
@@ -209,7 +210,7 @@ public class StudiesService implements Studies {
 
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
     final BinaryFilesManager binaryFilesManager = new BinaryFilesManager(
-        new MultiPathStudyFinder(Resources.getAvailableBinaryFilesPaths(), Resources.getBinaryFilesDirectory()));
+        new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
     if (shouldRunFileBasedSubsetting(request, binaryFilesManager)) {
       LOG.info("Running file-based subsetting for study " + studyId);
       EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
@@ -248,6 +249,7 @@ public class StudiesService implements Studies {
       return false;
     }
     if (!binaryFilesManager.studyDirExists(requestBundle.getStudy())) {
+      LOG.info("Unable to find study dir for " + requestBundle.getStudy().getStudyId() + " in study files.");
       return false;
     }
     if (!binaryFilesManager.entityDirExists(requestBundle.getStudy(), requestBundle.getTargetEntity())) {
@@ -272,7 +274,7 @@ public class StudiesService implements Studies {
         .flatMap(filter -> filter.getAllVariables().stream())
         .collect(Collectors.toList());
     for (VariableWithValues filterVar: filterVars) {
-      if (!binaryFilesManager.variableFileExists(requestBundle.getStudy(), requestBundle.getTargetEntity(), filterVar)) {
+      if (!binaryFilesManager.variableFileExists(requestBundle.getStudy(), filterVar.getEntity(), filterVar)) {
         LOG.info("Unable to find filterVar var " + filterVar.getId() + " in study files.");
         return false;
       }
