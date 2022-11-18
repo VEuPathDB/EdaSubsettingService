@@ -27,6 +27,9 @@ COPY gradle gradle
 # cache build environment
 RUN make install-dev-env
 
+# RUN mkdir /cc-build
+# COPY --from=cc-build /cc-build /cc-build
+
 # cache gradle and dependencies installation
 RUN ./gradlew dependencies
 

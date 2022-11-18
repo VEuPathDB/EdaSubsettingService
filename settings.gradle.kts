@@ -14,7 +14,8 @@ pluginManagement {
   }
 }
 
-val core = file("../lib-jaxrs-container-core");
+//val core = file("../lib-jaxrs-container-core");
+val core = file("/cc-build");
 if (core.exists()) {
   include(":core")
   project(":core").projectDir = core
@@ -26,8 +27,8 @@ if (edaCommon.exists()) {
   project(":edaCommon").projectDir = edaCommon
 }
 
-val libSubsetting = file("../lib-eda-subsetting")
-if (libSubsetting.exists()) {
-  include(":libSubsetting")
-  project(":libSubsetting").projectDir = libSubsetting
-}
+// val libSubsetting = file("../lib-eda-subsetting")
+// if (libSubsetting.exists()) {
+//   include(":libSubsetting")
+//   project(":libSubsetting").projectDir = libSubsetting
+// }
