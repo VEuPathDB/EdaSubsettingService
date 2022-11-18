@@ -24,7 +24,7 @@ public class EnvironmentVars {
     _binaryFilesDirectory = getOptionalVar("BINARY_FILES_DIR", "");
     _binaryFilesMount = getOptionalVar("BINARY_FILES_MOUNT", "");
     _datasetAccessServiceUrl = getRequiredVar("DATASET_ACCESS_SERVICE_URL");
-    _fileBasedSubsettingEnabled = Boolean.parseBoolean(getOptionalVar("FILE_SUBSETTING_ENABLED", "false"));
+    _fileBasedSubsettingEnabled = true; // Temporary override until systems wires up the environment variable.
   }
 
   public boolean isDevelopmentMode() {
