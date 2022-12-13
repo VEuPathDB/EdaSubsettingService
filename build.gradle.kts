@@ -2,7 +2,7 @@ import org.veupathdb.lib.gradle.container.util.Logger.Level
 
 plugins {
   java
-  id("org.veupathdb.lib.gradle.container.container-utils") version "4.0.0"
+  id("org.veupathdb.lib.gradle.container.container-utils") version "4.6.0"
   id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
@@ -97,8 +97,8 @@ repositories {
 // versions
 val coreLib       = "6.12.0"         // Container core lib version
 val edaCommon     = "9.2.0"         // EDA Common version
-val libSubsetting = "3.4.0"         // lib-eda-subsetting version
-val fgputil       = "2.8.1-jakarta" // FgpUtil version
+val libSubsetting = "3.5.2"         // lib-eda-subsetting version
+val fgputil       = "2.9.3-jakarta" // FgpUtil version
 
 val jersey        = "3.0.4"       // Jersey/JaxRS version
 val jackson       = "2.13.3"      // FasterXML Jackson version

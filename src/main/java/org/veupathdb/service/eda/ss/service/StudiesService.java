@@ -78,7 +78,6 @@ public class StudiesService implements Studies {
 
   @Override
   public GetStudiesResponse getStudies() {
-
     // get IDs of studies visible to this user
     Set<String> visibleStudies = new DatasetAccessClient(
         Resources.ENV.getDatasetAccessServiceUrl(),
@@ -248,7 +247,7 @@ public class StudiesService implements Studies {
     if (!Resources.isFileBasedSubsettingEnabled() && requestBundle.getReportConfig().getDataSourceType() != DataSourceType.FILES) {
       return false;
     }
-    if (!binaryFilesManager.studyDirExists(requestBundle.getStudy())) {
+    if (!binaryFilesManager.studyHasFiles(requestBundle.getStudy())) {
       LOG.info("Unable to find study dir for " + requestBundle.getStudy().getStudyId() + " in study files.");
       return false;
     }
@@ -285,6 +284,7 @@ public class StudiesService implements Studies {
   @Override
   public PostStudiesEntitiesCountByStudyIdAndEntityIdResponse postStudiesEntitiesCountByStudyIdAndEntityId(
       String studyId, String entityId, EntityCountPostRequest rawRequest) {
+    LOG.info("Handling count request.");
 
     checkPerms(_request, studyId, StudyAccess::allowSubsetting);
     Study study = getStudyResolver().getStudyById(studyId);
@@ -296,13 +296,21 @@ public class StudiesService implements Studies {
     TreeNode<Entity> prunedEntityTree = FilteredResultFactory.pruneTree(
         request.getStudy().getEntityTree(), request.getFilters(), request.getTargetEntity());
 
-    long count = FilteredResultFactory.getEntityCount(
-        Resources.getApplicationDataSource(), dataSchema, prunedEntityTree, request.getTargetEntity(), request.getFilters());
+    final BinaryFilesManager binaryFilesManager = new BinaryFilesManager(
+        new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
 
     EntityCountPostResponse response = new EntityCountPostResponseImpl();
-    response.setCount(count);
+    if (shouldRunFileBasedSubsetting(request, binaryFilesManager)) {
+      long count = FilteredResultFactory.getEntityCount(prunedEntityTree, request.getTargetEntity(), request.getFilters(),
+          binaryFilesManager, study);
+      response.setCount(count);
+    } else {
+      long count = FilteredResultFactory.getEntityCount(
+          Resources.getApplicationDataSource(), dataSchema, prunedEntityTree, request.getTargetEntity(), request.getFilters());
+      response.setCount(count);
+    }
 
-    return  PostStudiesEntitiesCountByStudyIdAndEntityIdResponse.respond200WithApplicationJson(response);
+    return PostStudiesEntitiesCountByStudyIdAndEntityIdResponse.respond200WithApplicationJson(response);
   }
 
   private static void checkPerms(ContainerRequest request, String studyId, Predicate<StudyAccess> accessPredicate) {
