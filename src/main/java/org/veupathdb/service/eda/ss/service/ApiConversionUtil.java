@@ -2,10 +2,13 @@ package org.veupathdb.service.eda.ss.service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.gusdb.fgputil.SortDirection;
 import org.gusdb.fgputil.functional.TreeNode;
+import org.veupathdb.service.eda.common.client.DatasetAccessClient;
+import org.veupathdb.service.eda.common.client.DatasetAccessClient.StudyDatasetInfo;
 import org.veupathdb.service.eda.generated.model.*;
 import org.veupathdb.service.eda.ss.model.Entity;
 import org.veupathdb.service.eda.ss.model.Study;
@@ -269,11 +272,25 @@ public class ApiConversionUtil {
     return org.veupathdb.service.eda.ss.model.tabular.DataSourceType.fromValue(dataSourceType.getValue());
   }
 
-  public static List<APIStudyOverview> toApiStudyOverviews(List<StudyOverview> studyOverviews) {
-    return studyOverviews.stream().map(overview -> {
+  public static List<APIStudyOverview> toApiStudyOverviews(
+      Map<String, StudyDatasetInfo> datasetInfoMap,
+      Map<String, StudyOverview> overviewMap) {
+    return datasetInfoMap.keySet().stream().map(studyId -> {
+      StudyDatasetInfo dataset = datasetInfoMap.get(studyId);
+      StudyOverview overview = overviewMap.get(studyId);
       APIStudyOverview study = new APIStudyOverviewImpl();
-      study.setId(overview.getStudyId());
+      study.setId(studyId);
+      study.setSourceType(switch(overview.getStudySourceType()) {
+        case CURATED -> StudySourceType.CURATED;
+        case USER_SUBMITTED -> StudySourceType.USERSUBMITTED;
+      });
+      study.setDatasetId(dataset.getDatasetId());
+      study.setSha1hash(dataset.getSha1Hash());
+      study.setDisplayName(dataset.getDisplayName());
+      study.setShortDisplayName(dataset.getShortDisplayName());
+      study.setDescription(dataset.getDescription());
       return study;
     }).collect(Collectors.toList());
   }
+
 }

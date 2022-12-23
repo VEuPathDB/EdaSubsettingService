@@ -2,12 +2,10 @@ package org.veupathdb.service.eda.ss.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -29,6 +27,7 @@ import org.veupathdb.lib.container.jaxrs.server.annotations.Authenticated;
 import org.veupathdb.lib.container.jaxrs.server.middleware.CustomResponseHeadersFilter;
 import org.veupathdb.service.eda.common.auth.StudyAccess;
 import org.veupathdb.service.eda.common.client.DatasetAccessClient;
+import org.veupathdb.service.eda.common.client.DatasetAccessClient.StudyDatasetInfo;
 import org.veupathdb.service.eda.generated.model.APIEntity;
 import org.veupathdb.service.eda.generated.model.APIStudyDetail;
 import org.veupathdb.service.eda.generated.model.EntityCountPostRequest;
@@ -62,7 +61,6 @@ import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
 import org.veupathdb.service.eda.ss.model.variable.Variable;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
 import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
-import org.veupathdb.service.eda.ss.model.variable.binary.MultiPathStudyFinder;
 import org.veupathdb.service.eda.ss.model.variable.binary.SimpleStudyFinder;
 
 import static org.veupathdb.service.eda.ss.service.ApiConversionUtil.*;
@@ -79,20 +77,21 @@ public class StudiesService implements Studies {
   @Override
   public GetStudiesResponse getStudies() {
     // get IDs of studies visible to this user
-    Set<String> visibleStudies = new DatasetAccessClient(
+    Map<String, StudyDatasetInfo> visibleStudyMap = new DatasetAccessClient(
         Resources.ENV.getDatasetAccessServiceUrl(),
         UserProvider.getSubmittedAuth(_request).orElseThrow()
-    ).getStudyDatasetInfoMapForUser().keySet();
+    ).getStudyDatasetInfoMapForUser();
+    Set<String> visibleStudyIds = visibleStudyMap.keySet();
 
     // filter overviews by visible studies
-    List<StudyOverview> visibleOverviews = getStudyResolver()
+    Map<String, StudyOverview> visibleOverviewMap = getStudyResolver()
         .getStudyOverviews().stream()
-        .filter(overview -> visibleStudies.contains(overview.getStudyId()))
-        .collect(Collectors.toList());
+        .filter(overview -> visibleStudyIds.contains(overview.getStudyId()))
+        .collect(Collectors.toMap(StudyOverview::getStudyId, Function.identity()));
 
     // convert to API objects and return
     StudiesGetResponse out = new StudiesGetResponseImpl();
-    out.setStudies(ApiConversionUtil.toApiStudyOverviews(visibleOverviews));
+    out.setStudies(ApiConversionUtil.toApiStudyOverviews(visibleStudyMap, visibleOverviewMap));
     return GetStudiesResponse.respond200WithApplicationJson(out);
   }
 
