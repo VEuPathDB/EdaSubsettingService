@@ -2,13 +2,10 @@ package org.veupathdb.service.eda.ss.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -30,6 +27,7 @@ import org.veupathdb.lib.container.jaxrs.server.annotations.Authenticated;
 import org.veupathdb.lib.container.jaxrs.server.middleware.CustomResponseHeadersFilter;
 import org.veupathdb.service.eda.common.auth.StudyAccess;
 import org.veupathdb.service.eda.common.client.DatasetAccessClient;
+import org.veupathdb.service.eda.common.client.DatasetAccessClient.StudyDatasetInfo;
 import org.veupathdb.service.eda.generated.model.APIEntity;
 import org.veupathdb.service.eda.generated.model.APIStudyDetail;
 import org.veupathdb.service.eda.generated.model.EntityCountPostRequest;
@@ -62,6 +60,8 @@ import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
 import org.veupathdb.service.eda.ss.model.variable.Variable;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
+import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
+import org.veupathdb.service.eda.ss.model.variable.binary.SimpleStudyFinder;
 
 import static org.veupathdb.service.eda.ss.service.ApiConversionUtil.*;
 
@@ -76,22 +76,22 @@ public class StudiesService implements Studies {
 
   @Override
   public GetStudiesResponse getStudies() {
-
     // get IDs of studies visible to this user
-    Set<String> visibleStudies = new DatasetAccessClient(
+    Map<String, StudyDatasetInfo> visibleStudyMap = new DatasetAccessClient(
         Resources.ENV.getDatasetAccessServiceUrl(),
         UserProvider.getSubmittedAuth(_request).orElseThrow()
-    ).getStudyDatasetInfoMapForUser().keySet();
+    ).getStudyDatasetInfoMapForUser();
+    Set<String> visibleStudyIds = visibleStudyMap.keySet();
 
     // filter overviews by visible studies
-    List<StudyOverview> visibleOverviews = getStudyResolver()
+    Map<String, StudyOverview> visibleOverviewMap = getStudyResolver()
         .getStudyOverviews().stream()
-        .filter(overview -> visibleStudies.contains(overview.getStudyId()))
-        .collect(Collectors.toList());
+        .filter(overview -> visibleStudyIds.contains(overview.getStudyId()))
+        .collect(Collectors.toMap(StudyOverview::getStudyId, Function.identity()));
 
     // convert to API objects and return
     StudiesGetResponse out = new StudiesGetResponseImpl();
-    out.setStudies(ApiConversionUtil.toApiStudyOverviews(visibleOverviews));
+    out.setStudies(ApiConversionUtil.toApiStudyOverviews(visibleStudyMap, visibleOverviewMap));
     return GetStudiesResponse.respond200WithApplicationJson(out);
   }
 
@@ -207,15 +207,19 @@ public class StudiesService implements Studies {
     }
 
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
-    if (request.getReportConfig().getDataSourceType() == DataSourceType.FILES) {
+    final BinaryFilesManager binaryFilesManager = new BinaryFilesManager(
+        new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
+    if (shouldRunFileBasedSubsetting(request, binaryFilesManager)) {
+      LOG.info("Running file-based subsetting for study " + studyId);
       EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
           FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), request.getTargetEntity(),
-              request.getRequestedVariables(), request.getFilters(), responseType.getFormatter(),
-              request.getReportConfig(), outStream, Resources.getBinaryFilesDirectory()));
+              request.getRequestedVariables(), request.getFilters(), responseType.getBinaryFormatter(),
+              request.getReportConfig(), outStream, binaryFilesManager));
       return responseConverter.apply(streamer, responseType);
     }
+    LOG.info("Performing oracle-based subsetting for study " + studyId);
     EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
-        FilteredResultFactory.produceTabularSubset(Resources.getApplicationDataSource(), Resources.getAppDbSchema(),
+        FilteredResultFactory.produceTabularSubset(Resources.getApplicationDataSource(), dataSchema,
             request.getStudy(), request.getTargetEntity(), request.getRequestedVariables(), request.getFilters(),
             request.getReportConfig(), responseType.getFormatter(), outStream));
     return responseConverter.apply(streamer, responseType);
@@ -232,9 +236,54 @@ public class StudiesService implements Studies {
     return StudyAccess::allowResultsAll;
   }
 
+  /**
+   * Skip and do oracle-based subsetting if either:
+   * 1. File-based subsetting is disabled via environment variable
+   * 2. getReportConfig().getDataSourceType() is not specified or is specified as DATABASE
+   * 3. Any data is missing in files (i.e. MissingDataException is thrown).
+   **/
+  private static boolean shouldRunFileBasedSubsetting(RequestBundle requestBundle, BinaryFilesManager binaryFilesManager) {
+    if (!Resources.isFileBasedSubsettingEnabled() && requestBundle.getReportConfig().getDataSourceType() != DataSourceType.FILES) {
+      return false;
+    }
+    if (!binaryFilesManager.studyHasFiles(requestBundle.getStudy())) {
+      LOG.info("Unable to find study dir for " + requestBundle.getStudy().getStudyId() + " in study files.");
+      return false;
+    }
+    if (!binaryFilesManager.entityDirExists(requestBundle.getStudy(), requestBundle.getTargetEntity())) {
+      LOG.info("Unable to find entity dir for " + requestBundle.getTargetEntity().getId() + " in study files.");
+      return false;
+    }
+    if (!binaryFilesManager.idMapFileExists(requestBundle.getStudy(), requestBundle.getTargetEntity())) {
+      LOG.info("Unable to find ID file for " + requestBundle.getTargetEntity().getId() + " in study files.");
+      return false;
+    }
+    if (!requestBundle.getTargetEntity().getAncestorEntities().isEmpty() && !binaryFilesManager.ancestorFileExists(requestBundle.getStudy(), requestBundle.getTargetEntity())) {
+      LOG.info("Unable to find ancestor file for " + requestBundle.getTargetEntity().getId() + " in study files.");
+      return false;
+    }
+    for (VariableWithValues outputVar: requestBundle.getRequestedVariables()) {
+      if (!binaryFilesManager.variableFileExists(requestBundle.getStudy(), requestBundle.getTargetEntity(), outputVar)) {
+        LOG.info("Unable to find output var " + outputVar.getId() + " in study files.");
+        return false;
+      }
+    }
+    List<VariableWithValues> filterVars = requestBundle.getFilters().stream()
+        .flatMap(filter -> filter.getAllVariables().stream())
+        .collect(Collectors.toList());
+    for (VariableWithValues filterVar: filterVars) {
+      if (!binaryFilesManager.variableFileExists(requestBundle.getStudy(), filterVar.getEntity(), filterVar)) {
+        LOG.info("Unable to find filterVar var " + filterVar.getId() + " in study files.");
+        return false;
+      }
+    }
+    return true;
+  }
+
   @Override
   public PostStudiesEntitiesCountByStudyIdAndEntityIdResponse postStudiesEntitiesCountByStudyIdAndEntityId(
       String studyId, String entityId, EntityCountPostRequest rawRequest) {
+    LOG.info("Handling count request.");
 
     checkPerms(_request, studyId, StudyAccess::allowSubsetting);
     Study study = getStudyResolver().getStudyById(studyId);
@@ -246,13 +295,21 @@ public class StudiesService implements Studies {
     TreeNode<Entity> prunedEntityTree = FilteredResultFactory.pruneTree(
         request.getStudy().getEntityTree(), request.getFilters(), request.getTargetEntity());
 
-    long count = FilteredResultFactory.getEntityCount(
-        Resources.getApplicationDataSource(), dataSchema, prunedEntityTree, request.getTargetEntity(), request.getFilters());
+    final BinaryFilesManager binaryFilesManager = new BinaryFilesManager(
+        new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
 
     EntityCountPostResponse response = new EntityCountPostResponseImpl();
-    response.setCount(count);
+    if (shouldRunFileBasedSubsetting(request, binaryFilesManager)) {
+      long count = FilteredResultFactory.getEntityCount(prunedEntityTree, request.getTargetEntity(), request.getFilters(),
+          binaryFilesManager, study);
+      response.setCount(count);
+    } else {
+      long count = FilteredResultFactory.getEntityCount(
+          Resources.getApplicationDataSource(), dataSchema, prunedEntityTree, request.getTargetEntity(), request.getFilters());
+      response.setCount(count);
+    }
 
-    return  PostStudiesEntitiesCountByStudyIdAndEntityIdResponse.respond200WithApplicationJson(response);
+    return PostStudiesEntitiesCountByStudyIdAndEntityIdResponse.respond200WithApplicationJson(response);
   }
 
   private static void checkPerms(ContainerRequest request, String studyId, Predicate<StudyAccess> accessPredicate) {
@@ -266,8 +323,7 @@ public class StudiesService implements Studies {
         new StudyFactory(
             Resources.getApplicationDataSource(),
             Resources.getUserStudySchema(),
-            StudyOverview.StudySourceType.USER_SUBMITTED,
-            false
+            StudyOverview.StudySourceType.USER_SUBMITTED
         )
     );
   }

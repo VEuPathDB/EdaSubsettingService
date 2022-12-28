@@ -1,0 +1,10 @@
+{
+  "reportConfig": {
+    "dataSource": "{{data_source}}"
+  },
+  "filters": [
+  ],
+  "outputVariableIds": [
+    "EUPATH_0000208"
+  ]
+}
