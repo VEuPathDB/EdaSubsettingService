@@ -21,6 +21,12 @@ public class Main extends Server {
     return new Resources(options);
   }
 
+  @Override
+  protected void onShutdown() {
+    Resources.getDeserializerThreadPool().shutdown();
+    Resources.getFileChannelThreadPool().shutdown();
+  }
+
   public static class QLF implements QueryLogConfig {
     public double getBaseline() {
       return 0.05D;

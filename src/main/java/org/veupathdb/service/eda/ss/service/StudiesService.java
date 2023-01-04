@@ -56,6 +56,7 @@ import org.veupathdb.service.eda.ss.model.db.StudyFactory;
 import org.veupathdb.service.eda.ss.model.db.StudyProvider;
 import org.veupathdb.service.eda.ss.model.db.StudyResolver;
 import org.veupathdb.service.eda.ss.model.distribution.DistributionFactory;
+import org.veupathdb.service.eda.ss.model.reducer.BinaryValuesStreamer;
 import org.veupathdb.service.eda.ss.model.tabular.DataSourceType;
 import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
@@ -210,12 +211,14 @@ public class StudiesService implements Studies {
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
     final BinaryFilesManager binaryFilesManager = new BinaryFilesManager(
         new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
+    final BinaryValuesStreamer binaryValuesStreamer = new BinaryValuesStreamer(binaryFilesManager,
+            Resources.getFileChannelThreadPool(), Resources.getDeserializerThreadPool());
     if (shouldRunFileBasedSubsetting(request, binaryFilesManager)) {
       LOG.info("Running file-based subsetting for study " + studyId);
       EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
           FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), request.getTargetEntity(),
               request.getRequestedVariables(), request.getFilters(), responseType.getBinaryFormatter(),
-              request.getReportConfig(), outStream, binaryFilesManager));
+              request.getReportConfig(), outStream, binaryValuesStreamer));
       return responseConverter.apply(streamer, responseType);
     }
     LOG.info("Performing oracle-based subsetting for study " + studyId);
@@ -299,10 +302,13 @@ public class StudiesService implements Studies {
     final BinaryFilesManager binaryFilesManager = new BinaryFilesManager(
         new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
 
+    final BinaryValuesStreamer binaryValuesStreamer = new BinaryValuesStreamer(binaryFilesManager,
+            Resources.getFileChannelThreadPool(), Resources.getDeserializerThreadPool());
+
     EntityCountPostResponse response = new EntityCountPostResponseImpl();
     if (shouldRunFileBasedSubsetting(request, binaryFilesManager)) {
       long count = FilteredResultFactory.getEntityCount(prunedEntityTree, request.getTargetEntity(), request.getFilters(),
-          binaryFilesManager, study);
+              binaryValuesStreamer, study);
       response.setCount(count);
     } else {
       long count = FilteredResultFactory.getEntityCount(
