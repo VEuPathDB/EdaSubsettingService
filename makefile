@@ -19,7 +19,7 @@ default:
 	@echo "    Ensures the current dev environment has the necessary "
 	@echo "    installable tools to build this project."
 	@echo ""
-	@echo "$(C_BLUE)  make raml-gen-code$(C_NONE)"
+	@echo "$(C_BLUE)  make gen-jaxrs$(C_NONE)"
 	@echo "    Generates Java classes representing API interfaces as "
 	@echo "    defined in api.raml and child types."
 	@echo ""
