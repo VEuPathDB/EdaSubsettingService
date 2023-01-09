@@ -12,6 +12,8 @@ import org.veupathdb.service.eda.ss.service.StudiesService;
 import org.veupathdb.service.eda.ss.test.StubDb;
 
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Service Resource Registration.
@@ -27,6 +29,10 @@ public class Resources extends ContainerResources {
 
   // use in-memory test DB unless "real" application DB is configured
   private static boolean USE_IN_MEMORY_TEST_DATABASE = true;
+
+  private static final ExecutorService FILE_READ_THREAD_POOL = Executors.newCachedThreadPool();
+
+  private static final ExecutorService DESERIALIZER_THREAD_POOL = Executors.newFixedThreadPool(6);
 
   public Resources(Options opts) {
     super(opts);
@@ -54,6 +60,10 @@ public class Resources extends ContainerResources {
     }
   }
 
+  public static boolean isFileBasedSubsettingEnabled() {
+    return ENV.isFileBasedSubsettingEnabled();
+  }
+
   public static DataSource getApplicationDataSource() {
     return USE_IN_MEMORY_TEST_DATABASE
       ? StubDb.getDataSource()
@@ -69,7 +79,15 @@ public class Resources extends ContainerResources {
   }
 
   public static Path getBinaryFilesDirectory() {
-    return Path.of(ENV.getBinaryFilesDirectory());
+    return Path.of(ENV.getBinaryFilesMount(), ENV.getBinaryFilesDirectory().replace("%DB_BUILD%", ENV.getDbBuild()));
+  }
+
+  public static ExecutorService getFileChannelThreadPool() {
+    return FILE_READ_THREAD_POOL;
+  }
+
+  public static ExecutorService getDeserializerThreadPool() {
+    return DESERIALIZER_THREAD_POOL;
   }
 
   /**

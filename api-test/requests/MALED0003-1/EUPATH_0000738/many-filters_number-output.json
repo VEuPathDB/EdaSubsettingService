@@ -1,0 +1,65 @@
+{
+  "reportConfig": {
+    "dataSource": "{{data_source}}"
+  },
+  "filters": [
+    {
+      "variableId": "OBI_0001169",
+      "entityId": "EUPATH_0000738",
+      "type": "numberRange",
+      "min": 30,
+      "max": 500
+    },
+    {
+      "variableId": "EUPATH_0004991",
+      "entityId": "EUPATH_0000738",
+      "type": "dateRange",
+      "min": "2010-10-19T00:00:00Z",
+      "max": "2017-04-24T00:00:00Z"
+    },
+    {
+      "entityId": "EUPATH_0000738",
+      "variableId": "EUPATH_0010995",
+      "stringSet": [
+        "No"
+      ],
+      "type": "stringSet"
+    },
+    {
+      "variableId": "EUPATH_0000743",
+      "entityId": "EUPATH_0000738",
+      "type": "numberRange",
+      "min": 40,
+      "max": 100
+    },
+    {
+      "entityId": "EUPATH_0000738",
+      "variableId": "EUPATH_0011927",
+      "stringSet": [
+        "Yes"
+      ],
+      "type": "stringSet"
+    },
+    {
+      "variableId": "EUPATH_0011931",
+      "entityId": "EUPATH_0000776",
+      "type": "numberRange",
+      "min": 5,
+      "max": 500
+    },
+    {
+      "entityId": "PCO_0000024",
+      "variableId": "ENVO_00000009",
+      "stringSet": [
+        "Bangladesh",
+        "Brazil",
+        "India",
+        "Nepal"
+      ],
+      "type": "stringSet"
+    }
+  ],
+  "outputVariableIds": [
+    "OBI_0001169"
+  ]
+}
