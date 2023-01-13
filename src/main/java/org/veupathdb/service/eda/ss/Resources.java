@@ -32,7 +32,7 @@ public class Resources extends ContainerResources {
 
   private static final ExecutorService FILE_READ_THREAD_POOL = Executors.newCachedThreadPool();
 
-  private static final ExecutorService DESERIALIZER_THREAD_POOL = Executors.newFixedThreadPool(6);
+  private static final ExecutorService DESERIALIZER_THREAD_POOL = Executors.newFixedThreadPool(10);
 
   public Resources(Options opts) {
     super(opts);
