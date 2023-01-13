@@ -18,6 +18,8 @@ import org.veupathdb.service.eda.generated.model.APIStudyDetail;
 import org.veupathdb.service.eda.ss.model.Study;
 import org.veupathdb.service.eda.ss.model.StudyOverview;
 import org.veupathdb.service.eda.ss.model.db.StudyFactory;
+import org.veupathdb.service.eda.ss.model.db.VariableFactory;
+import org.veupathdb.service.eda.ss.model.reducer.EmptyBinaryMetadataProvider;
 import org.veupathdb.service.eda.ss.test.MockModel;
 import org.veupathdb.service.eda.ss.test.StubDb;
 
@@ -34,7 +36,8 @@ public class StudiesTest {
   public static void setUp() {
     _model = new MockModel();
     DataSource dataSource = StubDb.getDataSource();
-    _study = new StudyFactory(dataSource, StubDb.APP_DB_SCHEMA, StudyOverview.StudySourceType.CURATED, null).getStudyById("DS-2324");
+    _study = new StudyFactory(dataSource, StubDb.APP_DB_SCHEMA, StudyOverview.StudySourceType.CURATED,
+        new VariableFactory(dataSource, StubDb.APP_DB_SCHEMA, new EmptyBinaryMetadataProvider())).getStudyById("DS-2324");
   }
 
   @Test

@@ -24,7 +24,7 @@ containerBuild {
     group = "org.veupathdb.service.eda"
 
     // Project Version
-    version = "3.0.0"
+    version = "3.5.2"
 
     // Project Root Package
     projectPackage = "org.veupathdb.service.eda.ss"
@@ -99,7 +99,7 @@ repositories {
 // versions
 val coreLib       = "6.13.2"        // Container core lib version
 val edaCommon     = "10.2.2"        // EDA Common version
-val libSubsetting = "3.7.0"         // lib-eda-subsetting version
+val libSubsetting = "3.7.1"         // lib-eda-subsetting version
 val fgputil       = "2.12.0-jakarta" // FgpUtil version
 
 // use local EdaCommon compiled schema if project exists, else use released version;
