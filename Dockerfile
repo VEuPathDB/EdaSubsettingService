@@ -24,11 +24,20 @@ ENV DOCKER=build
 COPY makefile build.gradle.kts settings.gradle.kts gradlew ./
 COPY gradle gradle
 
+RUN mkdir /lib-subsetting-build
+COPY --from=lib-subsetting-build /dev-dependencies /lib-subsetting-build
+#RUN mkdir /fgp-util
+#COPY --from=fgp-util-build /dev-dependencies /fgp-util
+#WORKDIR /fgp-util
+#RUN curl -O https://raw.githubusercontent.com/VEuPathDB/maven-release-tools/main/settings.xml
+#RUN mvn install --settings settings.xml
+#WORKDIR /workspace
+
 # cache build environment
 RUN make install-dev-env
 
 # cache gradle and dependencies installation
-RUN ./gradlew dependencies
+# RUN ./gradlew dependencies
 
 # copy remaining files
 COPY . .

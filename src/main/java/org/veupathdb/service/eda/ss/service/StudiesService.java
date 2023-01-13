@@ -50,12 +50,11 @@ import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Entity;
 import org.veupathdb.service.eda.ss.model.Study;
 import org.veupathdb.service.eda.ss.model.StudyOverview;
-import org.veupathdb.service.eda.ss.model.db.FilteredResultFactory;
-import org.veupathdb.service.eda.ss.model.db.StudyFactory;
-import org.veupathdb.service.eda.ss.model.db.StudyProvider;
-import org.veupathdb.service.eda.ss.model.db.StudyResolver;
+import org.veupathdb.service.eda.ss.model.db.*;
 import org.veupathdb.service.eda.ss.model.distribution.DistributionFactory;
 import org.veupathdb.service.eda.ss.model.reducer.BinaryValuesStreamer;
+import org.veupathdb.service.eda.ss.model.reducer.EmptyBinaryMetadataProvider;
+import org.veupathdb.service.eda.ss.model.reducer.MetadataFileBinaryProvider;
 import org.veupathdb.service.eda.ss.model.tabular.DataSourceType;
 import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
@@ -198,7 +197,9 @@ public class StudiesService implements Studies {
       EntityTabularPostRequest requestBody, boolean checkUserPermissions,
       BiFunction<EntityTabularPostResponseStream,TabularResponses.Type,T> responseConverter) {
     LOG.info("Handling tabular request for study {} and entity {}.", studyId, entityId);
-    Study study = getStudyResolver().getStudyById(studyId);
+    final BinaryFilesManager binaryFilesManager = new BinaryFilesManager(
+            new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
+    Study study = getStudyResolver(binaryFilesManager).getStudyById(studyId);
     String dataSchema = resolveSchema(study);
     RequestBundle request = RequestBundle.unpack(dataSchema, study, entityId, requestBody.getFilters(), requestBody.getOutputVariableIds(), requestBody.getReportConfig());
 
@@ -208,8 +209,6 @@ public class StudiesService implements Studies {
     }
 
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
-    final BinaryFilesManager binaryFilesManager = new BinaryFilesManager(
-        new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
     final BinaryValuesStreamer binaryValuesStreamer = new BinaryValuesStreamer(binaryFilesManager,
             Resources.getFileChannelThreadPool(), Resources.getDeserializerThreadPool());
     if (shouldRunFileBasedSubsetting(request, binaryFilesManager)) {
@@ -324,15 +323,35 @@ public class StudiesService implements Studies {
   }
 
   private static StudyProvider getStudyResolver() {
+    final VariableFactory variableFactory = new VariableFactory(Resources.getApplicationDataSource(),
+        Resources.getUserStudySchema(),
+        new EmptyBinaryMetadataProvider());
     return new StudyResolver(
         MetadataCache.instance(),
         new StudyFactory(
             Resources.getApplicationDataSource(),
             Resources.getUserStudySchema(),
-            StudyOverview.StudySourceType.USER_SUBMITTED
+            StudyOverview.StudySourceType.USER_SUBMITTED,
+            variableFactory
         )
     );
   }
+
+  private static StudyProvider getStudyResolver(BinaryFilesManager binaryFilesManager) {
+    MetadataFileBinaryProvider metadataFileBinaryProvider = new MetadataFileBinaryProvider(binaryFilesManager);
+    final VariableFactory variableFactory = new VariableFactory(Resources.getApplicationDataSource(),
+        Resources.getUserStudySchema(),
+        metadataFileBinaryProvider);
+    return new StudyResolver(
+        MetadataCache.instance(),
+        new StudyFactory(
+            Resources.getApplicationDataSource(),
+            Resources.getUserStudySchema(),
+            StudyOverview.StudySourceType.USER_SUBMITTED,
+            variableFactory)
+    );
+  }
+
 
   private static String resolveSchema(Study study) {
     return switch(study.getStudySourceType()) {
