@@ -4,7 +4,7 @@ import java.net.URL
 
 plugins {
   java
-  id("org.veupathdb.lib.gradle.container.container-utils") version "4.7.1"
+  id("org.veupathdb.lib.gradle.container.container-utils") version "4.7.3"
   id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
@@ -27,10 +27,10 @@ containerBuild {
     version = "3.5.2"
 
     // Project Root Package
-    projectPackage = "org.veupathdb.service.eda.ss"
+    projectPackage = "org.veupathdb.service.eda"
 
     // Main Class Name
-    mainClassName = "Main"
+    mainClassName = "ss.Main"
   }
 
   // Docker build configuration.
@@ -46,20 +46,7 @@ containerBuild {
     imageName = "eda-subsetting"
 
   }
-
-  generateJaxRS {
-    // List of custom arguments to use in the jax-rs code generation command
-    // execution.
-    arguments = listOf(/*arg1, arg2, arg3*/)
-
-    // Map of custom environment variables to set for the jax-rs code generation
-    // command execution.
-    environment = mapOf(/*Pair("env-key", "env-val"), Pair("env-key", "env-val")*/)
-  }
-
 }
-
-tasks.register("print-gen-package") { print("org.veupathdb.service.eda") }
 
 java {
   toolchain {
@@ -105,14 +92,7 @@ val fgputil       = "2.12.0-jakarta" // FgpUtil version
 // use local EdaCommon compiled schema if project exists, else use released version;
 //    this mirrors the way we use local EdaCommon code if available
 val edaCommonLocalProjectDir = findProject(":edaCommon")?.projectDir
-val edaCommonSchemaFetch =
-        if (edaCommonLocalProjectDir != null)
-          "cat ${edaCommonLocalProjectDir}/schema/library.raml"
-        else
-          "curl https://raw.githubusercontent.com/VEuPathDB/EdaCommon/v${edaCommon}/schema/library.raml"
-
 val commonRamlOutFileName = "$projectDir/schema/eda-common-lib.raml"
-tasks.register("print-eda-common-schema-fetch") { print(edaCommonSchemaFetch) }
 
 tasks.named("merge-raml") {
   // Hook into merge-raml to download or fetch EDA Common RAML before merging
@@ -140,6 +120,12 @@ tasks.named("merge-raml") {
     File(commonRamlOutFileName).delete()
   }
 }
+
+// ensures changing modules are never cached
+configurations.all {
+  resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
+}
+
 dependencies {
 
   // VEuPathDB libs, prefer local checkouts if available
