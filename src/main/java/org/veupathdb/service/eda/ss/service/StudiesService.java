@@ -245,7 +245,7 @@ public class StudiesService implements Studies {
    * 3. Any data is missing in files (i.e. MissingDataException is thrown).
    **/
   private static boolean shouldRunFileBasedSubsetting(RequestBundle requestBundle, BinaryFilesManager binaryFilesManager) {
-    if (!Resources.isFileBasedSubsettingEnabled() || requestBundle.getReportConfig().getDataSourceType() != DataSourceType.FILES) {
+    if (!Resources.isFileBasedSubsettingEnabled() || requestBundle.getReportConfig().getDataSourceType() == DataSourceType.DATABASE) {
       return false;
     }
     if (!binaryFilesManager.studyHasFiles(requestBundle.getStudy())) {
