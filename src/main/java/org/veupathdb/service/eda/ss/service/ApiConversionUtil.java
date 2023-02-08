@@ -5,8 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.gusdb.fgputil.SortDirection;
 import org.gusdb.fgputil.functional.TreeNode;
+import org.veupathdb.service.eda.common.auth.StudyAccess;
 import org.veupathdb.service.eda.common.client.DatasetAccessClient;
 import org.veupathdb.service.eda.common.client.DatasetAccessClient.StudyDatasetInfo;
 import org.veupathdb.service.eda.generated.model.*;
@@ -33,6 +37,7 @@ import org.veupathdb.service.eda.ss.model.variable.VariableDataShape;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
 
 public class ApiConversionUtil {
+  private static final Logger LOG = LogManager.getLogger(ApiConversionUtil.class);
 
   /** converts model study object to API study object */
   public static APIStudyDetail getApiStudyDetail(Study study) {
@@ -275,22 +280,30 @@ public class ApiConversionUtil {
   public static List<APIStudyOverview> toApiStudyOverviews(
       Map<String, StudyDatasetInfo> datasetInfoMap,
       Map<String, StudyOverview> overviewMap) {
-    return datasetInfoMap.keySet().stream().map(studyId -> {
-      StudyDatasetInfo dataset = datasetInfoMap.get(studyId);
-      StudyOverview overview = overviewMap.get(studyId);
-      APIStudyOverview study = new APIStudyOverviewImpl();
-      study.setId(studyId);
-      study.setSourceType(switch(overview.getStudySourceType()) {
-        case CURATED -> StudySourceType.CURATED;
-        case USER_SUBMITTED -> StudySourceType.USERSUBMITTED;
-      });
-      study.setDatasetId(dataset.getDatasetId());
-      study.setSha1hash(dataset.getSha1Hash());
-      study.setDisplayName(dataset.getDisplayName());
-      study.setShortDisplayName(dataset.getShortDisplayName());
-      study.setDescription(dataset.getDescription());
-      return study;
-    }).collect(Collectors.toList());
+    return datasetInfoMap.keySet().stream()
+        .filter(studyId -> {
+          final boolean studyInOverviews = overviewMap.containsKey(studyId);
+          if (!studyInOverviews) {
+            LOG.warn("Found study " + studyId + " in visible studies but not it's not being returned from canoncial list of studies.");
+          }
+          return studyInOverviews;
+        })
+        .map(studyId -> {
+          StudyDatasetInfo dataset = datasetInfoMap.get(studyId);
+          StudyOverview overview = overviewMap.get(studyId);
+          APIStudyOverview study = new APIStudyOverviewImpl();
+          study.setId(studyId);
+          study.setSourceType(switch (overview.getStudySourceType()) {
+            case CURATED -> StudySourceType.CURATED;
+            case USER_SUBMITTED -> StudySourceType.USERSUBMITTED;
+          });
+          study.setDatasetId(dataset.getDatasetId());
+          study.setSha1hash(dataset.getSha1Hash());
+          study.setDisplayName(dataset.getDisplayName());
+          study.setShortDisplayName(dataset.getShortDisplayName());
+          study.setDescription(dataset.getDescription());
+          return study;
+        }).collect(Collectors.toList());
   }
 
 }
