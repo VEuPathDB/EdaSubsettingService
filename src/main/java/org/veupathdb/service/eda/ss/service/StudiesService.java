@@ -22,6 +22,7 @@ import org.gusdb.fgputil.distribution.DistributionResult;
 import org.gusdb.fgputil.functional.TreeNode;
 import org.gusdb.fgputil.json.JsonUtil;
 import org.gusdb.fgputil.web.UrlEncodedForm;
+import org.veupathdb.lib.container.jaxrs.model.User;
 import org.veupathdb.lib.container.jaxrs.providers.UserProvider;
 import org.veupathdb.lib.container.jaxrs.server.annotations.Authenticated;
 import org.veupathdb.lib.container.jaxrs.server.middleware.CustomResponseHeadersFilter;
@@ -183,6 +184,10 @@ public class StudiesService implements Studies {
       String entityDisplay = getStudyResolver().getStudyById(studyId).getEntity(entityId).orElseThrow().getDisplayName();
       String fileName = studyId + "_" + entityDisplay + "_subsettedData.txt";
       String dispositionHeaderValue = "attachment; filename=\"" + fileName + "\"";
+      ServiceMetrics.reportSubsetDownload(studyId, UserProvider.lookupUser(_request)
+          .map(User::getUserID)
+          .map(id -> Long.toString(id))
+          .orElse("None"), entityDisplay);
       _request.setProperty(CustomResponseHeadersFilter.CUSTOM_HEADERS_KEY,
           new MapBuilder<>(HttpHeaders.CONTENT_DISPOSITION, dispositionHeaderValue).toMap());
       return typedResponse;
