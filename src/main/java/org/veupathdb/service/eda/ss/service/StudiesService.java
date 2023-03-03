@@ -213,13 +213,23 @@ public class StudiesService implements Studies {
       checkPerms(requestContext, studyId, getTabularAccessPredicate(request.getReportConfig()));
     }
 
+    // Oracle tables do not support >1000 columns; if an entity has a total of >1000 columns then the "wide table"
+    //   of data is not generated for that entity ("tall table" still is).  This only affects paged/sorted tabular
+    //   results, so add a check here for that kind of request on that kind of entity and throw 400 in that case.
+    Entity entity = request.getTargetEntity();
+    if (request.getReportConfig().requiresSorting() &&
+        // total columns equals IDs for the entity and ancestors + each variable (not sure if category/collection vars should count, but this is safe)
+        1 + entity.getAncestorPkColNames().size() + entity.getVariables().size() > 1000) {
+      throw new BadRequestException("Tabular requests with paging/sorting are not supported on entities with >1000 total columns");
+    }
+
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
     final BinaryValuesStreamer binaryValuesStreamer = new BinaryValuesStreamer(binaryFilesManager,
             Resources.getFileChannelThreadPool(), Resources.getDeserializerThreadPool());
     if (shouldRunFileBasedSubsetting(request, binaryFilesManager)) {
       LOG.info("Running file-based subsetting for study " + studyId);
       EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
-          FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), request.getTargetEntity(),
+          FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), entity,
               request.getRequestedVariables(), request.getFilters(), responseType.getBinaryFormatter(),
               request.getReportConfig(), outStream, binaryValuesStreamer));
       return responseConverter.apply(streamer, responseType);
@@ -227,7 +237,7 @@ public class StudiesService implements Studies {
     LOG.info("Performing oracle-based subsetting for study " + studyId);
     EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
         FilteredResultFactory.produceTabularSubset(Resources.getApplicationDataSource(), dataSchema,
-            request.getStudy(), request.getTargetEntity(), request.getRequestedVariables(), request.getFilters(),
+            request.getStudy(), entity, request.getRequestedVariables(), request.getFilters(),
             request.getReportConfig(), responseType.getFormatter(), outStream));
     return responseConverter.apply(streamer, responseType);
   }
