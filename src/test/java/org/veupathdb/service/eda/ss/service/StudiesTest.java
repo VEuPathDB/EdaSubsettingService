@@ -7,6 +7,7 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.veupathdb.service.eda.generated.model.APIEntity;
 import org.veupathdb.service.eda.generated.model.APIFilter;
 import org.veupathdb.service.eda.generated.model.APIFilterImpl;
@@ -20,12 +21,14 @@ import org.veupathdb.service.eda.ss.model.StudyOverview;
 import org.veupathdb.service.eda.ss.model.db.StudyFactory;
 import org.veupathdb.service.eda.ss.model.db.VariableFactory;
 import org.veupathdb.service.eda.ss.model.reducer.EmptyBinaryMetadataProvider;
+import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
 import org.veupathdb.service.eda.ss.test.MockModel;
 import org.veupathdb.service.eda.ss.test.StubDb;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
 
 public class StudiesTest {
 
@@ -36,8 +39,10 @@ public class StudiesTest {
   public static void setUp() {
     _model = new MockModel();
     DataSource dataSource = StubDb.getDataSource();
+    BinaryFilesManager binaryFilesManager = Mockito.mock(BinaryFilesManager.class);
+    Mockito.when(binaryFilesManager.studyHasFiles(anyString())).thenReturn(false);
     _study = new StudyFactory(dataSource, StubDb.APP_DB_SCHEMA, StudyOverview.StudySourceType.CURATED,
-        new VariableFactory(dataSource, StubDb.APP_DB_SCHEMA, new EmptyBinaryMetadataProvider())).getStudyById("DS-2324");
+        new VariableFactory(dataSource, StubDb.APP_DB_SCHEMA, new EmptyBinaryMetadataProvider(), binaryFilesManager)).getStudyById("DS-2324");
   }
 
   @Test
