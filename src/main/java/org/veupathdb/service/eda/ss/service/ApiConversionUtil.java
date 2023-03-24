@@ -46,7 +46,6 @@ public class ApiConversionUtil {
     APIStudyDetail apiStudyDetail = new APIStudyDetailImpl();
     apiStudyDetail.setId(study.getStudyId());
     apiStudyDetail.setRootEntity(apiEntityTree);
-    apiStudyDetail.setLastModified(study.getLastModified());
     return apiStudyDetail;
   }
 

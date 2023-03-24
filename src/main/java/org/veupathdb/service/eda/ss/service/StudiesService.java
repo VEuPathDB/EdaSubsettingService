@@ -345,36 +345,14 @@ public class StudiesService implements Studies {
     StudyAccess.confirmPermission(authHeader, Resources.ENV.getDatasetAccessServiceUrl(), studyId, accessPredicate);
   }
 
+
   private static StudyProvider getStudyResolver() {
     final BinaryFilesManager binaryFilesManager = Resources.getBinaryFilesManager();
-    final MetadataFileBinaryProvider metadataFileBinaryProvider = new MetadataFileBinaryProvider(binaryFilesManager);
-    final VariableFactory variableFactory = new VariableFactory(
-        Resources.getApplicationDataSource(),
-        Resources.getUserStudySchema(),
-<<<<<<< HEAD
-        new EmptyBinaryMetadataProvider(),
-        x -> false);
-    return new StudyResolver(
-        MetadataCache.instance(),
-        new StudyFactory(
-            Resources.getApplicationDataSource(),
-            Resources.getUserStudySchema(),
-            StudyOverview.StudySourceType.USER_SUBMITTED,
-            variableFactory
-        )
-    );
-  }
-
-  private static StudyProvider getStudyResolver(BinaryFilesManager binaryFilesManager) {
     MetadataFileBinaryProvider metadataFileBinaryProvider = new MetadataFileBinaryProvider(binaryFilesManager);
     final VariableFactory variableFactory = new VariableFactory(Resources.getApplicationDataSource(),
         Resources.getUserStudySchema(),
         metadataFileBinaryProvider,
         binaryFilesManager::studyHasFiles);
-=======
-        metadataFileBinaryProvider,
-        binaryFilesManager);
->>>>>>> 4d49cbd (Add internal (unauthenticated) endpoints for count and distribution)
     return new StudyResolver(
         MetadataCache.instance(),
         new StudyFactory(
