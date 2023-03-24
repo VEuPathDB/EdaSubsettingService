@@ -6,6 +6,8 @@ import org.apache.logging.log4j.Logger;
 import org.veupathdb.lib.container.jaxrs.config.Options;
 import org.veupathdb.lib.container.jaxrs.server.ContainerResources;
 import org.veupathdb.lib.container.jaxrs.utils.db.DbManager;
+import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
+import org.veupathdb.service.eda.ss.model.variable.binary.SimpleStudyFinder;
 import org.veupathdb.service.eda.ss.service.ClearMetadataCacheService;
 import org.veupathdb.service.eda.ss.service.InternalClientsService;
 import org.veupathdb.service.eda.ss.service.StudiesService;
@@ -33,6 +35,9 @@ public class Resources extends ContainerResources {
   private static final ExecutorService FILE_READ_THREAD_POOL = Executors.newCachedThreadPool();
 
   private static final ExecutorService DESERIALIZER_THREAD_POOL = Executors.newFixedThreadPool(16);
+
+  private static final BinaryFilesManager BINARY_FILES_MANAGER = new BinaryFilesManager(
+      new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
 
   public Resources(Options opts) {
     super(opts);
@@ -62,6 +67,10 @@ public class Resources extends ContainerResources {
 
   public static boolean isFileBasedSubsettingEnabled() {
     return ENV.isFileBasedSubsettingEnabled();
+  }
+
+  public static BinaryFilesManager getBinaryFilesManager() {
+    return BINARY_FILES_MANAGER;
   }
 
   public static DataSource getApplicationDataSource() {

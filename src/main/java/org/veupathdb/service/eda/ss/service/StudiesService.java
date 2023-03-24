@@ -129,8 +129,14 @@ public class StudiesService implements Studies {
   public PostStudiesEntitiesVariablesDistributionByStudyIdAndEntityIdAndVariableIdResponse 
   postStudiesEntitiesVariablesDistributionByStudyIdAndEntityIdAndVariableId(
       String studyId, String entityId, String variableId, VariableDistributionPostRequest request) {
+    checkPerms(_request, studyId, StudyAccess::allowSubsetting);
+    return PostStudiesEntitiesVariablesDistributionByStudyIdAndEntityIdAndVariableIdResponse.
+        respond200WithApplicationJson(handleDistributionRequest(studyId, entityId, variableId, request));
+  }
+
+  public static VariableDistributionPostResponse handleDistributionRequest(
+      String studyId, String entityId, String variableId, VariableDistributionPostRequest request) {
     try {
-      checkPerms(_request, studyId, StudyAccess::allowSubsetting);
       Study study = getStudyResolver().getStudyById(studyId);
       String dataSchema = resolveSchema(study);
 
@@ -148,9 +154,7 @@ public class StudiesService implements Studies {
       VariableDistributionPostResponse response = new VariableDistributionPostResponseImpl();
       response.setHistogram(toApiHistogramBins(result.getHistogramData()));
       response.setStatistics(toApiHistogramStats(result.getStatistics()));
-
-      return PostStudiesEntitiesVariablesDistributionByStudyIdAndEntityIdAndVariableIdResponse.
-          respond200WithApplicationJson(response);
+      return response;
     }
     catch (RuntimeException e) {
       LOG.error("Unable to deliver distribution response", e);
@@ -202,9 +206,7 @@ public class StudiesService implements Studies {
       EntityTabularPostRequest requestBody, boolean checkUserPermissions,
       BiFunction<EntityTabularPostResponseStream,TabularResponses.Type,T> responseConverter) {
     LOG.info("Handling tabular request for study {} and entity {}.", studyId, entityId);
-    final BinaryFilesManager binaryFilesManager = new BinaryFilesManager(
-            new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
-    Study study = getStudyResolver(binaryFilesManager).getStudyById(studyId);
+    Study study = getStudyResolver().getStudyById(studyId);
     String dataSchema = resolveSchema(study);
     RequestBundle request = RequestBundle.unpack(dataSchema, study, entityId, requestBody.getFilters(), requestBody.getOutputVariableIds(), requestBody.getReportConfig());
 
@@ -224,6 +226,7 @@ public class StudiesService implements Studies {
     }
 
     TabularResponses.Type responseType = TabularResponses.Type.fromAcceptHeader(requestContext);
+    final BinaryFilesManager binaryFilesManager = Resources.getBinaryFilesManager();
     final BinaryValuesStreamer binaryValuesStreamer = new BinaryValuesStreamer(binaryFilesManager,
             Resources.getFileChannelThreadPool(), Resources.getDeserializerThreadPool());
     if (shouldRunFileBasedSubsetting(request, binaryFilesManager)) {
@@ -300,9 +303,13 @@ public class StudiesService implements Studies {
   @Override
   public PostStudiesEntitiesCountByStudyIdAndEntityIdResponse postStudiesEntitiesCountByStudyIdAndEntityId(
       String studyId, String entityId, EntityCountPostRequest rawRequest) {
-    LOG.info("Handling count request.");
-
     checkPerms(_request, studyId, StudyAccess::allowSubsetting);
+    return PostStudiesEntitiesCountByStudyIdAndEntityIdResponse.respond200WithApplicationJson(
+        handleCountRequest(studyId, entityId, rawRequest));
+  }
+
+  public static EntityCountPostResponse handleCountRequest(String studyId, String entityId, EntityCountPostRequest rawRequest) {
+    LOG.info("Handling count request.");
     Study study = getStudyResolver().getStudyById(studyId);
     String dataSchema = resolveSchema(study);
 
@@ -323,13 +330,14 @@ public class StudiesService implements Studies {
       long count = FilteredResultFactory.getEntityCount(prunedEntityTree, request.getTargetEntity(), request.getFilters(),
               binaryValuesStreamer, study);
       response.setCount(count);
-    } else {
+    }
+    else {
       long count = FilteredResultFactory.getEntityCount(
           Resources.getApplicationDataSource(), dataSchema, prunedEntityTree, request.getTargetEntity(), request.getFilters());
       response.setCount(count);
     }
 
-    return PostStudiesEntitiesCountByStudyIdAndEntityIdResponse.respond200WithApplicationJson(response);
+    return response;
   }
 
   private static void checkPerms(ContainerRequest request, String studyId, Predicate<StudyAccess> accessPredicate) {
@@ -338,25 +346,13 @@ public class StudiesService implements Studies {
   }
 
   private static StudyProvider getStudyResolver() {
-    final VariableFactory variableFactory = new VariableFactory(Resources.getApplicationDataSource(),
+    final BinaryFilesManager binaryFilesManager = Resources.getBinaryFilesManager();
+    final MetadataFileBinaryProvider metadataFileBinaryProvider = new MetadataFileBinaryProvider(binaryFilesManager);
+    final VariableFactory variableFactory = new VariableFactory(
+        Resources.getApplicationDataSource(),
         Resources.getUserStudySchema(),
-        new EmptyBinaryMetadataProvider());
-    return new StudyResolver(
-        MetadataCache.instance(),
-        new StudyFactory(
-            Resources.getApplicationDataSource(),
-            Resources.getUserStudySchema(),
-            StudyOverview.StudySourceType.USER_SUBMITTED,
-            variableFactory
-        )
-    );
-  }
-
-  private static StudyProvider getStudyResolver(BinaryFilesManager binaryFilesManager) {
-    MetadataFileBinaryProvider metadataFileBinaryProvider = new MetadataFileBinaryProvider(binaryFilesManager);
-    final VariableFactory variableFactory = new VariableFactory(Resources.getApplicationDataSource(),
-        Resources.getUserStudySchema(),
-        metadataFileBinaryProvider);
+        metadataFileBinaryProvider,
+        binaryFilesManager);
     return new StudyResolver(
         MetadataCache.instance(),
         new StudyFactory(
@@ -366,7 +362,6 @@ public class StudiesService implements Studies {
             variableFactory)
     );
   }
-
 
   private static String resolveSchema(Study study) {
     return switch(study.getStudySourceType()) {
@@ -386,7 +381,7 @@ public class StudiesService implements Studies {
     return Optional.empty();
   }
 
-  private VariableWithValues<?> getRequestedVariable(RequestBundle req) {
+  private static VariableWithValues<?> getRequestedVariable(RequestBundle req) {
     if (req.getRequestedVariables().isEmpty()) {
       throw new RuntimeException("No requested variables (empty URL segment?)");
     }

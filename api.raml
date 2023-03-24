@@ -121,18 +121,50 @@ securitySchemes:
                       application/json:
                         type: lib.VariableDistributionPostResponse
 
-/ss-internal/studies/{study-id}/entities/{entity-id}/tabular:
-  post:
-    securedBy: header-auth
-    description: |
-     Return a tabular report of one or more variables belonging to this entity.  The output will also include all ancestor primary keys.  In the request, `filters` must be a subclass of [Filter](#type:lib.Filter)
-    body:
-      application/json:
-        type: lib.EntityTabularPostRequest
-    responses:
-      200:
-        body:
-          text/tab-separated-values:
-            type: lib.EntityTabularPostResponse
-          application/json:
-            type: lib.EntityTabularPostResponse
+/ss-internal/studies/{study-id}/entities/{entity-id}:
+
+  /count:
+    post:
+      securedBy: header-auth
+      description: |
+        Return a count of entities in this subset.  In the request, `filters` must be a subclass of [Filter](#type:lib.Filter)
+      body:
+        application/json:
+          type: lib.EntityCountPostRequest
+      responses:
+        200:
+          body:
+            application/json:
+              type: lib.EntityCountPostResponse
+
+  /tabular:
+    post:
+      securedBy: header-auth
+      description: |
+       Return a tabular report of one or more variables belonging to this entity.  The output will also include all ancestor primary keys.  In the request, `filters` must be a subclass of [Filter](#type:lib.Filter)
+      body:
+        application/json:
+          type: lib.EntityTabularPostRequest
+      responses:
+        200:
+          body:
+            text/tab-separated-values:
+              type: lib.EntityTabularPostResponse
+            application/json:
+              type: lib.EntityTabularPostResponse
+
+  /variables/{variable-id}/distribution:
+    post:
+      securedBy: header-auth
+      description: |
+        Return the count of entities in the subset that have a value for this variable, and |
+        a distribution for this variable, i.e., entity counts for each value of this |
+        variable.  In the request, `filters` must be a subclass of [Filter](#type:lib.Filter)
+      body:
+        application/json:
+          type: lib.VariableDistributionPostRequest
+      responses:
+        200:
+          body:
+            application/json:
+              type: lib.VariableDistributionPostResponse

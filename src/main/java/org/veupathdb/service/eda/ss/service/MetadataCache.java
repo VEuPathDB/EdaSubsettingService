@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 public class MetadataCache implements StudyProvider {
-  private static final BinaryFilesManager BINARY_FILES_MANAGER = new BinaryFilesManager(
-          new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
 
   // singleton pattern
   private static final MetadataCache _instance = new MetadataCache();
@@ -43,6 +41,7 @@ public class MetadataCache implements StudyProvider {
   }
 
   private static StudyProvider getCuratedStudyFactory() {
+    BinaryFilesManager binaryFilesManager = Resources.getBinaryFilesManager();
     return new StudyFactory(
         Resources.getApplicationDataSource(),
         Resources.getAppDbSchema(),
@@ -50,7 +49,8 @@ public class MetadataCache implements StudyProvider {
         new VariableFactory(
             Resources.getApplicationDataSource(),
             Resources.getAppDbSchema(),
-            new MetadataFileBinaryProvider(BINARY_FILES_MANAGER))
+            new MetadataFileBinaryProvider(binaryFilesManager),
+            binaryFilesManager)
     );
   }
 
