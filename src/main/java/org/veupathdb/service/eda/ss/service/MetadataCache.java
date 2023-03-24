@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 public class MetadataCache implements StudyProvider {
-  private static final BinaryFilesManager BINARY_FILES_MANAGER = new BinaryFilesManager(
-          new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
 
   // singleton pattern
   private static final MetadataCache _instance = new MetadataCache();
@@ -29,11 +27,6 @@ public class MetadataCache implements StudyProvider {
   // instance fields
   private List<StudyOverview> _studyOverviews;  // cache the overviews
   private final Map<String, Study> _studies = new HashMap<>(); // cache the studies
-  private final VariableFactory _cachedVarFactory = new VariableFactory(
-      Resources.getApplicationDataSource(),
-      Resources.getAppDbSchema(),
-      new MetadataFileBinaryProvider(BINARY_FILES_MANAGER),
-      BINARY_FILES_MANAGER::studyHasFiles);
 
 
   @Override
@@ -50,12 +43,18 @@ public class MetadataCache implements StudyProvider {
     return Collections.unmodifiableList(_studyOverviews);
   }
 
-  private StudyProvider getCuratedStudyFactory() {
+  private static StudyProvider getCuratedStudyFactory() {
+    BinaryFilesManager binaryFilesManager = Resources.getBinaryFilesManager();
     return new StudyFactory(
         Resources.getApplicationDataSource(),
         Resources.getAppDbSchema(),
         StudyOverview.StudySourceType.CURATED,
-        _cachedVarFactory);
+        new VariableFactory(
+            Resources.getApplicationDataSource(),
+            Resources.getAppDbSchema(),
+            new MetadataFileBinaryProvider(binaryFilesManager),
+            binaryFilesManager::studyHasFiles)
+    );
   }
 
   public synchronized void clear() {
