@@ -15,7 +15,7 @@ public class EnvironmentVars {
   protected boolean _fileBasedSubsettingEnabled;
   private String _binaryFilesMount;
 
-  public void load() {
+  public EnvironmentVars() {
     _developmentMode = Boolean.parseBoolean(getOptionalVar("DEVELOPMENT_MODE", "true"));
     _appDbSchema = getOptionalVar("APP_DB_SCHEMA", "eda.");
     _userStudySchema = getOptionalVar("USER_STUDY_SCHEMA", "apidbuserdatasets.");
