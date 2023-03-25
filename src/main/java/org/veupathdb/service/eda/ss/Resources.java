@@ -36,8 +36,7 @@ public class Resources extends ContainerResources {
 
   private static final ExecutorService DESERIALIZER_THREAD_POOL = Executors.newFixedThreadPool(16);
 
-  private static final BinaryFilesManager BINARY_FILES_MANAGER = new BinaryFilesManager(
-      new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
+  private static final BinaryFilesManager BINARY_FILES_MANAGER;
 
   public Resources(Options opts) {
     super(opts);
@@ -53,6 +52,9 @@ public class Resources extends ContainerResources {
       // application database configured; use it
       USE_IN_MEMORY_TEST_DATABASE = false;
     }
+
+    BINARY_FILES_MANAGER = new BinaryFilesManager(
+        new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
 
     if (ENV.isDevelopmentMode()) {
       enableJerseyTrace();
