@@ -27,20 +27,20 @@ public class Resources extends ContainerResources {
 
   private static final Logger LOG = LogManager.getLogger(Resources.class);
 
-  public static EnvironmentVars ENV = new EnvironmentVars();
+  private static final EnvironmentVars ENV = new EnvironmentVars();
 
-  // use in-memory test DB unless "real" application DB is configured
-  private static boolean USE_IN_MEMORY_TEST_DATABASE = true;
+  private static final BinaryFilesManager BINARY_FILES_MANAGER = new BinaryFilesManager(
+      new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
 
   private static final ExecutorService FILE_READ_THREAD_POOL = Executors.newCachedThreadPool();
 
   private static final ExecutorService DESERIALIZER_THREAD_POOL = Executors.newFixedThreadPool(16);
 
-  private static final BinaryFilesManager BINARY_FILES_MANAGER;
+  // use in-memory test DB unless "real" application DB is configured
+  private static boolean USE_IN_MEMORY_TEST_DATABASE = true;
 
   public Resources(Options opts) {
     super(opts);
-    ENV.load();
 
     // initialize auth and required DBs
     DbManager.initUserDatabase(opts);
@@ -52,9 +52,6 @@ public class Resources extends ContainerResources {
       // application database configured; use it
       USE_IN_MEMORY_TEST_DATABASE = false;
     }
-
-    BINARY_FILES_MANAGER = new BinaryFilesManager(
-        new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
 
     if (ENV.isDevelopmentMode()) {
       enableJerseyTrace();
@@ -99,6 +96,10 @@ public class Resources extends ContainerResources {
 
   public static ExecutorService getDeserializerThreadPool() {
     return DESERIALIZER_THREAD_POOL;
+  }
+
+  public static String getDatasetAccessServiceUrl() {
+    return ENV.getDatasetAccessServiceUrl();
   }
 
   /**

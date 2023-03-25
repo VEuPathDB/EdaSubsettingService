@@ -79,7 +79,7 @@ public class StudiesService implements Studies {
   public GetStudiesResponse getStudies() {
     // get IDs of studies visible to this user
     Map<String, StudyDatasetInfo> visibleStudyMap = new DatasetAccessClient(
-        Resources.ENV.getDatasetAccessServiceUrl(),
+        Resources.getDatasetAccessServiceUrl(),
         UserProvider.getSubmittedAuth(_request).orElseThrow()
     ).getStudyDatasetInfoMapForUser();
     Set<String> visibleStudyIds = visibleStudyMap.keySet();
@@ -342,7 +342,7 @@ public class StudiesService implements Studies {
 
   private static void checkPerms(ContainerRequest request, String studyId, Predicate<StudyAccess> accessPredicate) {
     Entry<String, String> authHeader = UserProvider.getSubmittedAuth(request).orElseThrow();
-    StudyAccess.confirmPermission(authHeader, Resources.ENV.getDatasetAccessServiceUrl(), studyId, accessPredicate);
+    StudyAccess.confirmPermission(authHeader, Resources.getDatasetAccessServiceUrl(), studyId, accessPredicate);
   }
 
   private static StudyProvider getStudyResolver() {
