@@ -1,6 +1,7 @@
 package org.veupathdb.service.eda.ss.service;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +46,7 @@ public class ApiConversionUtil {
     APIStudyDetail apiStudyDetail = new APIStudyDetailImpl();
     apiStudyDetail.setId(study.getStudyId());
     apiStudyDetail.setRootEntity(apiEntityTree);
+    apiStudyDetail.setLastModified(study.getLastModified());
     return apiStudyDetail;
   }
 
@@ -302,6 +304,7 @@ public class ApiConversionUtil {
           study.setDisplayName(dataset.getDisplayName());
           study.setShortDisplayName(dataset.getShortDisplayName());
           study.setDescription(dataset.getDescription());
+          study.setLastModified(overview.getLastModified());
           return study;
         }).collect(Collectors.toList());
   }

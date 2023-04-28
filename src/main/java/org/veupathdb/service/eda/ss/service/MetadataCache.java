@@ -7,6 +7,8 @@ import org.veupathdb.service.eda.ss.model.db.StudyFactory;
 import org.veupathdb.service.eda.ss.model.db.StudyProvider;
 import org.veupathdb.service.eda.ss.model.db.VariableFactory;
 import org.veupathdb.service.eda.ss.model.reducer.MetadataFileBinaryProvider;
+import org.veupathdb.service.eda.ss.model.variable.BinaryProperties;
+import org.veupathdb.service.eda.ss.model.variable.Variable;
 import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
 import org.veupathdb.service.eda.ss.model.variable.binary.SimpleStudyFinder;
 
@@ -27,6 +29,12 @@ public class MetadataCache implements StudyProvider {
   // instance fields
   private List<StudyOverview> _studyOverviews;  // cache the overviews
   private final Map<String, Study> _studies = new HashMap<>(); // cache the studies
+  private final VariableFactory _cachedVarFactory = new VariableFactory(
+      Resources.getApplicationDataSource(),
+      Resources.getAppDbSchema(),
+      new MetadataFileBinaryProvider(BINARY_FILES_MANAGER),
+      BINARY_FILES_MANAGER::studyHasFiles);
+
 
   @Override
   public synchronized Study getStudyById(String studyId) {
@@ -42,16 +50,12 @@ public class MetadataCache implements StudyProvider {
     return Collections.unmodifiableList(_studyOverviews);
   }
 
-  private static StudyProvider getCuratedStudyFactory() {
+  private StudyProvider getCuratedStudyFactory() {
     return new StudyFactory(
         Resources.getApplicationDataSource(),
         Resources.getAppDbSchema(),
         StudyOverview.StudySourceType.CURATED,
-        new VariableFactory(
-            Resources.getApplicationDataSource(),
-            Resources.getAppDbSchema(),
-            new MetadataFileBinaryProvider(BINARY_FILES_MANAGER))
-    );
+        _cachedVarFactory);
   }
 
   public synchronized void clear() {

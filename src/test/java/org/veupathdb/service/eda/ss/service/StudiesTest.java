@@ -37,7 +37,7 @@ public class StudiesTest {
     _model = new MockModel();
     DataSource dataSource = StubDb.getDataSource();
     _study = new StudyFactory(dataSource, StubDb.APP_DB_SCHEMA, StudyOverview.StudySourceType.CURATED,
-        new VariableFactory(dataSource, StubDb.APP_DB_SCHEMA, new EmptyBinaryMetadataProvider())).getStudyById("DS-2324");
+        new VariableFactory(dataSource, StubDb.APP_DB_SCHEMA, new EmptyBinaryMetadataProvider(), x -> false)).getStudyById("DS-2324");
   }
 
   @Test

@@ -340,7 +340,8 @@ public class StudiesService implements Studies {
   private static StudyProvider getStudyResolver() {
     final VariableFactory variableFactory = new VariableFactory(Resources.getApplicationDataSource(),
         Resources.getUserStudySchema(),
-        new EmptyBinaryMetadataProvider());
+        new EmptyBinaryMetadataProvider(),
+        x -> false);
     return new StudyResolver(
         MetadataCache.instance(),
         new StudyFactory(
@@ -356,7 +357,8 @@ public class StudiesService implements Studies {
     MetadataFileBinaryProvider metadataFileBinaryProvider = new MetadataFileBinaryProvider(binaryFilesManager);
     final VariableFactory variableFactory = new VariableFactory(Resources.getApplicationDataSource(),
         Resources.getUserStudySchema(),
-        metadataFileBinaryProvider);
+        metadataFileBinaryProvider,
+        binaryFilesManager::studyHasFiles);
     return new StudyResolver(
         MetadataCache.instance(),
         new StudyFactory(
