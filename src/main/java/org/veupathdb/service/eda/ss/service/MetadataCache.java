@@ -44,6 +44,7 @@ public class MetadataCache implements StudyProvider {
   }
 
   private static StudyProvider getCuratedStudyFactory() {
+    BinaryFilesManager binaryFilesManager = Resources.getBinaryFilesManager();
     return new StudyFactory(
         Resources.getApplicationDataSource(),
         Resources.getAppDbSchema(),
