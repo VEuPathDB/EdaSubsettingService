@@ -42,7 +42,7 @@ public class StudiesTest {
     BinaryFilesManager binaryFilesManager = Mockito.mock(BinaryFilesManager.class);
     Mockito.when(binaryFilesManager.studyHasFiles(anyString())).thenReturn(false);
     _study = new StudyFactory(dataSource, StubDb.APP_DB_SCHEMA, StudyOverview.StudySourceType.CURATED,
-        new VariableFactory(dataSource, StubDb.APP_DB_SCHEMA, new EmptyBinaryMetadataProvider(), binaryFilesManager)).getStudyById("DS-2324");
+        new VariableFactory(dataSource, StubDb.APP_DB_SCHEMA, new EmptyBinaryMetadataProvider(), x -> false)).getStudyById("DS-2324");
   }
 
   @Test

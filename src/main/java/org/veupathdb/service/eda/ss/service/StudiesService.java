@@ -345,14 +345,14 @@ public class StudiesService implements Studies {
     StudyAccess.confirmPermission(authHeader, Resources.getDatasetAccessServiceUrl(), studyId, accessPredicate);
   }
 
+
   private static StudyProvider getStudyResolver() {
     final BinaryFilesManager binaryFilesManager = Resources.getBinaryFilesManager();
     final MetadataFileBinaryProvider metadataFileBinaryProvider = new MetadataFileBinaryProvider(binaryFilesManager);
-    final VariableFactory variableFactory = new VariableFactory(
-        Resources.getApplicationDataSource(),
+    final VariableFactory variableFactory = new VariableFactory(Resources.getApplicationDataSource(),
         Resources.getUserStudySchema(),
         metadataFileBinaryProvider,
-        binaryFilesManager);
+        binaryFilesManager::studyHasFiles);
     return new StudyResolver(
         MetadataCache.instance(),
         new StudyFactory(
