@@ -354,7 +354,7 @@ public class StudiesService implements Studies {
         metadataFileBinaryProvider,
         binaryFilesManager::studyHasFiles);
     return new StudyResolver(
-        MetadataCache.instance(),
+        Resources.getMetadataCache(),
         new StudyFactory(
             Resources.getApplicationDataSource(),
             Resources.getUserStudySchema(),

@@ -10,6 +10,7 @@ import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
 import org.veupathdb.service.eda.ss.model.variable.binary.SimpleStudyFinder;
 import org.veupathdb.service.eda.ss.service.ClearMetadataCacheService;
 import org.veupathdb.service.eda.ss.service.InternalClientsService;
+import org.veupathdb.service.eda.ss.service.MetadataCache;
 import org.veupathdb.service.eda.ss.service.StudiesService;
 import org.veupathdb.service.eda.ss.test.StubDb;
 
@@ -62,6 +63,10 @@ public class Resources extends ContainerResources {
       LOG.info("Using application DB connection URL: " +
           DbManager.getInstance().getApplicationDatabase().getConfig().getConnectionUrl());
     }
+  }
+
+  public static MetadataCache getMetadataCache() {
+    return new MetadataCache();
   }
 
   public static boolean isFileBasedSubsettingEnabled() {
