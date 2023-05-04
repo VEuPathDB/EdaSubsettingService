@@ -25,13 +25,14 @@ import java.util.concurrent.Executors;
  * should be registered.
  */
 public class Resources extends ContainerResources {
-
   private static final Logger LOG = LogManager.getLogger(Resources.class);
 
   private static final EnvironmentVars ENV = new EnvironmentVars();
 
   private static final BinaryFilesManager BINARY_FILES_MANAGER = new BinaryFilesManager(
       new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
+
+  private static final MetadataCache METADATA_CACHE = new MetadataCache();
 
   private static final ExecutorService FILE_READ_THREAD_POOL = Executors.newCachedThreadPool();
 
@@ -66,7 +67,7 @@ public class Resources extends ContainerResources {
   }
 
   public static MetadataCache getMetadataCache() {
-    return new MetadataCache();
+    return METADATA_CACHE;
   }
 
   public static boolean isFileBasedSubsettingEnabled() {
