@@ -20,30 +20,31 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class MetadataCache implements StudyProvider {
   private static final Logger LOG = LogManager.getLogger(MetadataCache.class);
 
   // instance fields
-  private final BinaryFilesManager _binaryFilesManager;
-  private final StudyProvider _sourceStudyProvider;
   private List<StudyOverview> _studyOverviews;  // cache the overviews
+  private final BinaryFilesManager _binaryFilesManager;
+  private final Supplier<StudyProvider> _sourceStudyProvider;
   private final Map<String, Study> _studies = new HashMap<>(); // cache the studies
   private final Map<String, Boolean> _studyHasFilesCache = new HashMap<>();
   private final ScheduledExecutorService _scheduledThreadPool = Executors.newScheduledThreadPool(1); // Shut this down.
 
   public MetadataCache() {
     _binaryFilesManager = Resources.getBinaryFilesManager();
-    _sourceStudyProvider = getCuratedStudyFactory();
+    _sourceStudyProvider = this::getCuratedStudyFactory; // Lazily initialize to ensure database connection is established before construction.
     _scheduledThreadPool.scheduleAtFixedRate(this::invalidateOutOfDateStudies, 0L, 5L, TimeUnit.MINUTES);
   }
 
   MetadataCache(BinaryFilesManager binaryFilesManager,
-                        StudyProvider sourceStudyProvider,
-                        Duration refreshInterval) {
+                StudyProvider sourceStudyProvider,
+                Duration refreshInterval) {
     _binaryFilesManager = binaryFilesManager;
-    _sourceStudyProvider = sourceStudyProvider;
+    _sourceStudyProvider = () -> sourceStudyProvider;
     _scheduledThreadPool.scheduleAtFixedRate(this::invalidateOutOfDateStudies, 0L,
         refreshInterval.toMillis(), TimeUnit.MILLISECONDS);
   }
@@ -57,7 +58,7 @@ public class MetadataCache implements StudyProvider {
   @Override
   public synchronized List<StudyOverview> getStudyOverviews() {
     if (_studyOverviews == null) {
-      _studyOverviews = _sourceStudyProvider.getStudyOverviews();
+      _studyOverviews = _sourceStudyProvider.get().getStudyOverviews();
     }
     return Collections.unmodifiableList(_studyOverviews);
   }
@@ -91,21 +92,21 @@ public class MetadataCache implements StudyProvider {
 
   private void invalidateOutOfDateStudies() {
     LOG.info("Checking which studies are out of date in cache.");
-    List<StudyOverview> sourceStudies = _sourceStudyProvider.getStudyOverviews();
-    List<Study> studiesOutOfDate = _studies.values().stream()
-        .filter(study -> isOutOfDate(study, sourceStudies))
+    List<StudyOverview> dbStudies = _sourceStudyProvider.get().getStudyOverviews();
+    List<Study> studiesToRemove = _studies.values().stream()
+        .filter(study -> isOutOfDate(study, dbStudies))
         .toList();
     synchronized (this) {
       LOG.info("Removing the following out of date or missing studies from cache: "
-          + studiesOutOfDate.stream().map(StudyOverview::getStudyId).collect(Collectors.joining(",")));
-      sourceStudies.forEach(study -> _studyHasFilesCache.put(study.getStudyId(), _binaryFilesManager.studyHasFiles(study.getStudyId())));
+          + studiesToRemove.stream().map(StudyOverview::getStudyId).collect(Collectors.joining(",")));
+      dbStudies.forEach(study -> _studyHasFilesCache.put(study.getStudyId(), _binaryFilesManager.studyHasFiles(study.getStudyId())));
 
       // Replace study overviews with those available in DB.
-      _studyOverviews = sourceStudies;
+      _studyOverviews = dbStudies;
 
       // Remove any studies with full metadata loaded if they have been modified. They will be lazily repopulated.
       _studies.entrySet().removeIf(study ->
-          studiesOutOfDate.stream().anyMatch(removeStudy -> removeStudy.getStudyId().equals(study.getKey())));
+          studiesToRemove.stream().anyMatch(removeStudy -> removeStudy.getStudyId().equals(study.getKey())));
     }
   }
 
