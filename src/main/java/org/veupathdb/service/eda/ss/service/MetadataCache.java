@@ -91,20 +91,21 @@ public class MetadataCache implements StudyProvider {
 
   private void invalidateOutOfDateStudies() {
     LOG.info("Checking which studies are out of date in cache.");
-    List<StudyOverview> dbStudies = _sourceStudyProvider.getStudyOverviews();
-    boolean studyOverviewsOutOfDate = _studyOverviews != null && _studyOverviews.stream().anyMatch(study -> isOutOfDate(study, dbStudies));
-    List<Study> studiesToRemove = _studies.values().stream()
-        .filter(study -> isOutOfDate(study, dbStudies))
+    List<StudyOverview> sourceStudies = _sourceStudyProvider.getStudyOverviews();
+    List<Study> studiesOutOfDate = _studies.values().stream()
+        .filter(study -> isOutOfDate(study, sourceStudies))
         .toList();
     synchronized (this) {
       LOG.info("Removing the following out of date or missing studies from cache: "
-          + studiesToRemove.stream().map(StudyOverview::getStudyId).collect(Collectors.joining(",")));
-      dbStudies.forEach(study -> _studyHasFilesCache.put(study.getStudyId(), _binaryFilesManager.studyHasFiles(study.getStudyId())));
-      if (studyOverviewsOutOfDate) {
-        _studyOverviews = null;
-      }
+          + studiesOutOfDate.stream().map(StudyOverview::getStudyId).collect(Collectors.joining(",")));
+      sourceStudies.forEach(study -> _studyHasFilesCache.put(study.getStudyId(), _binaryFilesManager.studyHasFiles(study.getStudyId())));
+
+      // Replace study overviews with those available in DB.
+      _studyOverviews = sourceStudies;
+
+      // Remove any studies with full metadata loaded if they have been modified. They will be lazily repopulated.
       _studies.entrySet().removeIf(study ->
-          studiesToRemove.stream().anyMatch(removeStudy -> removeStudy.getStudyId().equals(study.getKey())));
+          studiesOutOfDate.stream().anyMatch(removeStudy -> removeStudy.getStudyId().equals(study.getKey())));
     }
   }
 
