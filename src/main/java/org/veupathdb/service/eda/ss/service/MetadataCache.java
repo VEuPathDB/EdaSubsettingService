@@ -84,6 +84,7 @@ public class MetadataCache implements StudyProvider {
   public synchronized void clear() {
     _studyOverviews = null;
     _studies.clear();
+    _studyHasFilesCache.clear();
   }
 
   public void shutdown() {
