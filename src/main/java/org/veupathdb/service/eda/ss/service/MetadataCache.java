@@ -34,12 +34,13 @@ public class MetadataCache implements StudyProvider {
   private final Map<String, Boolean> _studyHasFilesCache = new HashMap<>();
   private final ScheduledExecutorService _scheduledThreadPool = Executors.newScheduledThreadPool(1); // Shut this down.
 
-  public MetadataCache() {
-    _binaryFilesManager = Resources.getBinaryFilesManager();
+  public MetadataCache(BinaryFilesManager binaryFilesManager) {
+    _binaryFilesManager = binaryFilesManager;
     _sourceStudyProvider = this::getCuratedStudyFactory; // Lazily initialize to ensure database connection is established before construction.
     _scheduledThreadPool.scheduleAtFixedRate(this::invalidateOutOfDateStudies, 0L, 5L, TimeUnit.MINUTES);
   }
 
+  // Visible for testing
   MetadataCache(BinaryFilesManager binaryFilesManager,
                 StudyProvider sourceStudyProvider,
                 Duration refreshInterval) {
@@ -100,6 +101,8 @@ public class MetadataCache implements StudyProvider {
     synchronized (this) {
       LOG.info("Removing the following out of date or missing studies from cache: "
           + studiesToRemove.stream().map(StudyOverview::getStudyId).collect(Collectors.joining(",")));
+
+      // For each study with a study overview, check if the files exist and cache the result.
       dbStudies.forEach(study -> _studyHasFilesCache.put(study.getStudyId(), _binaryFilesManager.studyHasFiles(study.getStudyId())));
 
       // Replace study overviews with those available in DB.
