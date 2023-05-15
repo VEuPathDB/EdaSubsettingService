@@ -166,6 +166,8 @@ dependencies {
   // Unit Testing
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
   testImplementation("org.mockito:mockito-core:5.2.0")
+  testImplementation("org.mockito:mockito-junit-jupiter:5.2.0")
+  testImplementation("org.awaitility:awaitility:4.2.0")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
 }
 

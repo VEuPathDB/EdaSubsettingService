@@ -6,10 +6,16 @@ import org.apache.logging.log4j.Logger;
 import org.veupathdb.lib.container.jaxrs.config.Options;
 import org.veupathdb.lib.container.jaxrs.server.ContainerResources;
 import org.veupathdb.lib.container.jaxrs.utils.db.DbManager;
+import org.veupathdb.service.eda.ss.model.StudyOverview;
+import org.veupathdb.service.eda.ss.model.db.StudyFactory;
+import org.veupathdb.service.eda.ss.model.db.StudyProvider;
+import org.veupathdb.service.eda.ss.model.db.VariableFactory;
+import org.veupathdb.service.eda.ss.model.reducer.MetadataFileBinaryProvider;
 import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
 import org.veupathdb.service.eda.ss.model.variable.binary.SimpleStudyFinder;
 import org.veupathdb.service.eda.ss.service.ClearMetadataCacheService;
 import org.veupathdb.service.eda.ss.service.InternalClientsService;
+import org.veupathdb.service.eda.ss.service.MetadataCache;
 import org.veupathdb.service.eda.ss.service.StudiesService;
 import org.veupathdb.service.eda.ss.test.StubDb;
 
@@ -24,13 +30,14 @@ import java.util.concurrent.Executors;
  * should be registered.
  */
 public class Resources extends ContainerResources {
-
   private static final Logger LOG = LogManager.getLogger(Resources.class);
 
   private static final EnvironmentVars ENV = new EnvironmentVars();
 
   private static final BinaryFilesManager BINARY_FILES_MANAGER = new BinaryFilesManager(
       new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
+
+  private static final MetadataCache METADATA_CACHE = new MetadataCache(BINARY_FILES_MANAGER);
 
   private static final ExecutorService FILE_READ_THREAD_POOL = Executors.newCachedThreadPool();
 
@@ -62,6 +69,10 @@ public class Resources extends ContainerResources {
       LOG.info("Using application DB connection URL: " +
           DbManager.getInstance().getApplicationDatabase().getConfig().getConnectionUrl());
     }
+  }
+
+  public static MetadataCache getMetadataCache() {
+    return METADATA_CACHE;
   }
 
   public static boolean isFileBasedSubsettingEnabled() {
