@@ -2,6 +2,9 @@ package org.veupathdb.service.eda.ss.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
@@ -9,6 +12,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import jakarta.validation.ValidationException;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Context;
@@ -46,6 +50,8 @@ import org.veupathdb.service.eda.generated.model.ValueSpec;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostRequest;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponse;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponseImpl;
+import org.veupathdb.service.eda.generated.model.VocabByStudyPostRequest;
+import org.veupathdb.service.eda.generated.model.VocabByStudyPostResponseStream;
 import org.veupathdb.service.eda.generated.resources.Studies;
 import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Entity;
@@ -54,7 +60,6 @@ import org.veupathdb.service.eda.ss.model.StudyOverview;
 import org.veupathdb.service.eda.ss.model.db.*;
 import org.veupathdb.service.eda.ss.model.distribution.DistributionFactory;
 import org.veupathdb.service.eda.ss.model.reducer.BinaryValuesStreamer;
-import org.veupathdb.service.eda.ss.model.reducer.EmptyBinaryMetadataProvider;
 import org.veupathdb.service.eda.ss.model.reducer.MetadataFileBinaryProvider;
 import org.veupathdb.service.eda.ss.model.tabular.DataSourceType;
 import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
@@ -134,6 +139,8 @@ public class StudiesService implements Studies {
         respond200WithApplicationJson(handleDistributionRequest(studyId, entityId, variableId, request));
   }
 
+
+
   public static VariableDistributionPostResponse handleDistributionRequest(
       String studyId, String entityId, String variableId, VariableDistributionPostRequest request) {
     try {
@@ -199,6 +206,39 @@ public class StudiesService implements Studies {
     catch (JsonProcessingException e) {
       throw new BadRequestException(e.getMessage());
     }
+  }
+
+  @Override
+  public PostStudiesEntitiesVariablesStudyVocabByStudyIdAndEntityIdAndVariableIdResponse postStudiesEntitiesVariablesStudyVocabByStudyIdAndEntityIdAndVariableId(String studyId, String entityId, String variableId, VocabByStudyPostRequest entity) {
+    checkPerms(_request, studyId, StudyAccess::allowSubsetting);
+    Study study = getStudyResolver().getStudyById(studyId);
+    String dataSchema = resolveSchema(study);
+    VocabByStudyPostResponseStream streamer = new VocabByStudyPostResponseStream(outputStream -> {
+      final OutputStreamWriter writer = new OutputStreamWriter(outputStream);
+      final BufferedWriter bufferedWriter = new BufferedWriter(writer);
+      TabularResponses.ResultConsumer resultConsumer = TabularResponses.Type.TABULAR.getFormatter().getFormatter(bufferedWriter);
+      Variable var = study.getEntity(entityId)
+          .orElseThrow(() -> new ValidationException(String.format("Entity %s not found in study %s.", entityId, studyId)))
+          .getVariable(variableId)
+          .orElseThrow(() -> new ValidationException(String.format("Variable ID %s not found on entity %s in study %s.", variableId, entityId, studyId)));
+      if (!(var instanceof VariableWithValues<?>)) {
+        throw new ValidationException("Unable to retrieve vocabulary for a variable without values.");
+      }
+      final StudyVocabHandler vocabHandler = new StudyVocabHandler();
+      vocabHandler.queryStudyVocab(dataSchema,
+          Resources.getApplicationDataSource(),
+          study.getEntity(entity.getStudyEntity()).orElseThrow(),
+          (VariableWithValues<?>) var,
+          resultConsumer);
+
+      try {
+        bufferedWriter.flush();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    });
+
+    return PostStudiesEntitiesVariablesStudyVocabByStudyIdAndEntityIdAndVariableIdResponse.respond200WithTextTabSeparatedValues(streamer);
   }
 
   public static <T> T handleTabularRequest(

@@ -105,6 +105,18 @@ securitySchemes:
 
           /{variable-id}:
 
+            /study-vocab:
+              post:
+                securedBy: header-auth
+                body:
+                  application/json:
+                    type: lib.VocabByStudyPostRequest
+                responses:
+                  200:
+                    body:
+                      text/tab-separated-values:
+                        type: lib.VocabByStudyPostResponse
+
             /distribution:
               post:
                 securedBy: header-auth
