@@ -106,6 +106,10 @@ securitySchemes:
           /{variable-id}:
 
             /study-vocab:
+              description: |
+                Return a tabular report containing a row for each unique variable value per study entity ID in a megastudy.
+                This effectively gives us a vocabulary for each study in a megastudy to aid with analysis that needs to
+                know which values were searched for in the study(s) in question.
               post:
                 securedBy: header-auth
                 body:

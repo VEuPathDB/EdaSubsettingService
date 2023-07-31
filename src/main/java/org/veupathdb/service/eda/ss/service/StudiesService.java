@@ -217,17 +217,23 @@ public class StudiesService implements Studies {
       final OutputStreamWriter writer = new OutputStreamWriter(outputStream);
       final BufferedWriter bufferedWriter = new BufferedWriter(writer);
       TabularResponses.ResultConsumer resultConsumer = TabularResponses.Type.TABULAR.getFormatter().getFormatter(bufferedWriter);
+
+      // Validate entity/variable ID existence
       Variable var = study.getEntity(entityId)
           .orElseThrow(() -> new ValidationException(String.format("Entity %s not found in study %s.", entityId, studyId)))
           .getVariable(variableId)
           .orElseThrow(() -> new ValidationException(String.format("Variable ID %s not found on entity %s in study %s.", variableId, entityId, studyId)));
+
+      // Trivially, only works on variables with values
       if (!(var instanceof VariableWithValues<?>)) {
         throw new ValidationException("Unable to retrieve vocabulary for a variable without values.");
       }
+
+      // TODO: probably want a singleton StudyVocabHandler with caching implemented.
       final StudyVocabHandler vocabHandler = new StudyVocabHandler();
       vocabHandler.queryStudyVocab(dataSchema,
           Resources.getApplicationDataSource(),
-          study.getEntity(entity.getStudyEntity()).orElseThrow(),
+          study.getEntity(entity.getStudyEntity()).orElseThrow(() -> new ValidationException(String.format("Entity %s not found in study %s.", entity.getStudyEntity(), studyId))),
           (VariableWithValues<?>) var,
           resultConsumer);
 
