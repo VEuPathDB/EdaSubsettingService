@@ -50,8 +50,8 @@ import org.veupathdb.service.eda.generated.model.ValueSpec;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostRequest;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponse;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponseImpl;
-import org.veupathdb.service.eda.generated.model.VocabByStudyPostRequest;
-import org.veupathdb.service.eda.generated.model.VocabByStudyPostResponseStream;
+import org.veupathdb.service.eda.generated.model.VocabByRootEntityPostRequest;
+import org.veupathdb.service.eda.generated.model.VocabByRootEntityPostResponseStream;
 import org.veupathdb.service.eda.generated.resources.Studies;
 import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Entity;
@@ -209,11 +209,11 @@ public class StudiesService implements Studies {
   }
 
   @Override
-  public PostStudiesEntitiesVariablesStudyVocabByStudyIdAndEntityIdAndVariableIdResponse postStudiesEntitiesVariablesStudyVocabByStudyIdAndEntityIdAndVariableId(String studyId, String entityId, String variableId, VocabByStudyPostRequest entity) {
+  public PostStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse postStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableId(String studyId, String entityId, String variableId, VocabByRootEntityPostRequest entity) {
     checkPerms(_request, studyId, StudyAccess::allowSubsetting);
     Study study = getStudyResolver().getStudyById(studyId);
     String dataSchema = resolveSchema(study);
-    VocabByStudyPostResponseStream streamer = new VocabByStudyPostResponseStream(outputStream -> {
+    VocabByRootEntityPostResponseStream streamer = new VocabByRootEntityPostResponseStream(outputStream -> {
       final OutputStreamWriter writer = new OutputStreamWriter(outputStream);
       final BufferedWriter bufferedWriter = new BufferedWriter(writer);
       TabularResponses.ResultConsumer resultConsumer = TabularResponses.Type.TABULAR.getFormatter().getFormatter(bufferedWriter);
@@ -233,7 +233,7 @@ public class StudiesService implements Studies {
       final StudyVocabHandler vocabHandler = new StudyVocabHandler();
       vocabHandler.queryStudyVocab(dataSchema,
           Resources.getApplicationDataSource(),
-          study.getEntity(entity.getStudyEntity()).orElseThrow(() -> new ValidationException(String.format("Entity %s not found in study %s.", entity.getStudyEntity(), studyId))),
+          study.getEntityTree().getContents(),
           (VariableWithValues<?>) var,
           resultConsumer);
 
@@ -244,7 +244,7 @@ public class StudiesService implements Studies {
       }
     });
 
-    return PostStudiesEntitiesVariablesStudyVocabByStudyIdAndEntityIdAndVariableIdResponse.respond200WithTextTabSeparatedValues(streamer);
+    return PostStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse.respond200WithTextTabSeparatedValues(streamer);
   }
 
   public static <T> T handleTabularRequest(

@@ -105,21 +105,21 @@ securitySchemes:
 
           /{variable-id}:
 
-            /study-vocab:
+            /root-vocab:
               description: |
-                Return a tabular report containing a row for each unique variable value per study entity ID in a megastudy.
+                Return a tabular report containing a row for each unique variable value per root entity ID in a megastudy.
                 This effectively gives us a vocabulary for each study in a megastudy to aid with analysis that needs to
                 know which values were searched for in the study(s) in question.
               post:
                 securedBy: header-auth
                 body:
                   application/json:
-                    type: lib.VocabByStudyPostRequest
+                    type: lib.VocabByRootEntityPostRequest
                 responses:
                   200:
                     body:
                       text/tab-separated-values:
-                        type: lib.VocabByStudyPostResponse
+                        type: lib.VocabByRootEntityPostResponse
 
             /distribution:
               post:
