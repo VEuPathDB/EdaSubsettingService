@@ -35,6 +35,7 @@ import org.veupathdb.service.eda.common.client.DatasetAccessClient;
 import org.veupathdb.service.eda.common.client.DatasetAccessClient.StudyDatasetInfo;
 import org.veupathdb.service.eda.generated.model.APIEntity;
 import org.veupathdb.service.eda.generated.model.APIStudyDetail;
+import org.veupathdb.service.eda.generated.model.APIVariableDataShape;
 import org.veupathdb.service.eda.generated.model.EntityCountPostRequest;
 import org.veupathdb.service.eda.generated.model.EntityCountPostResponse;
 import org.veupathdb.service.eda.generated.model.EntityCountPostResponseImpl;
@@ -65,6 +66,7 @@ import org.veupathdb.service.eda.ss.model.tabular.DataSourceType;
 import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
 import org.veupathdb.service.eda.ss.model.variable.Variable;
+import org.veupathdb.service.eda.ss.model.variable.VariableType;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
 import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
 import org.veupathdb.service.eda.ss.model.variable.binary.SimpleStudyFinder;
@@ -229,12 +231,17 @@ public class StudiesService implements Studies {
         throw new ValidationException("Unable to retrieve vocabulary for a variable without values.");
       }
 
-      // TODO: probably want a singleton StudyVocabHandler with caching implemented.
-      final StudyVocabHandler vocabHandler = new StudyVocabHandler();
+      VariableWithValues<?> variableWithValues = (VariableWithValues<?>) var;
+      if (variableWithValues.getType() != VariableType.STRING || variableWithValues.getVocabulary() == null) {
+        throw new ValidationException("Specified variable must be a string with a vocabulary.");
+      }
+
+      // TODO: probably want a singleton RootVocabHandler with caching implemented.
+      final RootVocabHandler vocabHandler = new RootVocabHandler();
       vocabHandler.queryStudyVocab(dataSchema,
           Resources.getApplicationDataSource(),
           study.getEntityTree().getContents(),
-          (VariableWithValues<?>) var,
+          variableWithValues,
           resultConsumer);
 
       try {
