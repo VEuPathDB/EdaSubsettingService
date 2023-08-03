@@ -110,11 +110,8 @@ securitySchemes:
                 Return a tabular report containing a row for each unique variable value per root entity ID in a megastudy.
                 This effectively gives us a vocabulary for each study in a megastudy to aid with analysis that needs to
                 know which values were searched for in the study(s) in question.
-              post:
+              get:
                 securedBy: header-auth
-                body:
-                  application/json:
-                    type: lib.VocabByRootEntityPostRequest
                 responses:
                   200:
                     body:
