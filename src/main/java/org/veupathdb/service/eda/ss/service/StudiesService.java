@@ -51,7 +51,6 @@ import org.veupathdb.service.eda.generated.model.ValueSpec;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostRequest;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponse;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponseImpl;
-import org.veupathdb.service.eda.generated.model.VocabByRootEntityPostRequest;
 import org.veupathdb.service.eda.generated.model.VocabByRootEntityPostResponseStream;
 import org.veupathdb.service.eda.generated.resources.Studies;
 import org.veupathdb.service.eda.ss.Resources;
@@ -211,7 +210,7 @@ public class StudiesService implements Studies {
   }
 
   @Override
-  public PostStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse postStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableId(String studyId, String entityId, String variableId, VocabByRootEntityPostRequest entity) {
+  public GetStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse getStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableId(String studyId, String entityId, String variableId) {
     checkPerms(_request, studyId, StudyAccess::allowSubsetting);
     Study study = getStudyResolver().getStudyById(studyId);
     String dataSchema = resolveSchema(study);
@@ -252,7 +251,7 @@ public class StudiesService implements Studies {
       }
     });
 
-    return PostStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse.respond200WithTextTabSeparatedValues(streamer);
+    return GetStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse.respond200WithTextTabSeparatedValues(streamer);
   }
 
   public static <T> T handleTabularRequest(
