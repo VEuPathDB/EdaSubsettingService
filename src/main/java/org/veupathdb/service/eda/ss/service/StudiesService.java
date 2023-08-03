@@ -215,26 +215,27 @@ public class StudiesService implements Studies {
     checkPerms(_request, studyId, StudyAccess::allowSubsetting);
     Study study = getStudyResolver().getStudyById(studyId);
     String dataSchema = resolveSchema(study);
+
+    // Validate entity/variable ID existence
+    Variable var = study.getEntity(entityId)
+        .orElseThrow(() -> new ValidationException(String.format("Entity %s not found in study %s.", entityId, studyId)))
+        .getVariable(variableId)
+        .orElseThrow(() -> new ValidationException(String.format("Variable ID %s not found on entity %s in study %s.", variableId, entityId, studyId)));
+
+    // Trivially, only works on variables with values
+    if (!(var instanceof VariableWithValues<?>)) {
+      throw new ValidationException("Unable to retrieve vocabulary for a variable without values.");
+    }
+
+    VariableWithValues<?> variableWithValues = (VariableWithValues<?>) var;
+    if (variableWithValues.getType() != VariableType.STRING || variableWithValues.getVocabulary() == null) {
+      throw new ValidationException("Specified variable must be a string with a vocabulary.");
+    }
+
     VocabByRootEntityPostResponseStream streamer = new VocabByRootEntityPostResponseStream(outputStream -> {
       final OutputStreamWriter writer = new OutputStreamWriter(outputStream);
       final BufferedWriter bufferedWriter = new BufferedWriter(writer);
       TabularResponses.ResultConsumer resultConsumer = TabularResponses.Type.TABULAR.getFormatter().getFormatter(bufferedWriter);
-
-      // Validate entity/variable ID existence
-      Variable var = study.getEntity(entityId)
-          .orElseThrow(() -> new ValidationException(String.format("Entity %s not found in study %s.", entityId, studyId)))
-          .getVariable(variableId)
-          .orElseThrow(() -> new ValidationException(String.format("Variable ID %s not found on entity %s in study %s.", variableId, entityId, studyId)));
-
-      // Trivially, only works on variables with values
-      if (!(var instanceof VariableWithValues<?>)) {
-        throw new ValidationException("Unable to retrieve vocabulary for a variable without values.");
-      }
-
-      VariableWithValues<?> variableWithValues = (VariableWithValues<?>) var;
-      if (variableWithValues.getType() != VariableType.STRING || variableWithValues.getVocabulary() == null) {
-        throw new ValidationException("Specified variable must be a string with a vocabulary.");
-      }
 
       // TODO: probably want a singleton RootVocabHandler with caching implemented.
       final RootVocabHandler vocabHandler = new RootVocabHandler();

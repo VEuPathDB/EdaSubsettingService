@@ -107,9 +107,10 @@ securitySchemes:
 
             /root-vocab:
               description: |
-                Return a tabular report containing a row for each unique variable value per root entity ID in a megastudy.
-                This effectively gives us a vocabulary for each study in a megastudy to aid with analysis that needs to
-                know which values were searched for in the study(s) in question.
+                Groups values of this variable by their rows' root entity ID (collecting a vocabulary of values specific
+                to each root entity record) and returns them as a tabular result where each row is a distinct 
+                combination of root entity ID and variable value. This is useful for reducing applicable vocabularies 
+                of this variable to only the root entities remaining after a subset operation.
               get:
                 securedBy: header-auth
                 responses:
