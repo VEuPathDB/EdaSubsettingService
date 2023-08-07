@@ -2,6 +2,9 @@ package org.veupathdb.service.eda.ss.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
@@ -9,6 +12,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import jakarta.validation.ValidationException;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Context;
@@ -31,6 +35,7 @@ import org.veupathdb.service.eda.common.client.DatasetAccessClient;
 import org.veupathdb.service.eda.common.client.DatasetAccessClient.StudyDatasetInfo;
 import org.veupathdb.service.eda.generated.model.APIEntity;
 import org.veupathdb.service.eda.generated.model.APIStudyDetail;
+import org.veupathdb.service.eda.generated.model.APIVariableDataShape;
 import org.veupathdb.service.eda.generated.model.EntityCountPostRequest;
 import org.veupathdb.service.eda.generated.model.EntityCountPostResponse;
 import org.veupathdb.service.eda.generated.model.EntityCountPostResponseImpl;
@@ -46,6 +51,7 @@ import org.veupathdb.service.eda.generated.model.ValueSpec;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostRequest;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponse;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponseImpl;
+import org.veupathdb.service.eda.generated.model.VocabByRootEntityPostResponseStream;
 import org.veupathdb.service.eda.generated.resources.Studies;
 import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Entity;
@@ -54,12 +60,12 @@ import org.veupathdb.service.eda.ss.model.StudyOverview;
 import org.veupathdb.service.eda.ss.model.db.*;
 import org.veupathdb.service.eda.ss.model.distribution.DistributionFactory;
 import org.veupathdb.service.eda.ss.model.reducer.BinaryValuesStreamer;
-import org.veupathdb.service.eda.ss.model.reducer.EmptyBinaryMetadataProvider;
 import org.veupathdb.service.eda.ss.model.reducer.MetadataFileBinaryProvider;
 import org.veupathdb.service.eda.ss.model.tabular.DataSourceType;
 import org.veupathdb.service.eda.ss.model.tabular.TabularReportConfig;
 import org.veupathdb.service.eda.ss.model.tabular.TabularResponses;
 import org.veupathdb.service.eda.ss.model.variable.Variable;
+import org.veupathdb.service.eda.ss.model.variable.VariableType;
 import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
 import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
 import org.veupathdb.service.eda.ss.model.variable.binary.SimpleStudyFinder;
@@ -134,6 +140,8 @@ public class StudiesService implements Studies {
         respond200WithApplicationJson(handleDistributionRequest(studyId, entityId, variableId, request));
   }
 
+
+
   public static VariableDistributionPostResponse handleDistributionRequest(
       String studyId, String entityId, String variableId, VariableDistributionPostRequest request) {
     try {
@@ -199,6 +207,51 @@ public class StudiesService implements Studies {
     catch (JsonProcessingException e) {
       throw new BadRequestException(e.getMessage());
     }
+  }
+
+  @Override
+  public GetStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse getStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableId(String studyId, String entityId, String variableId) {
+    checkPerms(_request, studyId, StudyAccess::allowSubsetting);
+    Study study = getStudyResolver().getStudyById(studyId);
+    String dataSchema = resolveSchema(study);
+
+    // Validate entity/variable ID existence
+    Variable var = study.getEntity(entityId)
+        .orElseThrow(() -> new ValidationException(String.format("Entity %s not found in study %s.", entityId, studyId)))
+        .getVariable(variableId)
+        .orElseThrow(() -> new ValidationException(String.format("Variable ID %s not found on entity %s in study %s.", variableId, entityId, studyId)));
+
+    // Trivially, only works on variables with values
+    if (!(var instanceof VariableWithValues<?>)) {
+      throw new ValidationException("Unable to retrieve vocabulary for a variable without values.");
+    }
+
+    VariableWithValues<?> variableWithValues = (VariableWithValues<?>) var;
+    if (variableWithValues.getType() != VariableType.STRING || variableWithValues.getVocabulary() == null) {
+      throw new ValidationException("Specified variable must be a string with a vocabulary.");
+    }
+
+    VocabByRootEntityPostResponseStream streamer = new VocabByRootEntityPostResponseStream(outputStream -> {
+      final OutputStreamWriter writer = new OutputStreamWriter(outputStream);
+      final BufferedWriter bufferedWriter = new BufferedWriter(writer);
+      TabularResponses.ResultConsumer resultConsumer = TabularResponses.Type.TABULAR.getFormatter().getFormatter(bufferedWriter);
+
+      // TODO: probably want a singleton RootVocabHandler with caching implemented.
+      final RootVocabHandler vocabHandler = new RootVocabHandler();
+      vocabHandler.queryStudyVocab(dataSchema,
+          Resources.getApplicationDataSource(),
+          study.getEntityTree().getContents(),
+          variableWithValues,
+          resultConsumer);
+
+      try {
+        bufferedWriter.flush();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    });
+
+    return GetStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse.respond200WithTextTabSeparatedValues(streamer);
   }
 
   public static <T> T handleTabularRequest(

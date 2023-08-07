@@ -105,6 +105,20 @@ securitySchemes:
 
           /{variable-id}:
 
+            /root-vocab:
+              description: |
+                Groups values of this variable by their rows' root entity ID (collecting a vocabulary of values specific
+                to each root entity record) and returns them as a tabular result where each row is a distinct 
+                combination of root entity ID and variable value. This is useful for reducing applicable vocabularies 
+                of this variable to only the root entities remaining after a subset operation.
+              get:
+                securedBy: header-auth
+                responses:
+                  200:
+                    body:
+                      text/tab-separated-values:
+                        type: lib.VocabByRootEntityPostResponse
+
             /distribution:
               post:
                 securedBy: header-auth
