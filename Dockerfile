@@ -34,6 +34,9 @@ RUN ./gradlew install-raml-4-jax-rs install-raml-merge
 # download project dependencies in advance
 RUN ./gradlew download-dependencies
 
+# COPY --from=eda-common-build /dev-dependencies /EdaCommon
+# COPY --from=lib-subsetting-build /dev-dependencies /lib-subsetting-build
+
 # copy raml over for merging, then perform code and documentation generation
 COPY api.raml ./
 COPY schema schema

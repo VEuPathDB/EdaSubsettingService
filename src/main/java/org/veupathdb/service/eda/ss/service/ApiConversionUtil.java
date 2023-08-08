@@ -1,7 +1,6 @@
 package org.veupathdb.service.eda.ss.service;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -11,8 +10,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.gusdb.fgputil.SortDirection;
 import org.gusdb.fgputil.functional.TreeNode;
-import org.veupathdb.service.eda.common.auth.StudyAccess;
-import org.veupathdb.service.eda.common.client.DatasetAccessClient;
 import org.veupathdb.service.eda.common.client.DatasetAccessClient.StudyDatasetInfo;
 import org.veupathdb.service.eda.generated.model.*;
 import org.veupathdb.service.eda.ss.model.Entity;
@@ -27,6 +24,7 @@ import org.veupathdb.service.eda.ss.model.tabular.TabularHeaderFormat;
 import org.veupathdb.service.eda.ss.model.varcollection.DateVarCollection;
 import org.veupathdb.service.eda.ss.model.varcollection.FloatingPointVarCollection;
 import org.veupathdb.service.eda.ss.model.varcollection.IntegerVarCollection;
+import org.veupathdb.service.eda.ss.model.varcollection.StringVarCollection;
 import org.veupathdb.service.eda.ss.model.varcollection.VarCollection;
 import org.veupathdb.service.eda.ss.model.variable.DateVariable;
 import org.veupathdb.service.eda.ss.model.variable.FloatingPointVariable;
@@ -75,6 +73,7 @@ public class ApiConversionUtil {
       case DATE -> getDateCollection((DateVarCollection)col);
       case INTEGER -> getIntegerCollection((IntegerVarCollection)col);
       case NUMBER -> getFloatCollection((FloatingPointVarCollection)col);
+      case STRING -> getStringCollection((StringVarCollection)col);
     };
     collection.setId(col.getId());
     collection.setDisplayName(col.getDisplayName());
@@ -109,6 +108,16 @@ public class ApiConversionUtil {
     floatCol.setUnits(col.getUnits());
     floatCol.setPrecision(col.getPrecision());
     return floatCol;
+  }
+
+  private static APICollection getStringCollection(StringVarCollection col) {
+    APIStringCollection stringCol = new APIStringCollectionImpl();
+    stringCol.setDisplayName(col.getDisplayName());
+    stringCol.setId(col.getId());
+    stringCol.setVocabulary(col.getVocabulary());
+    stringCol.setMemberVariableIds(col.getMemberVariableIds());
+    stringCol.setDistinctValuesCount(col.getDistinctValuesCount());
+    return stringCol;
   }
 
   /** converts model variable object to API variable object */

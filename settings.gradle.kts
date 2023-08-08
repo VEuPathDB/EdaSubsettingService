@@ -9,14 +9,18 @@ if (core.exists()) {
   project(":core").projectDir = core
 }
 
-val edaCommon = file("../EdaCommon");
-if (edaCommon.exists()) {
-  include(":edaCommon")
-  project(":edaCommon").projectDir = edaCommon
-}
+//val edaCommon = file("/eda-common-build");
+//val edaCommon = file("../EdaCommon");
 
-val libSubsetting = file("../lib-subsetting-build")
-if (libSubsetting.exists()) {
-  include(":libSubsetting")
-  project(":libSubsetting").projectDir = libSubsetting
-}
+//if (edaCommon.exists()) {
+//  include(":edaCommon")
+//  project(":edaCommon").projectDir = edaCommon
+//}
+
+//val libSubsetting = file("/lib-subsetting-build")
+//val libSubsetting = file("../lib-eda-subsetting")
+
+//if (libSubsetting.exists()) {
+//  include(":libSubsetting")
+//  project(":libSubsetting").projectDir = libSubsetting
+//}
