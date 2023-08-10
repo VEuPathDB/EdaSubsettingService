@@ -108,11 +108,14 @@ securitySchemes:
             /root-vocab:
               description: |
                 Groups values of this variable by their rows' root entity ID (collecting a vocabulary of values specific
-                to each root entity record) and returns them as a tabular result where each row is a distinct 
+                to each root entityq record) and returns them as a tabular result where each row is a distinct 
                 combination of root entity ID and variable value. This is useful for reducing applicable vocabularies 
                 of this variable to only the root entities remaining after a subset operation.
-              get:
+              post:
                 securedBy: header-auth
+                body:
+                  application/json:
+                    type: lib.VocabByRootEntityPostRequest
                 responses:
                   200:
                     body:

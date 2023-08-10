@@ -81,7 +81,7 @@ public class StudiesTest {
     numberFilter.setMax(10);
     afs.add(numberFilter);
     
-    RequestBundle.constructFiltersFromAPIFilters(_model.study, afs, StubDb.APP_DB_SCHEMA);
+    ApiConversionUtil.toInternalFilters(_model.study, afs, StubDb.APP_DB_SCHEMA);
     
     assertEquals(2, afs.size());
   }
@@ -105,7 +105,7 @@ public class StudiesTest {
       nakedFilter.setEntityId(_model.observation.getId());
       afs.add(nakedFilter);
 
-      RequestBundle.constructFiltersFromAPIFilters(_model.study, afs, StubDb.APP_DB_SCHEMA);
+      ApiConversionUtil.toInternalFilters(_model.study, afs, StubDb.APP_DB_SCHEMA);
     });
   }
 
