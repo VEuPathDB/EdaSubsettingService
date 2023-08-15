@@ -35,7 +35,6 @@ import org.veupathdb.service.eda.common.client.DatasetAccessClient;
 import org.veupathdb.service.eda.common.client.DatasetAccessClient.StudyDatasetInfo;
 import org.veupathdb.service.eda.generated.model.APIEntity;
 import org.veupathdb.service.eda.generated.model.APIStudyDetail;
-import org.veupathdb.service.eda.generated.model.APIVariableDataShape;
 import org.veupathdb.service.eda.generated.model.EntityCountPostRequest;
 import org.veupathdb.service.eda.generated.model.EntityCountPostResponse;
 import org.veupathdb.service.eda.generated.model.EntityCountPostResponseImpl;
@@ -51,6 +50,7 @@ import org.veupathdb.service.eda.generated.model.ValueSpec;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostRequest;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponse;
 import org.veupathdb.service.eda.generated.model.VariableDistributionPostResponseImpl;
+import org.veupathdb.service.eda.generated.model.VocabByRootEntityPostRequest;
 import org.veupathdb.service.eda.generated.model.VocabByRootEntityPostResponseStream;
 import org.veupathdb.service.eda.generated.resources.Studies;
 import org.veupathdb.service.eda.ss.Resources;
@@ -210,10 +210,11 @@ public class StudiesService implements Studies {
   }
 
   @Override
-  public GetStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse getStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableId(String studyId, String entityId, String variableId) {
+  public PostStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse postStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableId(String studyId, String entityId, String variableId, VocabByRootEntityPostRequest body) {
     checkPerms(_request, studyId, StudyAccess::allowSubsetting);
     Study study = getStudyResolver().getStudyById(studyId);
     String dataSchema = resolveSchema(study);
+
 
     // Validate entity/variable ID existence
     Variable var = study.getEntity(entityId)
@@ -242,7 +243,8 @@ public class StudiesService implements Studies {
           Resources.getApplicationDataSource(),
           study.getEntityTree().getContents(),
           variableWithValues,
-          resultConsumer);
+          resultConsumer,
+          toInternalFilters(study, body.getFilters(), dataSchema));
 
       try {
         bufferedWriter.flush();
@@ -251,7 +253,7 @@ public class StudiesService implements Studies {
       }
     });
 
-    return GetStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse.respond200WithTextTabSeparatedValues(streamer);
+    return PostStudiesEntitiesVariablesRootVocabByStudyIdAndEntityIdAndVariableIdResponse.respond200WithTextTabSeparatedValues(streamer);
   }
 
   public static <T> T handleTabularRequest(
