@@ -42,15 +42,7 @@ import org.veupathdb.service.eda.ss.model.varcollection.FloatingPointVarCollecti
 import org.veupathdb.service.eda.ss.model.varcollection.IntegerVarCollection;
 import org.veupathdb.service.eda.ss.model.varcollection.StringVarCollection;
 import org.veupathdb.service.eda.ss.model.varcollection.VarCollection;
-import org.veupathdb.service.eda.ss.model.variable.DateVariable;
-import org.veupathdb.service.eda.ss.model.variable.FloatingPointVariable;
-import org.veupathdb.service.eda.ss.model.variable.IntegerVariable;
-import org.veupathdb.service.eda.ss.model.variable.LongitudeVariable;
-import org.veupathdb.service.eda.ss.model.variable.StringVariable;
-import org.veupathdb.service.eda.ss.model.variable.Variable;
-import org.veupathdb.service.eda.ss.model.variable.VariableDataShape;
-import org.veupathdb.service.eda.ss.model.variable.VariableDisplayType;
-import org.veupathdb.service.eda.ss.model.variable.VariableWithValues;
+import org.veupathdb.service.eda.ss.model.variable.*;
 
 public class ApiConversionUtil {
   private static final Logger LOG = LogManager.getLogger(ApiConversionUtil.class);
@@ -217,7 +209,16 @@ public class ApiConversionUtil {
     apiVar.setDistributionDefaults(getFloatDistributionDefaults(var.getDistributionConfig()));
     apiVar.setUnits(var.getUnits());
     apiVar.setPrecision(var.getPrecision());
+    apiVar.setScale(toApiScale(var.getScale()));
     return apiVar;
+  }
+
+  private static APIVariableScale toApiScale(VariableScale scale) {
+    return scale == null ? null : switch(scale) {
+      case LOG_10 -> APIVariableScale.LOG;
+      case LOG_2 -> APIVariableScale.LOG2;
+      case NATURAL_LOG -> APIVariableScale.LN;
+    };
   }
 
   private static APINumberDistributionDefaults getFloatDistributionDefaults(NumberDistributionConfig<Double> distributionConfig) {

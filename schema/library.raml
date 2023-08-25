@@ -427,6 +427,12 @@ types:
       - geoaggregator
       - latitude
       - longitude
+  API_VariableScale:
+    type: string
+    enum:
+      - log
+      - log2
+      - ln
   API_VariablesCategory:
     type: API_Variable
     discriminatorValue: category
@@ -483,8 +489,9 @@ types:
     discriminatorValue: number
     properties:
       distributionDefaults: API_NumberDistributionDefaults
-      units: string
+      units?: string
       precision: number
+      scale?: API_VariableScale
   API_IntegerVariable:
     type: API_VariableWithValues
     discriminatorValue: integer
