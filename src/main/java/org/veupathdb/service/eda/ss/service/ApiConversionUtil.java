@@ -91,6 +91,10 @@ public class ApiConversionUtil {
     collection.setDistinctValuesCount(col.getDistinctValuesCount());
     collection.setVocabulary(col.getVocabulary());
     collection.setMemberVariableIds(col.getMemberVariableIds());
+    collection.setIsProportion(col.getIsProportion());
+    collection.setIsCompositional(col.getIsCompositional());
+    collection.setNormalizationMethod(col.getNormalizationMethod());
+
     return collection;
   }
 
