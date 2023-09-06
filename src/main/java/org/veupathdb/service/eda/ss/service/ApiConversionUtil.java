@@ -168,6 +168,8 @@ public class ApiConversionUtil {
     apiVar.setIsMultiValued(var.getIsMultiValued());
     apiVar.setIsTemporal(var.getIsTemporal());
     apiVar.setImputeZero(var.getImputeZero());
+    apiVar.setHasStudySpecificVocabulary(var.hasStudyDependentVocabulary());
+    apiVar.setVariableSpecToImputeZeroesFor(var.getVariableSpecToImputeZeroesFor());
     return apiVar;
   }
 
