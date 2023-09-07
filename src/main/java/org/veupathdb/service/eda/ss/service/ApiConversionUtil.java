@@ -17,6 +17,7 @@ import org.gusdb.fgputil.FormatUtil;
 import org.gusdb.fgputil.SortDirection;
 import org.gusdb.fgputil.functional.TreeNode;
 import org.veupathdb.service.eda.common.client.DatasetAccessClient.StudyDatasetInfo;
+import org.veupathdb.service.eda.common.model.VariableDef;
 import org.veupathdb.service.eda.generated.model.*;
 import org.veupathdb.service.eda.ss.Utils;
 import org.veupathdb.service.eda.ss.model.Entity;
@@ -169,7 +170,8 @@ public class ApiConversionUtil {
     apiVar.setIsTemporal(var.getIsTemporal());
     apiVar.setImputeZero(var.getImputeZero());
     apiVar.setHasStudySpecificVocabulary(var.hasStudyDependentVocabulary());
-    apiVar.setVariableSpecToImputeZeroesFor(var.getVariableSpecToImputeZeroesFor());
+    apiVar.setVariableSpecToImputeZeroesFor(VariableDef.newVariableSpecFromDotNotation(
+        var.getVariableSpecToImputeZeroesFor()));
     return apiVar;
   }
 
