@@ -53,6 +53,7 @@ public class ApiConversionUtil {
     APIEntity apiEntityTree = entityTreeToAPITree(study.getEntityTree());
     APIStudyDetail apiStudyDetail = new APIStudyDetailImpl();
     apiStudyDetail.setId(study.getStudyId());
+    apiStudyDetail.setHasMap(study.hasGeographicData());
     apiStudyDetail.setRootEntity(apiEntityTree);
     return apiStudyDetail;
   }
