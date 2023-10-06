@@ -213,6 +213,10 @@ types:
     properties:
       isRequired: boolean
       isTemporal: boolean
+      isCollection: boolean
+      isCompositional: boolean
+      isProportion: boolean
+      allowedNormalizationMethods: string[]
       minNumVars: number
       maxNumVars: number
       minNumValues: number
@@ -294,6 +298,7 @@ types:
     properties:
       id: string
       isUserStudy: boolean
+      hasMap: boolean
       rootEntity: API_Entity
   API_Entity:
     type: EntityIdGetResponse
