@@ -6,11 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.veupathdb.lib.container.jaxrs.config.Options;
 import org.veupathdb.lib.container.jaxrs.server.ContainerResources;
 import org.veupathdb.lib.container.jaxrs.utils.db.DbManager;
-import org.veupathdb.service.eda.ss.model.StudyOverview;
-import org.veupathdb.service.eda.ss.model.db.StudyFactory;
-import org.veupathdb.service.eda.ss.model.db.StudyProvider;
-import org.veupathdb.service.eda.ss.model.db.VariableFactory;
-import org.veupathdb.service.eda.ss.model.reducer.MetadataFileBinaryProvider;
 import org.veupathdb.service.eda.ss.model.variable.binary.BinaryFilesManager;
 import org.veupathdb.service.eda.ss.model.variable.binary.SimpleStudyFinder;
 import org.veupathdb.service.eda.ss.service.ClearMetadataCacheService;
@@ -20,6 +15,7 @@ import org.veupathdb.service.eda.ss.service.StudiesService;
 import org.veupathdb.service.eda.ss.test.StubDb;
 
 import java.nio.file.Path;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -32,12 +28,14 @@ import java.util.concurrent.Executors;
 public class Resources extends ContainerResources {
   private static final Logger LOG = LogManager.getLogger(Resources.class);
 
+  private static final CountDownLatch APP_DB_READY_SIGNAL = new CountDownLatch(1);
+
   private static final EnvironmentVars ENV = new EnvironmentVars();
 
   private static final BinaryFilesManager BINARY_FILES_MANAGER = new BinaryFilesManager(
       new SimpleStudyFinder(Resources.getBinaryFilesDirectory().toString()));
 
-  private static final MetadataCache METADATA_CACHE = new MetadataCache(BINARY_FILES_MANAGER);
+  private static final MetadataCache METADATA_CACHE = new MetadataCache(BINARY_FILES_MANAGER, APP_DB_READY_SIGNAL);
 
   private static final ExecutorService FILE_READ_THREAD_POOL = Executors.newCachedThreadPool();
 
@@ -69,6 +67,8 @@ public class Resources extends ContainerResources {
       LOG.info("Using application DB connection URL: " +
           DbManager.getInstance().getApplicationDatabase().getConfig().getConnectionUrl());
     }
+    // Signal to any async processes (e.g. MD cache refresh) that depend on the database that they may begin.
+    APP_DB_READY_SIGNAL.countDown();
   }
 
   public static MetadataCache getMetadataCache() {

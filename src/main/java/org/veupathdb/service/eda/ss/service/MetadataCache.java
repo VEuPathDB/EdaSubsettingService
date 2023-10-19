@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,11 +34,13 @@ public class MetadataCache implements StudyProvider {
   private final Map<String, Study> _studies = new HashMap<>(); // cache the studies
   private final Map<String, Boolean> _studyHasFilesCache = new HashMap<>();
   private final ScheduledExecutorService _scheduledThreadPool = Executors.newScheduledThreadPool(1); // Shut this down.
+  private final Optional<CountDownLatch> _appDbReadySignal;
 
-  public MetadataCache(BinaryFilesManager binaryFilesManager) {
+  public MetadataCache(BinaryFilesManager binaryFilesManager, CountDownLatch appDbReadySignal) {
     _binaryFilesManager = binaryFilesManager;
     _sourceStudyProvider = this::getCuratedStudyFactory; // Lazily initialize to ensure database connection is established before construction.
     _scheduledThreadPool.scheduleAtFixedRate(this::invalidateOutOfDateStudies, 0L, 5L, TimeUnit.MINUTES);
+    _appDbReadySignal = Optional.of(appDbReadySignal);
   }
 
   // Visible for testing
@@ -48,6 +51,7 @@ public class MetadataCache implements StudyProvider {
     _sourceStudyProvider = () -> sourceStudyProvider;
     _scheduledThreadPool.scheduleAtFixedRate(this::invalidateOutOfDateStudies, 0L,
         refreshInterval.toMillis(), TimeUnit.MILLISECONDS);
+    _appDbReadySignal = Optional.empty();
   }
 
   @Override
@@ -93,6 +97,19 @@ public class MetadataCache implements StudyProvider {
   }
 
   private void invalidateOutOfDateStudies() {
+    // Wait until main thread signals that the application database is ready. If we try to access it before, it will
+    // not throw an exception, but it will use the internal stub DB implementation which will result in missing studies.
+    if (_appDbReadySignal.isPresent()) {
+      LOG.info("Awaiting application database to be ready.");
+      try {
+        _appDbReadySignal.get().await();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        LOG.warn("Thread interrupted while awaiting Application database readiness.", e);
+        return;
+      }
+    }
+
     LOG.info("Checking which studies are out of date in cache.");
     List<StudyOverview> dbStudies = _sourceStudyProvider.get().getStudyOverviews();
     List<Study> studiesToRemove = _studies.values().stream()
