@@ -364,7 +364,7 @@ public class StudiesService implements Studies {
   }
 
   public static EntityCountPostResponse handleCountRequest(String studyId, String entityId, EntityCountPostRequest rawRequest) {
-    LOG.info("Handling count request with filters: {}", JsonUtil.serializeObject(rawRequest.getFilters()));
+    LOG.info("Handling count request with filters: {}", () -> JsonUtil.serializeObject(rawRequest.getFilters()));
     Study study = getStudyResolver().getStudyById(studyId);
     String dataSchema = resolveSchema(study);
 
