@@ -325,7 +325,7 @@ public class StudiesService implements Studies {
     }
   */
     if (requestBundle.getReportConfig().getDataSourceType() == DataSourceType.DATABASE) {
-      LOG.info("Can't use files because: requestBundle.getReportConfig().getDataSourceType() == DataSourceType.DATABASE ==" + DataSourceType.DATABASE);
+      LOG.info("Can't use files because: client request specified data source to be DATABASE");
       return false;
     }
     if (!binaryFilesManager.studyHasFiles(requestBundle.getStudy())) {
