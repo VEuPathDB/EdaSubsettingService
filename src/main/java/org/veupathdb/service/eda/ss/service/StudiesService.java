@@ -324,10 +324,14 @@ public class StudiesService implements Studies {
       return false;
     }
   */
+    LOG.info("Determining whether to use file-based subsetting in request for study '" +
+        requestBundle.getStudy().getStudyId() + "', entity '" + requestBundle.getTargetEntity() + "'.");
+
     if (requestBundle.getReportConfig().getDataSourceType() == DataSourceType.DATABASE) {
       LOG.info("Can't use files because: client request specified data source to be DATABASE");
       return false;
     }
+
     if (!binaryFilesManager.studyHasFiles(requestBundle.getStudy())) {
       LOG.info("Unable to find study dir for " + requestBundle.getStudy().getStudyId() + " in study files.");
       return false;
@@ -359,6 +363,7 @@ public class StudiesService implements Studies {
         return false;
       }
     }
+
     return true;
   }
 
