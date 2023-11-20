@@ -68,9 +68,12 @@ public class MetadataCache implements StudyProvider {
     return Collections.unmodifiableList(_studyOverviews);
   }
 
-  private synchronized boolean studyHasFiles(String studyId) {
-    _studyHasFilesCache.computeIfAbsent(studyId, _binaryFilesManager::studyHasFiles);
-    return _studyHasFilesCache.get(studyId);
+  private synchronized boolean studyHasFiles(String studyAbbrev) {
+    LOG.info("Asking if studyHasFiles for " + studyAbbrev + ".  Is cached? " + _studyHasFilesCache.containsKey(studyAbbrev));
+    _studyHasFilesCache.computeIfAbsent(studyAbbrev, _binaryFilesManager::studyHasFiles);
+    boolean result = _studyHasFilesCache.get(studyAbbrev);
+    LOG.info("Result of call for " + studyAbbrev + "? " + result);
+    return result;
   }
 
   private StudyProvider getCuratedStudyFactory() {
