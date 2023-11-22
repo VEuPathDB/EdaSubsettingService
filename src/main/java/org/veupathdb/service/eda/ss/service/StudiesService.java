@@ -74,6 +74,7 @@ import static org.veupathdb.service.eda.ss.service.ApiConversionUtil.*;
 
 @Authenticated(allowGuests = true)
 public class StudiesService implements Studies {
+
   private static final Logger LOG = LogManager.getLogger(StudiesService.class);
 
   private static final long MAX_ROWS_FOR_SINGLE_PAGE_ACCESS = 20;
@@ -260,7 +261,7 @@ public class StudiesService implements Studies {
       ContainerRequest requestContext, String studyId, String entityId,
       EntityTabularPostRequest requestBody, boolean checkUserPermissions,
       BiFunction<EntityTabularPostResponseStream,TabularResponses.Type,T> responseConverter) {
-    LOG.info("Handling tabular request for study {} and entity {}.", studyId, entityId);
+    LOG.debug("Handling tabular request for study {} and entity {}.", studyId, entityId);
     Study study = getStudyResolver().getStudyById(studyId);
     String dataSchema = resolveSchema(study);
     RequestBundle request = RequestBundle.unpack(dataSchema, study, entityId, requestBody.getFilters(), requestBody.getOutputVariableIds(), requestBody.getReportConfig());
@@ -285,14 +286,14 @@ public class StudiesService implements Studies {
     final BinaryValuesStreamer binaryValuesStreamer = new BinaryValuesStreamer(binaryFilesManager,
             Resources.getFileChannelThreadPool(), Resources.getDeserializerThreadPool());
     if (shouldRunFileBasedSubsetting(request, binaryFilesManager)) {
-      LOG.info("Running file-based subsetting for study " + studyId);
+      LOG.debug("Running file-based subsetting for study " + studyId);
       EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
           FilteredResultFactory.produceTabularSubsetFromFile(request.getStudy(), entity,
               request.getRequestedVariables(), request.getFilters(), responseType.getBinaryFormatter(),
               request.getReportConfig(), outStream, binaryValuesStreamer));
       return responseConverter.apply(streamer, responseType);
     }
-    LOG.info("Performing oracle-based subsetting for study " + studyId);
+    LOG.debug("Performing oracle-based subsetting for study " + studyId);
     EntityTabularPostResponseStream streamer = new EntityTabularPostResponseStream(outStream ->
         FilteredResultFactory.produceTabularSubset(Resources.getApplicationDataSource(), dataSchema,
             request.getStudy(), entity, request.getRequestedVariables(), request.getFilters(),
@@ -324,33 +325,33 @@ public class StudiesService implements Studies {
       return false;
     }
   */
-    LOG.info("Determining whether to use file-based subsetting in request for study '" +
+    LOG.debug("Determining whether to use file-based subsetting in request for study '" +
         requestBundle.getStudy().getStudyId() + "', entity '" + requestBundle.getTargetEntity() + "'.");
 
     if (requestBundle.getReportConfig().getDataSourceType() == DataSourceType.DATABASE) {
-      LOG.info("Can't use files because: client request specified data source to be DATABASE");
+      LOG.debug("Can't use files because: client request specified data source to be DATABASE");
       return false;
     }
 
     if (!binaryFilesManager.studyHasFiles(requestBundle.getStudy())) {
-      LOG.info("Unable to find study dir for " + requestBundle.getStudy().getStudyId() + " in study files.");
+      LOG.debug("Unable to find study dir for " + requestBundle.getStudy().getStudyId() + " in study files.");
       return false;
     }
     if (!binaryFilesManager.entityDirExists(requestBundle.getStudy(), requestBundle.getTargetEntity())) {
-      LOG.info("Unable to find entity dir for " + requestBundle.getTargetEntity().getId() + " in study files.");
+      LOG.debug("Unable to find entity dir for " + requestBundle.getTargetEntity().getId() + " in study files.");
       return false;
     }
     if (!binaryFilesManager.idMapFileExists(requestBundle.getStudy(), requestBundle.getTargetEntity())) {
-      LOG.info("Unable to find ID file for " + requestBundle.getTargetEntity().getId() + " in study files.");
+      LOG.debug("Unable to find ID file for " + requestBundle.getTargetEntity().getId() + " in study files.");
       return false;
     }
     if (!requestBundle.getTargetEntity().getAncestorEntities().isEmpty() && !binaryFilesManager.ancestorFileExists(requestBundle.getStudy(), requestBundle.getTargetEntity())) {
-      LOG.info("Unable to find ancestor file for " + requestBundle.getTargetEntity().getId() + " in study files.");
+      LOG.debug("Unable to find ancestor file for " + requestBundle.getTargetEntity().getId() + " in study files.");
       return false;
     }
     for (VariableWithValues outputVar: requestBundle.getRequestedVariables()) {
       if (!binaryFilesManager.variableFileExists(requestBundle.getStudy(), requestBundle.getTargetEntity(), outputVar)) {
-        LOG.info("Unable to find output var " + outputVar.getId() + " in study files.");
+        LOG.debug("Unable to find output var " + outputVar.getId() + " in study files.");
         return false;
       }
     }
@@ -359,7 +360,7 @@ public class StudiesService implements Studies {
         .collect(Collectors.toList());
     for (VariableWithValues filterVar: filterVars) {
       if (!binaryFilesManager.variableFileExists(requestBundle.getStudy(), filterVar.getEntity(), filterVar)) {
-        LOG.info("Unable to find filterVar var " + filterVar.getId() + " in study files.");
+        LOG.debug("Unable to find filterVar var " + filterVar.getId() + " in study files.");
         return false;
       }
     }

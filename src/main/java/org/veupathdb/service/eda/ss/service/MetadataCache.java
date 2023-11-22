@@ -2,7 +2,6 @@ package org.veupathdb.service.eda.ss.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.gusdb.fgputil.FormatUtil;
 import org.veupathdb.service.eda.ss.Resources;
 import org.veupathdb.service.eda.ss.model.Study;
 import org.veupathdb.service.eda.ss.model.StudyOverview;
@@ -70,14 +69,8 @@ public class MetadataCache implements StudyProvider {
   }
 
   private synchronized boolean studyHasFiles(String studyAbbrev) {
-    LOG.info("Asking if studyHasFiles for " + studyAbbrev + ".  Is cached? " + _studyHasFilesCache.containsKey(studyAbbrev));
     _studyHasFilesCache.computeIfAbsent(studyAbbrev, _binaryFilesManager::studyHasFiles);
-    boolean result = _studyHasFilesCache.get(studyAbbrev);
-    LOG.info("Result of call for " + studyAbbrev + "? " + result);
-    if (studyAbbrev.equals("BRAZIL0001-1") || studyAbbrev.equals("BRAZIL0001_1")) {
-      LOG.info("Where???\n" + FormatUtil.getCurrentStackTrace());
-    }
-    return result;
+    return _studyHasFilesCache.get(studyAbbrev);
   }
 
   private StudyProvider getCuratedStudyFactory() {
