@@ -139,6 +139,7 @@ public class MetadataCache implements StudyProvider {
     if (matchingDbStudy.isEmpty()) {
       return true;
     }
+
     // If in DB, check if it's out of date.
     return matchingDbStudy.get().getLastModified().after(studyOverview.getLastModified());
   }

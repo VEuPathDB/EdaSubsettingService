@@ -337,6 +337,13 @@ public class StudiesService implements Studies {
       LOG.debug("Unable to find study dir for " + requestBundle.getStudy().getStudyId() + " in study files.");
       return false;
     }
+
+    final long dataVersion = binaryFilesManager.getDataVersionUsed(requestBundle.getStudy());
+    if (binaryFilesManager.getDataVersionUsed(requestBundle.getStudy()) != requestBundle.getStudy().getLastModified().getTime()) {
+      LOG.info("Data version does not match last modified time of study. Data version: " + dataVersion + ". Study last modified "
+          + requestBundle.getStudy().getLastModified().getTime());
+      return false;
+    }
     if (!binaryFilesManager.entityDirExists(requestBundle.getStudy(), requestBundle.getTargetEntity())) {
       LOG.debug("Unable to find entity dir for " + requestBundle.getTargetEntity().getId() + " in study files.");
       return false;
