@@ -328,6 +328,10 @@ public class StudiesService implements Studies {
     LOG.debug("Determining whether to use file-based subsetting in request for study '" +
         requestBundle.getStudy().getStudyId() + "', entity '" + requestBundle.getTargetEntity() + "'.");
 
+    if (requestBundle.getReportConfig().requiresSorting()) {
+      return false;
+    }
+
     if (requestBundle.getReportConfig().getDataSourceType() == DataSourceType.DATABASE) {
       LOG.debug("Can't use files because: client request specified data source to be DATABASE");
       return false;
