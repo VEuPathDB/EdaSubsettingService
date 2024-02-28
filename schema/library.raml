@@ -256,6 +256,7 @@ types:
     additionalProperties: false
     properties:
       value: number
+  DynamicDataSpec: CollectionSpec | VariableSpec
   StudiesGetResponse:
     type: object
     additionalProperties: false
@@ -318,9 +319,13 @@ types:
         format: int64
       memberVariableIds: string[]
       imputeZero: boolean
+      hasStudyDependentVocabulary?: boolean
+      variableSpecToImputeZeroesFor?: VariableSpec
       normalizationMethod: string
       isCompositional: boolean
       isProportion: boolean
+      member: string
+      memberPlural: string
   API_CollectionType:
     type: string
     enum:

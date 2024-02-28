@@ -96,7 +96,8 @@ public class ApiConversionUtil {
     collection.setIsProportion(col.getIsProportion());
     collection.setIsCompositional(col.getIsCompositional());
     collection.setNormalizationMethod(col.getNormalizationMethod());
-
+    collection.setMember(col.getMember());
+    collection.setMemberPlural(col.getMemberPlural());
     return collection;
   }
 

@@ -88,7 +88,7 @@ repositories {
 // versions
 val coreLib       = "6.19.1"         // Container core lib version
 val edaCommon     = "11.7.1"         // EDA Common version
-val libSubsetting = "4.13.8"         // lib-eda-subsetting version
+val libSubsetting = "4.13.10"         // lib-eda-subsetting version
 val fgputil       = "2.12.18-jakarta" // FgpUtil version
 
 // use local EdaCommon compiled schema if project exists, else use released version;
