@@ -39,7 +39,7 @@ public class MetadataCache implements StudyProvider {
   public MetadataCache(BinaryFilesManager binaryFilesManager, CountDownLatch appDbReadySignal) {
     _binaryFilesManager = binaryFilesManager;
     _sourceStudyProvider = this::getCuratedStudyFactory; // Lazily initialize to ensure database connection is established before construction.
-    _scheduledThreadPool.scheduleAtFixedRate(this::invalidateOutOfDateStudies, 0L, 5L, TimeUnit.MINUTES);
+    _scheduledThreadPool.scheduleAtFixedRate(this::synchronizeCacheState, 0L, 5L, TimeUnit.MINUTES);
     _appDbReadySignal = Optional.of(appDbReadySignal);
   }
 
@@ -49,7 +49,7 @@ public class MetadataCache implements StudyProvider {
                 Duration refreshInterval) {
     _binaryFilesManager = binaryFilesManager;
     _sourceStudyProvider = () -> sourceStudyProvider;
-    _scheduledThreadPool.scheduleAtFixedRate(this::invalidateOutOfDateStudies, 0L,
+    _scheduledThreadPool.scheduleAtFixedRate(this::synchronizeCacheState, 0L,
         refreshInterval.toMillis(), TimeUnit.MILLISECONDS);
     _appDbReadySignal = Optional.empty();
   }
@@ -96,7 +96,7 @@ public class MetadataCache implements StudyProvider {
     _scheduledThreadPool.shutdown();
   }
 
-  private void invalidateOutOfDateStudies() {
+  private void synchronizeCacheState() {
     // Wait until main thread signals that the application database is ready. If we try to access it before, it will
     // not throw an exception, but it will use the internal stub DB implementation which will result in missing studies.
     if (_appDbReadySignal.isPresent()) {
@@ -115,17 +115,29 @@ public class MetadataCache implements StudyProvider {
     List<Study> studiesToRemove = _studies.values().stream()
         .filter(study -> isOutOfDate(study, dbStudies))
         .toList();
+
     synchronized (this) {
       LOG.info("Removing the following out of date or missing studies from cache: "
           + studiesToRemove.stream().map(StudyOverview::getStudyId).collect(Collectors.joining(",")));
 
-      // For each study with a study overview, check if the files exist and cache the result.
-      dbStudies.forEach(study -> _studyHasFilesCache.put(study.getStudyId(), _binaryFilesManager.studyHasFiles(study.getStudyId())));
+      dbStudies.forEach(study -> {
+        boolean studyHasFiles = _binaryFilesManager.studyHasFiles(study.getStudyId());
+
+        // Check if the files exist and cache the result. Store previous value in cache.
+        boolean usedToHaveFiles = Boolean.TRUE.equals(_studyHasFilesCache.put(study.getStudyId(), studyHasFiles));
+
+        if (!usedToHaveFiles && studyHasFiles) {
+          // Remove study if files have been added since last time cache was populated.
+          // Otherwise, the cache will reflect that the study has files, but necessary metadata will be missing from cache.
+          _studies.remove(study.getStudyId());
+        }
+      });
 
       // Replace study overviews with those available in DB.
       _studyOverviews = dbStudies;
 
-      // Remove any studies with full metadata loaded if they have been modified. They will be lazily repopulated.
+      // Remove any studies with full metadata loaded if they have been modified.
+      // They will be lazily repopulated when requested by users.
       _studies.entrySet().removeIf(study ->
           studiesToRemove.stream().anyMatch(removeStudy -> removeStudy.getStudyId().equals(study.getKey())));
     }
@@ -135,6 +147,7 @@ public class MetadataCache implements StudyProvider {
     Optional<StudyOverview> matchingDbStudy = dbStudies.stream()
         .filter(dbStudy -> dbStudy.getStudyId().equals(studyOverview.getStudyId()))
         .findAny();
+    
     // Study not in DB anymore, remove it from cache.
     if (matchingDbStudy.isEmpty()) {
       return true;
