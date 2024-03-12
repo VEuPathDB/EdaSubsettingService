@@ -123,7 +123,7 @@ public class MetadataCache implements StudyProvider {
       dbStudies.forEach(study -> {
         boolean studyHasFiles = _binaryFilesManager.studyHasFiles(study.getStudyId());
 
-        // Check if the files exist and cache the result. Store previous value in cache.
+        // Check if the files exist and cache the result. Get previous value from cache at the same time.
         boolean usedToHaveFiles = Boolean.TRUE.equals(_studyHasFilesCache.put(study.getStudyId(), studyHasFiles));
 
         if (!usedToHaveFiles && studyHasFiles) {
