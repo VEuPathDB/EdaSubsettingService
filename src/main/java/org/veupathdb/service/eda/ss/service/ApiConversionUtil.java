@@ -55,6 +55,7 @@ public class ApiConversionUtil {
     apiStudyDetail.setId(study.getStudyId());
     apiStudyDetail.setRootEntity(apiEntityTree);
     apiStudyDetail.setHasMap(study.hasGeographicData());
+    apiStudyDetail.setIsUserStudy(study.getStudySourceType() == StudyOverview.StudySourceType.USER_SUBMITTED);
     return apiStudyDetail;
   }
 
